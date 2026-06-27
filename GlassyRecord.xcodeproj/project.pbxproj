@@ -1,0 +1,795 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0D67B172E78543DC9FEA1D24 /* CameraService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53BA6576A22907866A43A0A3 /* CameraService.swift */; };
+		1E43E0C047FC26B43EB04DB2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 10F7422C59BECD1F5285CC02 /* Assets.xcassets */; };
+		1E58D8C9A6443E11EA39CCB9 /* MockCameraFeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57D952722AB5215A74401AF /* MockCameraFeed.swift */; };
+		255E767BF14C133F98A2AB03 /* SimulatorSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D4C5E04716960CA2770082E /* SimulatorSupport.swift */; };
+		28E968BC61F07332053399FB /* ModelIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BBE3869563B324D154A98341 /* ModelIO.framework */; };
+		30FD6BF9769A32EE252DF9DC /* RecordingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E5F5CE54715F372DBEA388D /* RecordingViewModel.swift */; };
+		33812DA01B40A2D3AF764D28 /* RenderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5624C9016DF7B1B2AB6BAF18 /* RenderService.swift */; };
+		37F72B9253B6B76427CDEB47 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3960AF5A07DD9DF05A5E71FE /* PersistenceController.swift */; };
+		3DB3F13B72EC285406F59D1D /* ScreenRecorderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03D3B81FA1DBFB5C823D601D /* ScreenRecorderService.swift */; };
+		5359F5B389A1332D0DECB1EA /* MockRecordingWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA5555C9D5798F58015CCF0F /* MockRecordingWriter.swift */; };
+		558AD8517D30483E3E042691 /* Vision.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = ACBEC9967909386252E6D88A /* Vision.framework */; };
+		55D9D63E3B20AC13F23ED05D /* SceneKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AF168E2AB4E05873579A0657 /* SceneKit.framework */; };
+		5D0C9B79647879C065790A04 /* AppModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5347329ADA3E098E824D87F /* AppModelsTests.swift */; };
+		636E2390D54C27E8C3355362 /* RecordingControlPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23695972DE2E5EDCE9B21DDB /* RecordingControlPanel.swift */; };
+		738CDE5196C1D6783E626010 /* GlassesSelectionCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD931DB28865D6F738F8926D /* GlassesSelectionCard.swift */; };
+		74288262944F6557BCDEBADC /* AppCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 681BD2B173991E4C9D3ACC5E /* AppCoordinator.swift */; };
+		79DA5E2008EB286C8D775636 /* PencilKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BDD2FD2CB2F0EBDF831062B9 /* PencilKit.framework */; };
+		86B610C04FA5897DC545A47C /* RecordingOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7315BE8BDACA80507B69D09B /* RecordingOverlayView.swift */; };
+		8A0E8D05AF3DB0857006F11C /* GlassesOverlayServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04A0A9EEC7EA9AF32E27636E /* GlassesOverlayServiceTests.swift */; };
+		8DBD22E6F8B1F5ED333A2709 /* ExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 136DED63C26E570333DAAAD7 /* ExportService.swift */; };
+		92BC7AAFE03BAFC2C74D5613 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D6511CFDFE92E63F5CD0935 /* SettingsView.swift */; };
+		A9376D3D2E820D7F95101C5E /* GlassyRecordApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C7DC9080B2FA08697B47D6B /* GlassyRecordApp.swift */; };
+		BAAADC2C260F72452087C7DA /* ReplayKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8E6742E1AF10D86EEF0813B5 /* ReplayKit.framework */; };
+		BCC8B874B37FEFB62E75FA3D /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 046FA003957AEF0948F9CBF2 /* HomeView.swift */; };
+		C469B0AD12D289D82E530B3B /* AudioService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAA585C2382ABFC53C259C81 /* AudioService.swift */; };
+		CB18F6C058AE928410DB0273 /* GlassyTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8259450C32901A4FAF470D1 /* GlassyTheme.swift */; };
+		CCDA3C23047D566A3C800811 /* Photos.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F7A5B1C41A3A5188B70042F2 /* Photos.framework */; };
+		CEE9DB30A61A3016CC94BE42 /* SettingsStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97B72739C579B73E8636AB57 /* SettingsStoreTests.swift */; };
+		D597494C98459C585D81FC8E /* AppModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0CA0295AE5AF1B40063E59F /* AppModels.swift */; };
+		D77E825C895918C408BD8A7B /* GlassesOverlayService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2587041F22AEB1C4C7978BD /* GlassesOverlayService.swift */; };
+		DACCDDBC2DC25F076B409422 /* ARKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 94452E549370531E1C6B73B5 /* ARKit.framework */; };
+		DE17AFB9801217F3C3FB2A3E /* GlassyRecordUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0812929F4F54F04B77ED2309 /* GlassyRecordUITests.swift */; };
+		E0C47269F504444BF5056BB2 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1BB6B82A0832DAF8928AD637 /* Metal.framework */; };
+		E9A045E2F5510509EF8565FE /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2C4C45C7A2DBE80E48490FF /* AVFoundation.framework */; };
+		F4F046E04238E26FA358BFC4 /* EditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B563952FF986F44428A582 /* EditorView.swift */; };
+		FAD3456328266F3426C3CF38 /* SimulatorFaceCamPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = A65D1DC8C2C77683BD61F0AE /* SimulatorFaceCamPreview.swift */; };
+		FF4151A15FFAA79FB915DA74 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F2AAFE44A385E934FF6AD43 /* MetalKit.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		26865D8C842124B0ADAE7111 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 18ECFB6550180C90D03B3E2D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 37A8FC07AE371F20BFEF09B3;
+			remoteInfo = GlassyRecord;
+		};
+		93E66790CAF7E6B274B8F104 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 18ECFB6550180C90D03B3E2D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 37A8FC07AE371F20BFEF09B3;
+			remoteInfo = GlassyRecord;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		03D3B81FA1DBFB5C823D601D /* ScreenRecorderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenRecorderService.swift; sourceTree = "<group>"; };
+		046FA003957AEF0948F9CBF2 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		04A0A9EEC7EA9AF32E27636E /* GlassesOverlayServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassesOverlayServiceTests.swift; sourceTree = "<group>"; };
+		0812929F4F54F04B77ED2309 /* GlassyRecordUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassyRecordUITests.swift; sourceTree = "<group>"; };
+		10F7422C59BECD1F5285CC02 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		136DED63C26E570333DAAAD7 /* ExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportService.swift; sourceTree = "<group>"; };
+		1BB6B82A0832DAF8928AD637 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
+		23695972DE2E5EDCE9B21DDB /* RecordingControlPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingControlPanel.swift; sourceTree = "<group>"; };
+		2E5F5CE54715F372DBEA388D /* RecordingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingViewModel.swift; sourceTree = "<group>"; };
+		323B0B4914C6084357520A8D /* GlassyRecordTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = GlassyRecordTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		3960AF5A07DD9DF05A5E71FE /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
+		53BA6576A22907866A43A0A3 /* CameraService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraService.swift; sourceTree = "<group>"; };
+		5624C9016DF7B1B2AB6BAF18 /* RenderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenderService.swift; sourceTree = "<group>"; };
+		5C7DC9080B2FA08697B47D6B /* GlassyRecordApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassyRecordApp.swift; sourceTree = "<group>"; };
+		681BD2B173991E4C9D3ACC5E /* AppCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCoordinator.swift; sourceTree = "<group>"; };
+		69D40CD04597AF2379C79D97 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		6D4C5E04716960CA2770082E /* SimulatorSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimulatorSupport.swift; sourceTree = "<group>"; };
+		7315BE8BDACA80507B69D09B /* RecordingOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingOverlayView.swift; sourceTree = "<group>"; };
+		8E6742E1AF10D86EEF0813B5 /* ReplayKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ReplayKit.framework; path = System/Library/Frameworks/ReplayKit.framework; sourceTree = SDKROOT; };
+		94452E549370531E1C6B73B5 /* ARKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ARKit.framework; path = System/Library/Frameworks/ARKit.framework; sourceTree = SDKROOT; };
+		97B72739C579B73E8636AB57 /* SettingsStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStoreTests.swift; sourceTree = "<group>"; };
+		9D6511CFDFE92E63F5CD0935 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		9F2AAFE44A385E934FF6AD43 /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
+		A0CA0295AE5AF1B40063E59F /* AppModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModels.swift; sourceTree = "<group>"; };
+		A650576ED14DDB7FFA55F0A1 /* GlassyRecord.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GlassyRecord.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A65D1DC8C2C77683BD61F0AE /* SimulatorFaceCamPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimulatorFaceCamPreview.swift; sourceTree = "<group>"; };
+		AA5555C9D5798F58015CCF0F /* MockRecordingWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockRecordingWriter.swift; sourceTree = "<group>"; };
+		AAA585C2382ABFC53C259C81 /* AudioService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioService.swift; sourceTree = "<group>"; };
+		ACBEC9967909386252E6D88A /* Vision.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Vision.framework; path = System/Library/Frameworks/Vision.framework; sourceTree = SDKROOT; };
+		AF168E2AB4E05873579A0657 /* SceneKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SceneKit.framework; path = System/Library/Frameworks/SceneKit.framework; sourceTree = SDKROOT; };
+		B57D952722AB5215A74401AF /* MockCameraFeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockCameraFeed.swift; sourceTree = "<group>"; };
+		B8259450C32901A4FAF470D1 /* GlassyTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassyTheme.swift; sourceTree = "<group>"; };
+		BBE3869563B324D154A98341 /* ModelIO.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ModelIO.framework; path = System/Library/Frameworks/ModelIO.framework; sourceTree = SDKROOT; };
+		BDD2FD2CB2F0EBDF831062B9 /* PencilKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PencilKit.framework; path = System/Library/Frameworks/PencilKit.framework; sourceTree = SDKROOT; };
+		C2B563952FF986F44428A582 /* EditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorView.swift; sourceTree = "<group>"; };
+		C2C4C45C7A2DBE80E48490FF /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		CBED1809A878013EB9CCD62D /* GlassyRecordUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = GlassyRecordUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D2587041F22AEB1C4C7978BD /* GlassesOverlayService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassesOverlayService.swift; sourceTree = "<group>"; };
+		DD931DB28865D6F738F8926D /* GlassesSelectionCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassesSelectionCard.swift; sourceTree = "<group>"; };
+		E14261FC021668744BC15F85 /* GlassyRecord.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GlassyRecord.entitlements; sourceTree = "<group>"; };
+		E5347329ADA3E098E824D87F /* AppModelsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModelsTests.swift; sourceTree = "<group>"; };
+		F7A5B1C41A3A5188B70042F2 /* Photos.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Photos.framework; path = System/Library/Frameworks/Photos.framework; sourceTree = SDKROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		BA1D0870CD7B1A4BECD50DE3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DACCDDBC2DC25F076B409422 /* ARKit.framework in Frameworks */,
+				E9A045E2F5510509EF8565FE /* AVFoundation.framework in Frameworks */,
+				BAAADC2C260F72452087C7DA /* ReplayKit.framework in Frameworks */,
+				E0C47269F504444BF5056BB2 /* Metal.framework in Frameworks */,
+				FF4151A15FFAA79FB915DA74 /* MetalKit.framework in Frameworks */,
+				558AD8517D30483E3E042691 /* Vision.framework in Frameworks */,
+				55D9D63E3B20AC13F23ED05D /* SceneKit.framework in Frameworks */,
+				28E968BC61F07332053399FB /* ModelIO.framework in Frameworks */,
+				CCDA3C23047D566A3C800811 /* Photos.framework in Frameworks */,
+				79DA5E2008EB286C8D775636 /* PencilKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		07BE5BEF8635CE48EFE8093A /* GlassyRecordUITests */ = {
+			isa = PBXGroup;
+			children = (
+				0812929F4F54F04B77ED2309 /* GlassyRecordUITests.swift */,
+			);
+			path = GlassyRecordUITests;
+			sourceTree = "<group>";
+		};
+		0A0913C3D4C72AC33F99DDF5 /* GlassyRecordTests */ = {
+			isa = PBXGroup;
+			children = (
+				E5347329ADA3E098E824D87F /* AppModelsTests.swift */,
+				04A0A9EEC7EA9AF32E27636E /* GlassesOverlayServiceTests.swift */,
+				97B72739C579B73E8636AB57 /* SettingsStoreTests.swift */,
+			);
+			path = GlassyRecordTests;
+			sourceTree = "<group>";
+		};
+		1A63F189C6CAF4B2CC1EB2CF = {
+			isa = PBXGroup;
+			children = (
+				B690C6DFBB639B3FD558E6E7 /* GlassyRecord */,
+				0A0913C3D4C72AC33F99DDF5 /* GlassyRecordTests */,
+				07BE5BEF8635CE48EFE8093A /* GlassyRecordUITests */,
+				7EB487A563480BC254916437 /* Frameworks */,
+				AC40E15E1DD7646458C9E31C /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		4033E63D294D7404FC49FE88 /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				046FA003957AEF0948F9CBF2 /* HomeView.swift */,
+			);
+			path = Home;
+			sourceTree = "<group>";
+		};
+		44DDE749964E0FB368BF1E5E /* Theme */ = {
+			isa = PBXGroup;
+			children = (
+				B8259450C32901A4FAF470D1 /* GlassyTheme.swift */,
+			);
+			path = Theme;
+			sourceTree = "<group>";
+		};
+		4B7D22121B802D6DE53D1393 /* Editor */ = {
+			isa = PBXGroup;
+			children = (
+				C2B563952FF986F44428A582 /* EditorView.swift */,
+			);
+			path = Editor;
+			sourceTree = "<group>";
+		};
+		565B06C31482A564861052B0 /* Persistence */ = {
+			isa = PBXGroup;
+			children = (
+				3960AF5A07DD9DF05A5E71FE /* PersistenceController.swift */,
+			);
+			path = Persistence;
+			sourceTree = "<group>";
+		};
+		5FE17E5A56BB1B39044F2772 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				681BD2B173991E4C9D3ACC5E /* AppCoordinator.swift */,
+				5C7DC9080B2FA08697B47D6B /* GlassyRecordApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		62F38D413AC24C4619531EC0 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				AAA585C2382ABFC53C259C81 /* AudioService.swift */,
+				53BA6576A22907866A43A0A3 /* CameraService.swift */,
+				136DED63C26E570333DAAAD7 /* ExportService.swift */,
+				D2587041F22AEB1C4C7978BD /* GlassesOverlayService.swift */,
+				B57D952722AB5215A74401AF /* MockCameraFeed.swift */,
+				AA5555C9D5798F58015CCF0F /* MockRecordingWriter.swift */,
+				5624C9016DF7B1B2AB6BAF18 /* RenderService.swift */,
+				03D3B81FA1DBFB5C823D601D /* ScreenRecorderService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		7EB487A563480BC254916437 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				94452E549370531E1C6B73B5 /* ARKit.framework */,
+				C2C4C45C7A2DBE80E48490FF /* AVFoundation.framework */,
+				1BB6B82A0832DAF8928AD637 /* Metal.framework */,
+				9F2AAFE44A385E934FF6AD43 /* MetalKit.framework */,
+				BBE3869563B324D154A98341 /* ModelIO.framework */,
+				BDD2FD2CB2F0EBDF831062B9 /* PencilKit.framework */,
+				F7A5B1C41A3A5188B70042F2 /* Photos.framework */,
+				8E6742E1AF10D86EEF0813B5 /* ReplayKit.framework */,
+				AF168E2AB4E05873579A0657 /* SceneKit.framework */,
+				ACBEC9967909386252E6D88A /* Vision.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		848902E18709D2EA9080BD21 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				10F7422C59BECD1F5285CC02 /* Assets.xcassets */,
+				E14261FC021668744BC15F85 /* GlassyRecord.entitlements */,
+				69D40CD04597AF2379C79D97 /* Info.plist */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		875977307CE6DCA9E2D15A15 /* Recording */ = {
+			isa = PBXGroup;
+			children = (
+				7315BE8BDACA80507B69D09B /* RecordingOverlayView.swift */,
+				2E5F5CE54715F372DBEA388D /* RecordingViewModel.swift */,
+			);
+			path = Recording;
+			sourceTree = "<group>";
+		};
+		8A4FB77752545C805A173F8E /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				6D4C5E04716960CA2770082E /* SimulatorSupport.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		A22CC1BBD0E7095105107158 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				4B7D22121B802D6DE53D1393 /* Editor */,
+				4033E63D294D7404FC49FE88 /* Home */,
+				875977307CE6DCA9E2D15A15 /* Recording */,
+				E2A52FD04AAB4775020D7D57 /* Settings */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		A64FE8C26C7C259A59BACCB4 /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				D27E84005E8A47742E4CBF5B /* Components */,
+				44DDE749964E0FB368BF1E5E /* Theme */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		A8D590F77B1D4340550F212A /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				A0CA0295AE5AF1B40063E59F /* AppModels.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		AC40E15E1DD7646458C9E31C /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A650576ED14DDB7FFA55F0A1 /* GlassyRecord.app */,
+				323B0B4914C6084357520A8D /* GlassyRecordTests.xctest */,
+				CBED1809A878013EB9CCD62D /* GlassyRecordUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		B690C6DFBB639B3FD558E6E7 /* GlassyRecord */ = {
+			isa = PBXGroup;
+			children = (
+				5FE17E5A56BB1B39044F2772 /* App */,
+				F86542D88CBFBCB9E8700030 /* Core */,
+				A22CC1BBD0E7095105107158 /* Features */,
+				848902E18709D2EA9080BD21 /* Resources */,
+				62F38D413AC24C4619531EC0 /* Services */,
+				A64FE8C26C7C259A59BACCB4 /* UI */,
+			);
+			path = GlassyRecord;
+			sourceTree = "<group>";
+		};
+		D27E84005E8A47742E4CBF5B /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				DD931DB28865D6F738F8926D /* GlassesSelectionCard.swift */,
+				23695972DE2E5EDCE9B21DDB /* RecordingControlPanel.swift */,
+				A65D1DC8C2C77683BD61F0AE /* SimulatorFaceCamPreview.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		E2A52FD04AAB4775020D7D57 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				9D6511CFDFE92E63F5CD0935 /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		F86542D88CBFBCB9E8700030 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				A8D590F77B1D4340550F212A /* Models */,
+				565B06C31482A564861052B0 /* Persistence */,
+				8A4FB77752545C805A173F8E /* Utilities */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		37A8FC07AE371F20BFEF09B3 /* GlassyRecord */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 402FFC880F3EAA0C42FE7387 /* Build configuration list for PBXNativeTarget "GlassyRecord" */;
+			buildPhases = (
+				C70DDCA4F3DE4D6837CBA7EF /* Sources */,
+				A182FACA3AD0A4AD8F41BC18 /* Resources */,
+				BA1D0870CD7B1A4BECD50DE3 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = GlassyRecord;
+			packageProductDependencies = (
+			);
+			productName = GlassyRecord;
+			productReference = A650576ED14DDB7FFA55F0A1 /* GlassyRecord.app */;
+			productType = "com.apple.product-type.application";
+		};
+		9C12B5F96814C441AB0A409A /* GlassyRecordUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8E49C3000D707FF18DF7E31C /* Build configuration list for PBXNativeTarget "GlassyRecordUITests" */;
+			buildPhases = (
+				C51ACC58A3931E67AF1D90D9 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				6B8E1BB712919FA8674F026F /* PBXTargetDependency */,
+			);
+			name = GlassyRecordUITests;
+			packageProductDependencies = (
+			);
+			productName = GlassyRecordUITests;
+			productReference = CBED1809A878013EB9CCD62D /* GlassyRecordUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		F723586E2B761B9A92BE0012 /* GlassyRecordTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 29D5B12779085D22000A20C4 /* Build configuration list for PBXNativeTarget "GlassyRecordTests" */;
+			buildPhases = (
+				2B1C416F75E50517DD8BD37F /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				02DDE1CDA1963130951B522E /* PBXTargetDependency */,
+			);
+			name = GlassyRecordTests;
+			packageProductDependencies = (
+			);
+			productName = GlassyRecordTests;
+			productReference = 323B0B4914C6084357520A8D /* GlassyRecordTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		18ECFB6550180C90D03B3E2D /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					37A8FC07AE371F20BFEF09B3 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+					9C12B5F96814C441AB0A409A = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+						TestTargetID = 37A8FC07AE371F20BFEF09B3;
+					};
+					F723586E2B761B9A92BE0012 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = FE551AAC788ED85266749BAB /* Build configuration list for PBXProject "GlassyRecord" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 1A63F189C6CAF4B2CC1EB2CF;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = AC40E15E1DD7646458C9E31C /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				37A8FC07AE371F20BFEF09B3 /* GlassyRecord */,
+				F723586E2B761B9A92BE0012 /* GlassyRecordTests */,
+				9C12B5F96814C441AB0A409A /* GlassyRecordUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A182FACA3AD0A4AD8F41BC18 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1E43E0C047FC26B43EB04DB2 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		2B1C416F75E50517DD8BD37F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5D0C9B79647879C065790A04 /* AppModelsTests.swift in Sources */,
+				8A0E8D05AF3DB0857006F11C /* GlassesOverlayServiceTests.swift in Sources */,
+				CEE9DB30A61A3016CC94BE42 /* SettingsStoreTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C51ACC58A3931E67AF1D90D9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DE17AFB9801217F3C3FB2A3E /* GlassyRecordUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C70DDCA4F3DE4D6837CBA7EF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				74288262944F6557BCDEBADC /* AppCoordinator.swift in Sources */,
+				D597494C98459C585D81FC8E /* AppModels.swift in Sources */,
+				C469B0AD12D289D82E530B3B /* AudioService.swift in Sources */,
+				0D67B172E78543DC9FEA1D24 /* CameraService.swift in Sources */,
+				F4F046E04238E26FA358BFC4 /* EditorView.swift in Sources */,
+				8DBD22E6F8B1F5ED333A2709 /* ExportService.swift in Sources */,
+				D77E825C895918C408BD8A7B /* GlassesOverlayService.swift in Sources */,
+				738CDE5196C1D6783E626010 /* GlassesSelectionCard.swift in Sources */,
+				A9376D3D2E820D7F95101C5E /* GlassyRecordApp.swift in Sources */,
+				CB18F6C058AE928410DB0273 /* GlassyTheme.swift in Sources */,
+				BCC8B874B37FEFB62E75FA3D /* HomeView.swift in Sources */,
+				1E58D8C9A6443E11EA39CCB9 /* MockCameraFeed.swift in Sources */,
+				5359F5B389A1332D0DECB1EA /* MockRecordingWriter.swift in Sources */,
+				37F72B9253B6B76427CDEB47 /* PersistenceController.swift in Sources */,
+				636E2390D54C27E8C3355362 /* RecordingControlPanel.swift in Sources */,
+				86B610C04FA5897DC545A47C /* RecordingOverlayView.swift in Sources */,
+				30FD6BF9769A32EE252DF9DC /* RecordingViewModel.swift in Sources */,
+				33812DA01B40A2D3AF764D28 /* RenderService.swift in Sources */,
+				3DB3F13B72EC285406F59D1D /* ScreenRecorderService.swift in Sources */,
+				92BC7AAFE03BAFC2C74D5613 /* SettingsView.swift in Sources */,
+				FAD3456328266F3426C3CF38 /* SimulatorFaceCamPreview.swift in Sources */,
+				255E767BF14C133F98A2AB03 /* SimulatorSupport.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		02DDE1CDA1963130951B522E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 37A8FC07AE371F20BFEF09B3 /* GlassyRecord */;
+			targetProxy = 26865D8C842124B0ADAE7111 /* PBXContainerItemProxy */;
+		};
+		6B8E1BB712919FA8674F026F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 37A8FC07AE371F20BFEF09B3 /* GlassyRecord */;
+			targetProxy = 93E66790CAF7E6B274B8F104 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		042F4F51F0138612E2A5C739 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.glassyrecord.app.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/GlassyRecord.app/GlassyRecord";
+			};
+			name = Debug;
+		};
+		165DCB23B8F10F0E55934473 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.glassyrecord.app.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/GlassyRecord.app/GlassyRecord";
+			};
+			name = Release;
+		};
+		45A4F9E846B318D670A3C837 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.glassyrecord.app.uitests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = GlassyRecord;
+			};
+			name = Debug;
+		};
+		5A9B7609E854E2BF09F07CA0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = GlassyRecord/Resources/GlassyRecord.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = GlassyRecord/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.glassyrecord.app;
+				SDKROOT = iphoneos;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		73B00F914B3446C9247B01EC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = GlassyRecord/Resources/GlassyRecord.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = GlassyRecord/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.glassyrecord.app;
+				SDKROOT = iphoneos;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		7EE6DA66AC33F2F7740D2682 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		D76787295B9A8ED4E955737E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.glassyrecord.app.uitests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = GlassyRecord;
+			};
+			name = Release;
+		};
+		DE530BDAA682C9A9056896B6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		29D5B12779085D22000A20C4 /* Build configuration list for PBXNativeTarget "GlassyRecordTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				042F4F51F0138612E2A5C739 /* Debug */,
+				165DCB23B8F10F0E55934473 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		402FFC880F3EAA0C42FE7387 /* Build configuration list for PBXNativeTarget "GlassyRecord" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5A9B7609E854E2BF09F07CA0 /* Debug */,
+				73B00F914B3446C9247B01EC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		8E49C3000D707FF18DF7E31C /* Build configuration list for PBXNativeTarget "GlassyRecordUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				45A4F9E846B318D670A3C837 /* Debug */,
+				D76787295B9A8ED4E955737E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		FE551AAC788ED85266749BAB /* Build configuration list for PBXProject "GlassyRecord" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DE530BDAA682C9A9056896B6 /* Debug */,
+				7EE6DA66AC33F2F7740D2682 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 18ECFB6550180C90D03B3E2D /* Project object */;
+}

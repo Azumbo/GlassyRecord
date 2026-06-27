@@ -1,0 +1,75 @@
+name: GlassyRecord
+options:
+  bundleIdPrefix: com.glassyrecord
+  deploymentTarget:
+    iOS: "18.0"
+  xcodeVersion: "16.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+    TARGETED_DEVICE_FAMILY: "1,2"
+    SUPPORTS_MACCATALYST: false
+targets:
+  GlassyRecord:
+    type: application
+    platform: iOS
+    sources:
+      - path: GlassyRecord
+        excludes:
+          - "**/*.md"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.glassyrecord.app
+        INFOPLIST_FILE: GlassyRecord/Resources/Info.plist
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        ENABLE_PREVIEWS: YES
+        SWIFT_STRICT_CONCURRENCY: complete
+    dependencies:
+      - sdk: ARKit.framework
+      - sdk: AVFoundation.framework
+      - sdk: ReplayKit.framework
+      - sdk: Metal.framework
+      - sdk: MetalKit.framework
+      - sdk: Vision.framework
+      - sdk: SceneKit.framework
+      - sdk: ModelIO.framework
+      - sdk: Photos.framework
+      - sdk: PencilKit.framework
+    entitlements:
+      path: GlassyRecord/Resources/GlassyRecord.entitlements
+  GlassyRecordTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - GlassyRecordTests
+    dependencies:
+      - target: GlassyRecord
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.glassyrecord.app.tests
+        GENERATE_INFOPLIST_FILE: YES
+  GlassyRecordUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - GlassyRecordUITests
+    dependencies:
+      - target: GlassyRecord
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.glassyrecord.app.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: GlassyRecord
+schemes:
+  GlassyRecord:
+    build:
+      targets:
+        GlassyRecord: all
+    test:
+      targets:
+        - GlassyRecordTests
+        - GlassyRecordUITests
