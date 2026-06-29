@@ -141,10 +141,6 @@ struct SettingsView: View {
 #Preview {
     NavigationStack {
         SettingsView()
-            .environmentObject(SettingsStore(
-                modelContext: ModelContext(PersistenceController.shared.container)
-            ))
+            .environmentObject(SettingsStore())
     }
 }
-
-import SwiftData

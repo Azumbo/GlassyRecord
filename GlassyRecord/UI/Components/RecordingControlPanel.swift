@@ -78,12 +78,12 @@ struct RecordingControlPanel: View {
         Button(action: onStop) {
             ZStack {
                 Circle()
-                    .fill(GlassyTheme.recordRed.opacity(0.25))
+                    .fill(GlassyTheme.record.opacity(0.25))
                     .frame(width: pulse ? 58 : 52, height: pulse ? 58 : 52)
                     .animation(GlassyTheme.pulse, value: pulse)
 
                 RoundedRectangle(cornerRadius: 6)
-                    .fill(GlassyTheme.recordRed)
+                    .fill(GlassyTheme.record)
                     .frame(width: 28, height: 28)
             }
         }
@@ -123,7 +123,7 @@ struct DrawingCanvasView: UIViewRepresentable {
         case .marker:
             return PKInkingTool(.marker, color: .yellow, width: 12)
         case .neon:
-            return PKInkingTool(.pen, color: UIColor(GlassyTheme.neonAccent), width: 5)
+            return PKInkingTool(.pen, color: UIColor(GlassyTheme.inkNeon), width: 5)
         }
     }
 

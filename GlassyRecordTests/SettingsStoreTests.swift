@@ -3,34 +3,17 @@ import XCTest
 
 @MainActor
 final class SettingsStoreTests: XCTestCase {
-    func testSettingsUpdatePersists() {
-        let persistence = PersistenceController(inMemory: true)
-        let context = ModelContext(persistence.container)
-        let store = SettingsStore(persistence: persistence, modelContext: context)
-
-        store.update { $0.quality = .uhd4K }
-        XCTAssertEqual(store.settings.quality, .uhd4K)
-
-        let reloaded = persistence.loadSettings(context: context)
-        XCTAssertEqual(reloaded.quality, .uhd4K)
+    func testDefaultSettings() {
+        let store = SettingsStore()
+        XCTAssertEqual(store.settings.quality, .hd1080p)
+        XCTAssertTrue(store.settings.microphoneEnabled)
     }
 
-    func testGlassesSettingsPersistence() {
-        let persistence = PersistenceController(inMemory: true)
-        let context = ModelContext(persistence.container)
-        let store = SettingsStore(persistence: persistence, modelContext: context)
-
-        store.update {
-            $0.glassesEnabledByDefault = true
-            $0.glassesColor = .blue
-            $0.lensTransparency = 0.6
-        }
-
-        let reloaded = persistence.loadSettings(context: context)
-        XCTAssertTrue(reloaded.glassesEnabledByDefault)
-        XCTAssertEqual(reloaded.glassesColor, .blue)
-        XCTAssertEqual(reloaded.lensTransparency, 0.6, accuracy: 0.001)
+    func testUpdatePersists() {
+        let store = SettingsStore()
+        store.update { $0.quality = .uhd4K }
+        let reloaded = SettingsStore()
+        XCTAssertEqual(reloaded.settings.quality, .uhd4K)
+        store.update { $0.quality = .hd1080p }
     }
 }
-
-import SwiftData

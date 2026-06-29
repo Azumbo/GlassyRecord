@@ -50,6 +50,9 @@ final class GlassesOverlayService: NSObject, ObservableObject {
 
     private let renderSize = CGSize(width: 640, height: 480)
 
+    /// Потребитель кадров для PiP (ARKit как источник камеры).
+    var frameConsumer: ((CVPixelBuffer, CMTime) -> Void)?
+
     override init() {
         isARAvailable = ARFaceTrackingConfiguration.isSupported
         useVisionFallback = !ARFaceTrackingConfiguration.isSupported
@@ -77,12 +80,6 @@ final class GlassesOverlayService: NSObject, ObservableObject {
     func startTracking() {
         guard isEnabled else { return }
 
-        if SimulatorSupport.isRunning {
-            useVisionFallback = true
-            trackingState.isTracking = true
-            return
-        }
-
         if isARAvailable {
             startARTracking()
         } else {
@@ -97,15 +94,7 @@ final class GlassesOverlayService: NSObject, ObservableObject {
 
     /// Накладывает очки на кадр с камеры. Возвращает новый pixel buffer или исходный.
     func processFrame(_ pixelBuffer: CVPixelBuffer) -> CVPixelBuffer {
-        guard isEnabled else { return pixelBuffer }
-
-        if SimulatorSupport.isRunning {
-            if !trackingState.isTracking { trackingState.isTracking = true }
-            processWithVision(pixelBuffer)
-            return renderGlassesOntoBuffer(pixelBuffer) ?? pixelBuffer
-        }
-
-        guard trackingState.isTracking else { return pixelBuffer }
+        guard isEnabled, trackingState.isTracking else { return pixelBuffer }
 
         if useVisionFallback {
             processWithVision(pixelBuffer)
@@ -184,7 +173,7 @@ final class GlassesOverlayService: NSObject, ObservableObject {
         glassesNode?.enumerateChildNodes { node, _ in
             guard let material = node.geometry?.firstMaterial,
                   material.name == "acetate" else { return }
-            if var color = material.diffuse.contents as? UIColor {
+            if let color = material.diffuse.contents as? UIColor {
                 var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
                 color.getRed(&r, green: &g, blue: &b, alpha: &a)
                 material.diffuse.contents = UIColor(
@@ -394,6 +383,15 @@ final class GlassesOverlayService: NSObject, ObservableObject {
 // MARK: - ARSessionDelegate
 
 extension GlassesOverlayService: ARSessionDelegate {
+    nonisolated func session(_ session: ARSession, didUpdate frame: ARFrame) {
+        let pixelBuffer = frame.capturedImage
+        let time = CMTime(seconds: frame.timestamp, preferredTimescale: 1_000_000_000)
+
+        Task { @MainActor [weak self] in
+            self?.frameConsumer?(pixelBuffer, time)
+        }
+    }
+
     nonisolated func session(_ session: ARSession, didUpdate anchors: [ARAnchor]) {
         guard let faceAnchor = anchors.compactMap({ $0 as? ARFaceAnchor }).first else { return }
 

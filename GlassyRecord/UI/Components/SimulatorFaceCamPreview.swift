@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Превью Face Cam для симулятора — силуэт лица и 2D-очки Monokol MK295.
+/// Превью Face Cam для симулятора — нейтральные системные тона.
 struct SimulatorFaceCamPreview: View {
     let glassesEnabled: Bool
     let glassesColor: GlassesFrameColor
@@ -8,22 +8,18 @@ struct SimulatorFaceCamPreview: View {
 
     var body: some View {
         ZStack {
-            LinearGradient(
-                colors: [.teal.opacity(0.7), .indigo.opacity(0.8)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+            GlassyTheme.fillSecondary
 
             // Силуэт лица
             Ellipse()
-                .fill(.pink.opacity(0.45))
+                .fill(GlassyTheme.fillTertiary)
                 .frame(width: 72, height: 96)
                 .offset(y: 4)
 
             // Глаза
             HStack(spacing: 22) {
-                Circle().fill(.white.opacity(0.9)).frame(width: 10, height: 10)
-                Circle().fill(.white.opacity(0.9)).frame(width: 10, height: 10)
+                Circle().fill(GlassyTheme.labelTertiary).frame(width: 10, height: 10)
+                Circle().fill(GlassyTheme.labelTertiary).frame(width: 10, height: 10)
             }
             .offset(y: -6)
 
@@ -52,7 +48,7 @@ struct SimulatorGlassesOverlay: View {
                     .frame(width: 30, height: 22)
                     .background(
                         RoundedRectangle(cornerRadius: 0)
-                            .fill(.white.opacity(0.08))
+                            .fill(GlassyTheme.fillPrimary.opacity(0.5))
                     )
 
                 RoundedRectangle(cornerRadius: 0)
@@ -60,7 +56,7 @@ struct SimulatorGlassesOverlay: View {
                     .frame(width: 30, height: 22)
                     .background(
                         RoundedRectangle(cornerRadius: 0)
-                            .fill(.white.opacity(0.08))
+                            .fill(GlassyTheme.fillPrimary.opacity(0.5))
                     )
             }
 
@@ -79,10 +75,14 @@ struct SimulatorBanner: View {
             Text(SimulatorSupport.previewNotice)
                 .font(.caption2)
         }
-        .foregroundStyle(.white)
-        .padding(.horizontal, 10)
+        .foregroundStyle(GlassyTheme.labelPrimary)
+        .padding(.horizontal, 12)
         .padding(.vertical, 6)
-        .background(.orange.opacity(0.85), in: Capsule())
+        .background(.regularMaterial, in: Capsule())
+        .overlay {
+            Capsule()
+                .strokeBorder(GlassyTheme.separator, lineWidth: 0.5)
+        }
         .padding(.top, 52)
     }
 }

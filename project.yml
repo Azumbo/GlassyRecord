@@ -2,16 +2,21 @@ name: GlassyRecord
 options:
   bundleIdPrefix: com.glassyrecord
   deploymentTarget:
-    iOS: "18.0"
-  xcodeVersion: "16.0"
+    iOS: "16.0"
+  xcodeVersion: "26.0"
   createIntermediateGroups: true
 settings:
   base:
-    SWIFT_VERSION: "6.0"
-    DEVELOPMENT_TEAM: ""
+    SWIFT_VERSION: "5.9"
+    DEVELOPMENT_TEAM: YSSY28XABK
     CODE_SIGN_STYLE: Automatic
     TARGETED_DEVICE_FAMILY: "1,2"
     SUPPORTS_MACCATALYST: false
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    STRING_CATALOG_GENERATE_SYMBOLS: YES
+    ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS: NO
 targets:
   GlassyRecord:
     type: application
@@ -20,6 +25,9 @@ targets:
       - path: GlassyRecord
         excludes:
           - "**/*.md"
+          - "Core/Persistence/PersistenceController.swift"
+          - "Services/VideoComposer.swift"
+      - path: Shared
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.glassyrecord.app
@@ -27,8 +35,8 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         ENABLE_PREVIEWS: YES
-        SWIFT_STRICT_CONCURRENCY: complete
     dependencies:
+      - target: GlassyRecordBroadcastUpload
       - sdk: ARKit.framework
       - sdk: AVFoundation.framework
       - sdk: ReplayKit.framework
@@ -36,11 +44,42 @@ targets:
       - sdk: MetalKit.framework
       - sdk: Vision.framework
       - sdk: SceneKit.framework
-      - sdk: ModelIO.framework
       - sdk: Photos.framework
       - sdk: PencilKit.framework
+      - sdk: AVKit.framework
+    attributes:
+      ProvisioningStyle: Automatic
+      SystemCapabilities:
+        com.apple.ApplicationGroups.iOS:
+          enabled: 1
     entitlements:
       path: GlassyRecord/Resources/GlassyRecord.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.glassyrecord.shared
+  GlassyRecordBroadcastUpload:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: GlassyRecordBroadcastUpload
+      - path: Shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.glassyrecord.app.broadcast
+        INFOPLIST_FILE: GlassyRecordBroadcastUpload/Info.plist
+    dependencies:
+      - sdk: ReplayKit.framework
+      - sdk: AVFoundation.framework
+    attributes:
+      ProvisioningStyle: Automatic
+      SystemCapabilities:
+        com.apple.ApplicationGroups.iOS:
+          enabled: 1
+    entitlements:
+      path: GlassyRecordBroadcastUpload/GlassyRecordBroadcastUpload.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.glassyrecord.shared
   GlassyRecordTests:
     type: bundle.unit-test
     platform: iOS
@@ -69,7 +108,13 @@ schemes:
     build:
       targets:
         GlassyRecord: all
+        GlassyRecordBroadcastUpload: all
+    run:
+      environmentVariables:
+        OS_ACTIVITY_MODE: disable
     test:
       targets:
         - GlassyRecordTests
         - GlassyRecordUITests
+      environmentVariables:
+        OS_ACTIVITY_MODE: disable

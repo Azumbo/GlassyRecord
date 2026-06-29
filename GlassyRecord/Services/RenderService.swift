@@ -161,8 +161,6 @@ actor RenderService {
 
         let destX = Int(frame.origin.x * CGFloat(output.width))
         let destY = Int(frame.origin.y * CGFloat(output.height))
-        let destW = Int(frame.width * CGFloat(output.width))
-        let destH = Int(frame.height * CGFloat(output.height))
 
         blit.copy(
             from: faceTexture,

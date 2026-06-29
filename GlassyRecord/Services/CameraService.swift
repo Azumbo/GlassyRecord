@@ -1,7 +1,72 @@
-import AVFoundation
+@preconcurrency import AVFoundation
 import Combine
 import SwiftUI
 import UIKit
+
+/// Контекст захвата для работы на `sessionQueue` (вне MainActor).
+private struct CameraSessionContext: @unchecked Sendable {
+    let session: AVCaptureSession
+    let videoOutput: AVCaptureVideoDataOutput
+}
+
+/// Конфигурация AVCaptureSession — только на sessionQueue.
+private enum CameraSessionConfigurator {
+    static func setup(
+        context: CameraSessionContext,
+        delegate: AVCaptureVideoDataOutputSampleBufferDelegate,
+        queue: DispatchQueue,
+        quality: RecordingQuality,
+        mirrored: Bool
+    ) throws {
+        let session = context.session
+        let videoOutput = context.videoOutput
+
+        session.beginConfiguration()
+        defer { session.commitConfiguration() }
+
+        session.inputs.forEach { session.removeInput($0) }
+        session.outputs.forEach { session.removeOutput($0) }
+        session.sessionPreset = .hd1280x720
+
+        guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front) else {
+            throw GlassyRecordError.cameraUnavailable
+        }
+
+        let input = try AVCaptureDeviceInput(device: device)
+        guard session.canAddInput(input) else { throw GlassyRecordError.cameraUnavailable }
+        session.addInput(input)
+
+        videoOutput.videoSettings = [
+            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
+        ]
+        videoOutput.alwaysDiscardsLateVideoFrames = true
+        videoOutput.setSampleBufferDelegate(delegate, queue: queue)
+
+        guard session.canAddOutput(videoOutput) else { throw GlassyRecordError.cameraUnavailable }
+        session.addOutput(videoOutput)
+
+        if let connection = videoOutput.connection(with: .video) {
+            connection.isVideoMirrored = mirrored
+            CaptureConnectionSupport.applyPortrait(to: connection)
+        }
+
+        try configureFrameRate(device: device, fps: min(quality.preferredFPS, 30))
+    }
+
+    private static func configureFrameRate(device: AVCaptureDevice, fps: Int) throws {
+        try device.lockForConfiguration()
+        defer { device.unlockForConfiguration() }
+
+        let target = Double(fps)
+        if let range = device.activeFormat.videoSupportedFrameRateRanges.first(where: {
+            $0.maxFrameRate >= target
+        }) {
+            let clamped = min(target, range.maxFrameRate)
+            device.activeVideoMinFrameDuration = CMTime(value: 1, timescale: CMTimeScale(clamped))
+            device.activeVideoMaxFrameDuration = CMTime(value: 1, timescale: CMTimeScale(clamped))
+        }
+    }
+}
 
 /// Захват видео с фронтальной камеры через AVFoundation.
 /// На симуляторе автоматически переключается на `MockCameraFeed`.
@@ -12,15 +77,11 @@ final class CameraService: NSObject, ObservableObject {
     @Published private(set) var latestPixelBuffer: CVPixelBuffer?
     @Published var error: GlassyRecordError?
 
-    let session = AVCaptureSession()
-    private let videoOutput = AVCaptureVideoDataOutput()
-    private let sessionQueue = DispatchQueue(label: "com.glassyrecord.camera", qos: .userInitiated)
+    nonisolated(unsafe) let session = AVCaptureSession()
+    nonisolated(unsafe) private let videoOutput = AVCaptureVideoDataOutput()
+    nonisolated private let sessionQueue = DispatchQueue(label: "com.glassyrecord.camera", qos: .userInitiated)
     private var continuationBuffer: ((CVPixelBuffer) -> Void)?
     private let mockFeed = MockCameraFeed()
-
-    override init() {
-        super.init()
-    }
 
     func configure(quality: RecordingQuality, mirrored: Bool) async throws {
         if SimulatorSupport.isRunning {
@@ -32,19 +93,34 @@ final class CameraService: NSObject, ObservableObject {
             throw GlassyRecordError.permissionDenied("камере")
         }
 
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            sessionQueue.async { [weak self] in
-                guard let self else {
-                    continuation.resume()
-                    return
-                }
-                do {
-                    try self.setupSession(quality: quality, mirrored: mirrored)
-                    continuation.resume()
-                } catch {
-                    continuation.resume(throwing: error)
+        let ctx = CameraSessionContext(session: session, videoOutput: videoOutput)
+        let queue = sessionQueue
+
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            group.addTask {
+                try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                    queue.async {
+                        do {
+                            try CameraSessionConfigurator.setup(
+                                context: ctx,
+                                delegate: self,
+                                queue: queue,
+                                quality: quality,
+                                mirrored: mirrored
+                            )
+                            continuation.resume()
+                        } catch {
+                            continuation.resume(throwing: error)
+                        }
+                    }
                 }
             }
+            group.addTask {
+                try await Task.sleep(for: .seconds(10))
+                throw GlassyRecordError.cameraUnavailable
+            }
+            try await group.next()
+            group.cancelAll()
         }
     }
 
@@ -60,10 +136,11 @@ final class CameraService: NSObject, ObservableObject {
             return
         }
 
-        sessionQueue.async { [weak self] in
-            guard let self, !self.session.isRunning else { return }
-            self.session.startRunning()
-            Task { @MainActor in self.isRunning = true }
+        let ctx = CameraSessionContext(session: session, videoOutput: videoOutput)
+        sessionQueue.async {
+            guard !ctx.session.isRunning else { return }
+            ctx.session.startRunning()
+            Task { @MainActor [weak self] in self?.isRunning = true }
         }
     }
 
@@ -75,68 +152,19 @@ final class CameraService: NSObject, ObservableObject {
             return
         }
 
-        sessionQueue.async { [weak self] in
-            guard let self, self.session.isRunning else { return }
-            self.session.stopRunning()
-            Task { @MainActor in
-                self.isRunning = false
-                self.latestPixelBuffer = nil
+        let ctx = CameraSessionContext(session: session, videoOutput: videoOutput)
+        sessionQueue.async {
+            guard ctx.session.isRunning else { return }
+            ctx.session.stopRunning()
+            Task { @MainActor [weak self] in
+                self?.isRunning = false
+                self?.latestPixelBuffer = nil
             }
         }
     }
 
     func onFrame(_ handler: @escaping (CVPixelBuffer) -> Void) {
         continuationBuffer = handler
-    }
-
-    private func setupSession(quality: RecordingQuality, mirrored: Bool) throws {
-        session.beginConfiguration()
-        defer { session.commitConfiguration() }
-
-        session.inputs.forEach { session.removeInput($0) }
-        session.outputs.forEach { session.removeOutput($0) }
-
-        session.sessionPreset = quality == .uhd4K ? .hd4K3840x2160 : .hd1920x1080
-
-        guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front) else {
-            throw GlassyRecordError.cameraUnavailable
-        }
-
-        let input = try AVCaptureDeviceInput(device: device)
-        guard session.canAddInput(input) else { throw GlassyRecordError.cameraUnavailable }
-        session.addInput(input)
-
-        videoOutput.videoSettings = [
-            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
-        ]
-        videoOutput.alwaysDiscardsLateVideoFrames = true
-        videoOutput.setSampleBufferDelegate(self, queue: sessionQueue)
-
-        guard session.canAddOutput(videoOutput) else { throw GlassyRecordError.cameraUnavailable }
-        session.addOutput(videoOutput)
-
-        if let connection = videoOutput.connection(with: .video) {
-            connection.isVideoMirrored = mirrored
-            if connection.isVideoRotationAngleSupported(90) {
-                connection.videoRotationAngle = 90
-            }
-        }
-
-        try configureFrameRate(device: device, fps: quality.preferredFPS)
-    }
-
-    private func configureFrameRate(device: AVCaptureDevice, fps: Int) throws {
-        try device.lockForConfiguration()
-        defer { device.unlockForConfiguration() }
-
-        let target = Double(min(fps, 120))
-        if let range = device.activeFormat.videoSupportedFrameRateRanges.first(where: {
-            $0.maxFrameRate >= target
-        }) {
-            let clamped = min(target, range.maxFrameRate)
-            device.activeVideoMinFrameDuration = CMTime(value: 1, timescale: CMTimeScale(clamped))
-            device.activeVideoMaxFrameDuration = CMTime(value: 1, timescale: CMTimeScale(clamped))
-        }
     }
 
     private func requestCameraPermission() async -> Bool {
@@ -165,12 +193,10 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
     }
 }
 
-/// CVPixelBuffer не Sendable в Swift 6; обёртка для передачи между потоками захвата и UI.
 private struct UncheckedSendablePixelBuffer: @unchecked Sendable {
     let value: CVPixelBuffer
 }
 
-/// UIViewRepresentable для превью камеры.
 struct CameraPreviewView: UIViewRepresentable {
     let session: AVCaptureSession
 

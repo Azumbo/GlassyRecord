@@ -2,10 +2,9 @@ import SwiftUI
 
 /// Карточка выбора очков Monokol MK295 на главном экране.
 struct GlassesSelectionCard: View {
-    let isEnabled: Bool
+    @Binding var isEnabled: Bool
     let selectedColor: GlassesFrameColor
     let lensTransparency: Float
-    let onToggle: (Bool) -> Void
     let onColorChange: (GlassesFrameColor) -> Void
 
     var body: some View {
@@ -14,7 +13,7 @@ struct GlassesSelectionCard: View {
                 Label("Очки Monokol MK295", systemImage: "eyeglasses")
                     .font(.headline)
                 Spacer()
-                Toggle("", isOn: Binding(get: { isEnabled }, set: onToggle))
+                Toggle("", isOn: $isEnabled)
                     .labelsHidden()
             }
 
@@ -32,7 +31,7 @@ struct GlassesSelectionCard: View {
 
             Text("Кубическая оправа из глянцевого ацетата c40")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(GlassyTheme.labelSecondary)
         }
         .padding(16)
         .liquidGlass()
@@ -51,7 +50,7 @@ struct GlassesPreviewTile: View {
             VStack(spacing: 8) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(Color(.secondarySystemFill))
+                        .fill(GlassyTheme.fillSecondary)
                         .frame(height: 64)
 
                     GlassesIconShape()
@@ -59,12 +58,12 @@ struct GlassesPreviewTile: View {
                         .frame(width: 56, height: 28)
 
                     GlassesIconShape()
-                        .fill(.white.opacity(Double(lensTransparency) * 0.15))
+                        .fill(GlassyTheme.fillPrimary.opacity(0.6))
                         .frame(width: 48, height: 20)
                 }
                 .overlay {
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .stroke(isSelected ? Color.accentColor : .clear, lineWidth: 2)
+                        .stroke(isSelected ? GlassyTheme.tint : .clear, lineWidth: 2)
                 }
 
                 Text(color == .red ? "Красный" : "Синий")

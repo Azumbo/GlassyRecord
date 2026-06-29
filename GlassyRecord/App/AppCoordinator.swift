@@ -39,26 +39,19 @@ final class AppCoordinator: ObservableObject {
     }
 }
 
-/// Реактивное хранилище настроек с Combine.
+/// Реактивное хранилище настроек.
 @MainActor
 final class SettingsStore: ObservableObject {
     @Published var settings: AppSettings
 
-    private let persistence: PersistenceController
-    private let modelContext: ModelContext
-
-  init(persistence: PersistenceController = .shared, modelContext: ModelContext) {
-        self.persistence = persistence
-        self.modelContext = modelContext
-        self.settings = persistence.loadSettings(context: modelContext)
+    init() {
+        self.settings = SettingsUserDefaults.load()
     }
 
     func update(_ transform: (inout AppSettings) -> Void) {
         var copy = settings
         transform(&copy)
         settings = copy
-        persistence.saveSettings(copy, context: modelContext)
+        SettingsUserDefaults.save(copy)
     }
 }
-
-import SwiftData

@@ -35,25 +35,17 @@ struct HomeView: View {
     }
 
     private var background: some View {
-        LinearGradient(
-            colors: [
-                Color(.systemBackground),
-                Color.accentColor.opacity(0.08)
-            ],
-            startPoint: .top,
-            endPoint: .bottom
-        )
-        .ignoresSafeArea()
-        .background(.ultraThinMaterial)
+        GlassyTheme.backgroundGrouped
+            .ignoresSafeArea()
     }
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Запись экрана + Face Cam")
+            Text("Запись всего экрана iPhone + Face Cam")
                 .font(.title2.weight(.semibold))
-            Text("С наложением очков Monokol MK295 в реальном времени")
+            Text("Записывает экран, включая другие приложения (Duolingo и т.д.), с селфи и звуком. На iPhone — системная запись; в симуляторе — демо.")
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(GlassyTheme.labelSecondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -65,19 +57,19 @@ struct HomeView: View {
         } label: {
             ZStack {
                 Circle()
-                    .fill(GlassyTheme.recordRed.opacity(0.2))
+                    .fill(GlassyTheme.record.opacity(0.15))
                     .frame(width: pulse ? 120 : 100, height: pulse ? 120 : 100)
                     .animation(GlassyTheme.pulse, value: pulse)
 
                 Circle()
-                    .fill(GlassyTheme.recordRed)
+                    .fill(GlassyTheme.record)
                     .frame(width: 88, height: 88)
                     .overlay {
                         Image(systemName: "record.circle")
                             .font(.system(size: 36, weight: .semibold))
                             .foregroundStyle(.white)
                     }
-                    .shadow(color: GlassyTheme.recordRed.opacity(0.5), radius: 16, y: 6)
+                    .shadow(color: GlassyTheme.record.opacity(0.25), radius: 8, y: 4)
             }
             .frame(height: 140)
         }
@@ -129,14 +121,16 @@ struct HomeView: View {
 
     private var glassesCard: some View {
         GlassesSelectionCard(
-            isEnabled: settingsStore.settings.glassesEnabledByDefault,
+            isEnabled: Binding(
+                get: { settingsStore.settings.glassesEnabledByDefault },
+                set: { enabled in settingsStore.update { $0.glassesEnabledByDefault = enabled } }
+            ),
             selectedColor: settingsStore.settings.glassesColor,
-            lensTransparency: settingsStore.settings.lensTransparency
-        ) { enabled in
-            settingsStore.update { $0.glassesEnabledByDefault = enabled }
-        } onColorChange: { color in
-            settingsStore.update { $0.glassesColor = color }
-        }
+            lensTransparency: settingsStore.settings.lensTransparency,
+            onColorChange: { color in
+                settingsStore.update { $0.glassesColor = color }
+            }
+        )
     }
 }
 
@@ -146,16 +140,8 @@ struct QualityChip: View {
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
-            Text(title)
-                .font(.subheadline.weight(.semibold))
-                .padding(.horizontal, 16)
-                .padding(.vertical, 10)
-                .background(isSelected ? Color.accentColor : Color(.secondarySystemFill))
-                .foregroundStyle(isSelected ? .white : .primary)
-                .clipShape(Capsule())
-        }
-        .buttonStyle(.plain)
+        Button(title, action: action)
+            .buttonStyle(SelectableCapsuleStyle(isSelected: isSelected))
     }
 }
 
@@ -168,26 +154,15 @@ struct ToggleChip: View {
     var body: some View {
         Button(action: action) {
             Label(title, systemImage: systemImage)
-                .font(.subheadline.weight(.medium))
-                .padding(.horizontal, 14)
-                .padding(.vertical, 10)
-                .background(isOn ? Color.accentColor.opacity(0.2) : Color(.secondarySystemFill))
-                .clipShape(Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(SelectableCapsuleStyle(isSelected: isOn))
     }
 }
 
 #Preview {
     NavigationStack {
         HomeView()
-            .environmentObject(AppCoordinator(settingsStore: SettingsStore(
-                modelContext: ModelContext(PersistenceController.shared.container)
-            )))
-            .environmentObject(SettingsStore(
-                modelContext: ModelContext(PersistenceController.shared.container)
-            ))
+            .environmentObject(AppCoordinator(settingsStore: SettingsStore()))
+            .environmentObject(SettingsStore())
     }
 }
-
-import SwiftData

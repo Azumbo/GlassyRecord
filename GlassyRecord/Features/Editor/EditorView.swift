@@ -44,16 +44,13 @@ final class EditorViewModel: ObservableObject {
             let end = CMTime(seconds: trimEnd, preferredTimescale: 600)
             let range = CMTimeRange(start: start, end: end)
 
-            guard let renderService = RenderService() else {
-                errorMessage = GlassyRecordError.exportFailed("Metal недоступен").localizedDescription
-                return
-            }
+            let renderService = RenderService()
             let exported = try await exportService.export(
                 asset: asset,
                 codec: exportCodec,
                 trimRange: range,
                 filter: selectedFilter,
-                renderService: renderService
+                renderService: renderService ?? RenderService()!
             )
             try await exportService.saveToPhotoLibrary(url: exported)
         } catch {
@@ -96,7 +93,7 @@ struct EditorView: View {
             if let player = viewModel.player {
                 VideoPlayer(player: player)
             } else {
-                ContentUnavailableView("Нет видео", systemImage: "film")
+                PlaceholderStateView(title: "Нет видео", systemImage: "film")
             }
         }
         .frame(maxHeight: .infinity)
@@ -179,10 +176,10 @@ struct EditorView: View {
     }
 
     private var textControls: some View {
-        ContentUnavailableView(
-            "Текст и фигуры",
+        PlaceholderStateView(
+            title: "Текст и фигуры",
             systemImage: "text.badge.plus",
-            description: Text("Добавьте подписи в следующем обновлении")
+            subtitle: "Добавьте подписи в следующем обновлении"
         )
         .frame(height: 120)
     }
