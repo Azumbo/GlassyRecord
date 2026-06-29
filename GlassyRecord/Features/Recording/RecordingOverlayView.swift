@@ -129,18 +129,7 @@ struct RecordingOverlayContent: View {
                     .foregroundStyle(GlassyTheme.labelSecondary)
                     .multilineTextAlignment(.center)
 
-                Button {
-                    viewModel.startBroadcast()
-                } label: {
-                    Label("Начать запись экрана", systemImage: "record.circle")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(GlassyTheme.record)
-
-                Text("В списке выберите Glassy Record → «Начать трансляцию». Разрешите запись экрана и микрофон.")
+                Text("Нажмите кнопку ниже и подтвердите запись экрана и микрофон в системном диалоге iOS.")
                     .font(.caption)
                     .foregroundStyle(GlassyTheme.labelSecondary)
                     .multilineTextAlignment(.center)
@@ -151,10 +140,6 @@ struct RecordingOverlayContent: View {
                 )
                 .frame(height: 44)
                 .padding(.horizontal, 8)
-
-                Text("Или используйте системную кнопку ReplayKit.")
-                    .font(.caption2)
-                    .foregroundStyle(GlassyTheme.labelSecondary)
 
                 if !AppGroup.isConfigured {
                     Text(AppGroup.diagnosticMessage)
@@ -217,7 +202,6 @@ struct RecordingOverlayContent: View {
                     Button("Повторить") {
                         viewModel.setupPhase = .idle
                         viewModel.prepareBroadcastConfig()
-                        viewModel.startBroadcast()
                     }
                     .buttonStyle(.borderedProminent)
                 }

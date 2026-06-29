@@ -81,12 +81,19 @@ final class RecordingViewModel: ObservableObject {
         NotificationCenter.default.publisher(for: UIScreen.capturedDidChangeNotification)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
-                guard let self, UIScreen.main.isCaptured else { return }
-                if self.setupPhase.isFailed {
-                    self.setupPhase = .idle
-                }
-                if !self.isRecording {
-                    Task { await self.beginActiveBroadcastSession() }
+                guard let self else { return }
+                if UIScreen.main.isCaptured {
+                    if self.setupPhase.isFailed {
+                        self.setupPhase = .idle
+                    }
+                    if !self.isRecording {
+                        if let controller = ActiveBroadcastController.current() {
+                            self.broadcastService.setActiveController(controller)
+                        }
+                        Task { await self.beginActiveBroadcastSession() }
+                    }
+                } else if self.isRecording {
+                    self.refreshBroadcastState()
                 }
             }
             .store(in: &cancellables)
@@ -132,42 +139,6 @@ final class RecordingViewModel: ObservableObject {
         guard AppGroup.isConfigured else { return }
         BroadcastConfigStore.saveConfig(makeBroadcastConfig())
         RPScreenRecorder.shared().isMicrophoneEnabled = settings.microphoneEnabled
-    }
-
-    func startBroadcast() {
-        guard usesBroadcastMode else { return }
-        guard setupPhase == .idle || setupPhase.isFailed else { return }
-
-        guard AppGroup.isConfigured else {
-            fail(with: AppGroup.diagnosticMessage)
-            return
-        }
-
-        prepareBroadcastConfig()
-
-        BroadcastPickerPresenter.present(
-            configProvider: { [self] in makeBroadcastConfig() },
-            onStarted: { [weak self] controller in
-                Task { await self?.handleBroadcastStarted(controller: controller) }
-            },
-            onCancelled: { [weak self] message in
-                guard let self else { return }
-                if UIScreen.main.isCaptured || BroadcastConfigStore.state == .recording {
-                    Task { await self.beginActiveBroadcastSession() }
-                    return
-                }
-                if let message, !message.isEmpty {
-                    self.fail(with: message)
-                } else if self.setupPhase != .recording {
-                    self.setupPhase = .idle
-                }
-            }
-        )
-    }
-
-    private func handleBroadcastStarted(controller: RPBroadcastController) async {
-        broadcastService.setActiveController(controller)
-        await beginActiveBroadcastSession()
     }
 
     private func beginActiveBroadcastSession() async {

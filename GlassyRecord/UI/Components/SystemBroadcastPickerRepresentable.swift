@@ -2,7 +2,7 @@ import ReplayKit
 import SwiftUI
 import UIKit
 
-/// Нативная кнопка ReplayKit — iOS сам показывает окно трансляции (надёжнее кастомного picker).
+/// Нативная кнопка ReplayKit — сразу запускает наш Broadcast Extension без списка приложений.
 struct SystemBroadcastPickerRepresentable: UIViewRepresentable {
     var showsMicrophoneButton: Bool
     var onPrepare: () -> Void

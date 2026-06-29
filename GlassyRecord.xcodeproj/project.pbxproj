@@ -39,7 +39,6 @@
 		74288262944F6557BCDEBADC /* AppCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 681BD2B173991E4C9D3ACC5E /* AppCoordinator.swift */; };
 		76C1A5C13D904DE5590E6CEE /* BroadcastConfig+App.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EA17FC413A53F98D9130E62 /* BroadcastConfig+App.swift */; };
 		79DA5E2008EB286C8D775636 /* PencilKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BDD2FD2CB2F0EBDF831062B9 /* PencilKit.framework */; };
-		7A696CCCA8EA478DBFCC184A /* BroadcastPickerHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7E489FD4D631AC96A768333 /* BroadcastPickerHost.swift */; };
 		7FECA9844022DF40E346A28C /* SettingsUserDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788F5BC4419037711452B4BA /* SettingsUserDefaults.swift */; };
 		86B610C04FA5897DC545A47C /* RecordingOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7315BE8BDACA80507B69D09B /* RecordingOverlayView.swift */; };
 		8A0E8D05AF3DB0857006F11C /* GlassesOverlayServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04A0A9EEC7EA9AF32E27636E /* GlassesOverlayServiceTests.swift */; };
@@ -149,10 +148,9 @@
 		9D6511CFDFE92E63F5CD0935 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		9F2AAFE44A385E934FF6AD43 /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
 		A0CA0295AE5AF1B40063E59F /* AppModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModels.swift; sourceTree = "<group>"; };
-		A650576ED14DDB7FFA55F0A1 /* GlassyRecord.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GlassyRecord.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A650576ED14DDB7FFA55F0A1 /* GlassyRecord.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GlassyRecord.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A65D1DC8C2C77683BD61F0AE /* SimulatorFaceCamPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimulatorFaceCamPreview.swift; sourceTree = "<group>"; };
 		A6DA46E1E8402AB34783518A /* ActiveBroadcastController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveBroadcastController.swift; sourceTree = "<group>"; };
-		A7E489FD4D631AC96A768333 /* BroadcastPickerHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BroadcastPickerHost.swift; sourceTree = "<group>"; };
 		AA5555C9D5798F58015CCF0F /* MockRecordingWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockRecordingWriter.swift; sourceTree = "<group>"; };
 		AAA585C2382ABFC53C259C81 /* AudioService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioService.swift; sourceTree = "<group>"; };
 		ACBEC9967909386252E6D88A /* Vision.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Vision.framework; path = System/Library/Frameworks/Vision.framework; sourceTree = SDKROOT; };
@@ -160,7 +158,7 @@
 		AF168E2AB4E05873579A0657 /* SceneKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SceneKit.framework; path = System/Library/Frameworks/SceneKit.framework; sourceTree = SDKROOT; };
 		B350EA4E988F1F8736FCF212 /* AppGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroup.swift; sourceTree = "<group>"; };
 		B57D952722AB5215A74401AF /* MockCameraFeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockCameraFeed.swift; sourceTree = "<group>"; };
-		B72ADBBE3EC29702D46B59C7 /* GlassyRecordBroadcastUpload.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = GlassyRecordBroadcastUpload.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		B72ADBBE3EC29702D46B59C7 /* GlassyRecordBroadcastUpload.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = GlassyRecordBroadcastUpload.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		B8259450C32901A4FAF470D1 /* GlassyTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassyTheme.swift; sourceTree = "<group>"; };
 		BDD2FD2CB2F0EBDF831062B9 /* PencilKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PencilKit.framework; path = System/Library/Frameworks/PencilKit.framework; sourceTree = SDKROOT; };
 		C2B563952FF986F44428A582 /* EditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorView.swift; sourceTree = "<group>"; };
@@ -423,7 +421,6 @@
 			isa = PBXGroup;
 			children = (
 				AD9D76AC1B2F5CBFB80E0EC2 /* ARFaceCamPreviewView.swift */,
-				A7E489FD4D631AC96A768333 /* BroadcastPickerHost.swift */,
 				DD931DB28865D6F738F8926D /* GlassesSelectionCard.swift */,
 				F59A4F7792A98847984F6F8F /* PiPInlinePreview.swift */,
 				89251BDCED63D7E24AE0937E /* PlaceholderStateView.swift */,
@@ -541,10 +538,12 @@
 				LastUpgradeCheck = 2600;
 				TargetAttributes = {
 					37A8FC07AE371F20BFEF09B3 = {
+						DevelopmentTeam = YSSY28XABK;
 						ProvisioningStyle = Automatic;
 						SystemCapabilities = "[\"com.apple.ApplicationGroups.iOS\": [\"enabled\": 1]]";
 					};
 					3985885A057BF20FC5736A43 = {
+						DevelopmentTeam = YSSY28XABK;
 						ProvisioningStyle = Automatic;
 						SystemCapabilities = "[\"com.apple.ApplicationGroups.iOS\": [\"enabled\": 1]]";
 					};
@@ -637,7 +636,6 @@
 				76C1A5C13D904DE5590E6CEE /* BroadcastConfig+App.swift in Sources */,
 				5E003757DCFF8E861E128D84 /* BroadcastErrorMessages.swift in Sources */,
 				62E6500C3F2CA06E3D5DC4F8 /* BroadcastExtensionLocator.swift in Sources */,
-				7A696CCCA8EA478DBFCC184A /* BroadcastPickerHost.swift in Sources */,
 				3BE479E5E2B812B0C0A78614 /* BroadcastRecordingConfig.swift in Sources */,
 				44B23E238EEA8A5AD27A177B /* BroadcastRecordingService.swift in Sources */,
 				0D67B172E78543DC9FEA1D24 /* CameraService.swift in Sources */,
@@ -749,7 +747,6 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = GlassyRecord/Resources/GlassyRecord.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = PRPL734V4V;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = GlassyRecord/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -766,7 +763,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = GlassyRecordBroadcastUpload/GlassyRecordBroadcastUpload.entitlements;
-				DEVELOPMENT_TEAM = PRPL734V4V;
 				INFOPLIST_FILE = GlassyRecordBroadcastUpload/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -786,7 +782,6 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = GlassyRecord/Resources/GlassyRecord.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = PRPL734V4V;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = GlassyRecord/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -868,7 +863,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = GlassyRecordBroadcastUpload/GlassyRecordBroadcastUpload.entitlements;
-				DEVELOPMENT_TEAM = PRPL734V4V;
 				INFOPLIST_FILE = GlassyRecordBroadcastUpload/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
