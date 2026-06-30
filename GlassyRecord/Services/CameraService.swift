@@ -80,7 +80,7 @@ final class CameraService: NSObject, ObservableObject {
     nonisolated(unsafe) let session = AVCaptureSession()
     nonisolated(unsafe) private let videoOutput = AVCaptureVideoDataOutput()
     nonisolated private let sessionQueue = DispatchQueue(label: "com.glassyrecord.camera", qos: .userInitiated)
-    private var continuationBuffer: ((CVPixelBuffer) -> Void)?
+    nonisolated(unsafe) private var continuationBuffer: ((CVPixelBuffer) -> Void)?
     private let mockFeed = MockCameraFeed()
 
     func configure(quality: RecordingQuality, mirrored: Bool) async throws {
@@ -185,10 +185,9 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
     ) {
         guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
         let boxed = UncheckedSendablePixelBuffer(value: pixelBuffer)
+        continuationBuffer?(boxed.value)
         Task { @MainActor [weak self] in
-            guard let self else { return }
-            self.latestPixelBuffer = boxed.value
-            self.continuationBuffer?(boxed.value)
+            self?.latestPixelBuffer = boxed.value
         }
     }
 }
@@ -199,15 +198,46 @@ private struct UncheckedSendablePixelBuffer: @unchecked Sendable {
 
 struct CameraPreviewView: UIViewRepresentable {
     let session: AVCaptureSession
+    var captureDevice: AVCaptureDevice?
+    var mirrored: Bool = true
+    var onPreviewLayerReady: ((AVCaptureVideoPreviewLayer) -> Void)?
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onPreviewLayerReady: onPreviewLayerReady)
+    }
 
     func makeUIView(context: Context) -> PreviewUIView {
         let view = PreviewUIView()
         view.previewLayer.session = session
         view.previewLayer.videoGravity = .resizeAspectFill
+        if let connection = view.previewLayer.connection, connection.isEnabled == false {
+            connection.isEnabled = true
+        }
+        context.coordinator.bind(layer: view.previewLayer)
         return view
     }
 
-    func updateUIView(_ uiView: PreviewUIView, context: Context) {}
+    func updateUIView(_ uiView: PreviewUIView, context: Context) {
+        if uiView.previewLayer.session !== session {
+            uiView.previewLayer.session = session
+        }
+        context.coordinator.bind(layer: uiView.previewLayer)
+    }
+
+    final class Coordinator {
+        private let onPreviewLayerReady: ((AVCaptureVideoPreviewLayer) -> Void)?
+        private weak var boundLayer: AVCaptureVideoPreviewLayer?
+
+        init(onPreviewLayerReady: ((AVCaptureVideoPreviewLayer) -> Void)?) {
+            self.onPreviewLayerReady = onPreviewLayerReady
+        }
+
+        func bind(layer: AVCaptureVideoPreviewLayer) {
+            guard boundLayer !== layer else { return }
+            boundLayer = layer
+            onPreviewLayerReady?(layer)
+        }
+    }
 }
 
 final class PreviewUIView: UIView {

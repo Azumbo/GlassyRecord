@@ -76,6 +76,53 @@ enum FaceCamCorner: String, Codable, CaseIterable, Identifiable {
     }
 }
 
+/// Фиксированные уровни крупности Face Cam / PiP относительно стандарта (S = 1.0).
+enum PiPFaceSizePreset: String, CaseIterable, Codable, Identifiable {
+    case half
+    case minus25
+    case standard
+    case plus50
+    case plus100
+    case plus150
+
+    var id: String { rawValue }
+
+    /// Множитель относительно стандартного размера иконки.
+    var scaleFactor: CGFloat {
+        switch self {
+        case .half: 0.5
+        case .minus25: 0.75
+        case .standard: 1.0
+        case .plus50: 1.5
+        case .plus100: 2.0
+        case .plus150: 2.5
+        }
+    }
+
+    var shortLabel: String {
+        switch self {
+        case .half: "½"
+        case .minus25: "−25%"
+        case .standard: "S"
+        case .plus50: "+50%"
+        case .plus100: "+100%"
+        case .plus150: "+150%"
+        }
+    }
+
+    var menuLabel: String {
+        switch self {
+        case .half: "В 2 раза меньше"
+        case .standard: "S — стандарт"
+        default: shortLabel
+        }
+    }
+
+    static func nearest(to scale: CGFloat) -> PiPFaceSizePreset {
+        allCases.min { abs($0.scaleFactor - scale) < abs($1.scaleFactor - scale) } ?? .standard
+    }
+}
+
 // MARK: - Glasses
 
 enum GlassesFrameColor: String, Codable, CaseIterable, Identifiable {
@@ -198,12 +245,14 @@ enum VideoFilter: String, Codable, CaseIterable, Identifiable {
 
 // MARK: - Recording Session
 
+/// Одна готовая запись: MP4 из Broadcast Extension (App Group) или mock на симуляторе.
 struct RecordingSession: Identifiable, Codable, Hashable {
     let id: UUID
     var title: String
     var createdAt: Date
     var duration: TimeInterval
-    var fileURL: URL?
+    /// Единственный выходной файл — screen capture с системным PiP.
+    let fileURL: URL
     var thumbnailData: Data?
     var quality: RecordingQuality
     var glassesEnabled: Bool
@@ -214,7 +263,7 @@ struct RecordingSession: Identifiable, Codable, Hashable {
         title: String = "Запись",
         createdAt: Date = .now,
         duration: TimeInterval = 0,
-        fileURL: URL? = nil,
+        fileURL: URL,
         thumbnailData: Data? = nil,
         quality: RecordingQuality = .hd1080p,
         glassesEnabled: Bool = false,
@@ -255,6 +304,20 @@ struct AppSettings: Codable, Equatable {
     var controlPanelAutoHideSeconds: Double = 3
     var timerAutoHideSeconds: Double = 5
     var lowPowerModeAware: Bool = true
+
+    /// Пресет крупности PiP / Face Cam (нормализует `faceCamScale`).
+    var pipFaceSizePreset: PiPFaceSizePreset {
+        PiPFaceSizePreset.nearest(to: faceCamScale)
+    }
+
+    /// Множитель для `PiPFrameScaler` и превью (S = 1.0, +100% = 2.0).
+    var pipContentScaleFactor: CGFloat {
+        pipFaceSizePreset.scaleFactor
+    }
+
+    mutating func applyPipFaceSizePreset(_ preset: PiPFaceSizePreset) {
+        faceCamScale = preset.scaleFactor
+    }
 }
 
 // MARK: - Errors

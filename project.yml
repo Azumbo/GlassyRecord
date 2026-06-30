@@ -26,7 +26,6 @@ targets:
         excludes:
           - "**/*.md"
           - "Core/Persistence/PersistenceController.swift"
-          - "Services/VideoComposer.swift"
       - path: Shared
     settings:
       base:
@@ -41,7 +40,6 @@ targets:
       - sdk: AVFoundation.framework
       - sdk: ReplayKit.framework
       - sdk: Metal.framework
-      - sdk: MetalKit.framework
       - sdk: Vision.framework
       - sdk: SceneKit.framework
       - sdk: Photos.framework
@@ -57,6 +55,7 @@ targets:
       properties:
         com.apple.security.application-groups:
           - group.com.glassyrecord.shared
+        com.apple.developer.avfoundation.multitasking-camera-access: true
   GlassyRecordBroadcastUpload:
     type: app-extension
     platform: iOS

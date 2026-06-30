@@ -1,10 +1,10 @@
 @preconcurrency import AVFoundation
-import ARKit
 import AVKit
 import Combine
+import SwiftUI
 import UIKit
 
-/// Face Cam через системный PiP: кадры (с AR-очками) → AVSampleBufferDisplayLayer → запись экрана подхватывает окно.
+/// Face Cam через системный PiP: кадры → AVSampleBufferDisplayLayer (фикс. окно) → PiP.
 @MainActor
 final class PiPCameraManager: NSObject, ObservableObject {
     @Published private(set) var isPrepared = false
@@ -14,8 +14,20 @@ final class PiPCameraManager: NSObject, ObservableObject {
     let displayLayer: AVSampleBufferDisplayLayer = {
         let layer = AVSampleBufferDisplayLayer()
         layer.videoGravity = .resizeAspectFill
+        layer.backgroundColor = UIColor.black.cgColor
+        layer.isOpaque = true
         return layer
     }()
+
+    let previewDisplayLayer: AVSampleBufferDisplayLayer = {
+        let layer = AVSampleBufferDisplayLayer()
+        layer.videoGravity = .resizeAspectFill
+        layer.backgroundColor = UIColor.black.cgColor
+        layer.isOpaque = true
+        return layer
+    }()
+
+    private let rotationPreviewLayer = AVCaptureVideoPreviewLayer()
 
     var isPictureInPictureSupported: Bool {
         AVPictureInPictureController.isPictureInPictureSupported()
@@ -25,34 +37,122 @@ final class PiPCameraManager: NSObject, ObservableObject {
     private var captureSession: AVCaptureSession?
     private var videoOutput: AVCaptureVideoDataOutput?
     private weak var glassesService: GlassesOverlayService?
-    private var usesARKitSource = false
     private var mirrored = true
-    private var streamStartTime = CMTime.zero
-    private var frameIndex: Int64 = 0
+    private var glassesEnabled = false
+    private var contentScale: CGFloat = 1.0
     private let videoQueue = DispatchQueue(label: "com.glassyrecord.pip.video", qos: .userInitiated)
+    private let sessionQueue = DispatchQueue(label: "com.glassyrecord.pip.session")
+    private let framePipeline = PiPFramePipeline()
+    private var interruptionObserver: NSObjectProtocol?
+    private var interruptionEndedObserver: NSObjectProtocol?
+    private var captureDevice: AVCaptureDevice?
+    private var rotationHandler: CaptureRotationHandler?
+    private var backgroundTaskID: UIBackgroundTaskIdentifier = .invalid
+    private var pendingPiPActivation = false
+    private var wantsPiPActive = false
+    private let audioKeepAlive = PiPAudioKeepAlive()
 
-    func prepare(glassesService: GlassesOverlayService, mirrored: Bool, glassesEnabled: Bool) async throws {
+    var previewSession: AVCaptureSession? { captureSession }
+    var previewDevice: AVCaptureDevice? { captureDevice }
+
+    override init() {
+        super.init()
+        framePipeline.bind(displayLayer: displayLayer)
+        framePipeline.bindPreview(displayLayer: previewDisplayLayer)
+        framePipeline.onFirstFrame = { [weak self] in
+            Task { @MainActor in self?.activatePiPIfPending() }
+        }
+    }
+
+    @MainActor
+    private func applyPresetRenderSizes(invalidatePiP: Bool = false) {
+        let pointSize = PiPDisplayLayerHost.renderSize(for: contentScale)
+        let pixelSize = PiPPixelGeometry.pixelSize(fromPoints: pointSize)
+        framePipeline.setTargetRenderSize(pixelSize)
+        PiPDisplayLayerHost.updateScale(contentScale, displayLayer: displayLayer)
+
+        if invalidatePiP {
+            refreshPiPGeometryAfterScaleChange()
+        }
+    }
+
+    func setContentScale(_ scale: CGFloat, invalidatePiP: Bool = true) {
+        let previous = contentScale
+        contentScale = min(max(scale, GlassyTheme.pipScaleMinimum), GlassyTheme.pipScaleMaximum)
+        let sizeChanged = abs(previous - contentScale) > 0.02
+
+        PiPSampleBufferFactory.reset()
+        framePipeline.configure(
+            contentScale: contentScale,
+            glassesEnabled: glassesEnabled,
+            glassesService: glassesEnabled ? glassesService : nil
+        )
+
+        if displayLayer.status == .failed {
+            displayLayer.flush()
+        }
+        if #available(iOS 14.0, *), displayLayer.requiresFlushToResumeDecoding {
+            displayLayer.flush()
+        }
+        if previewDisplayLayer.status == .failed {
+            previewDisplayLayer.flush()
+        }
+
+        applyPresetRenderSizes(invalidatePiP: sizeChanged || invalidatePiP)
+    }
+
+    /// Заставляет систему пересчитать размер PiP после смены физических bounds слоя.
+    private func refreshPiPGeometryAfterScaleChange() {
+        displayLayer.flush()
+        if #available(iOS 15.0, *) {
+            pipController?.invalidatePlaybackState()
+        }
+    }
+
+    private func syncDisplayLayerFrame() {
+        PiPDisplayLayerHost.updateScale(contentScale, displayLayer: displayLayer)
+    }
+
+    /// Ждём первый кадр в PiP-слое перед стартом (нельзя запустить PiP из фона).
+    func waitForFirstFrame(timeout: TimeInterval = 3) async {
+        if framePipeline.hasDeliveredFrame { return }
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            if framePipeline.hasDeliveredFrame { return }
+            try? await Task.sleep(for: .milliseconds(33))
+        }
+    }
+
+    func prepare(
+        glassesService: GlassesOverlayService,
+        mirrored: Bool,
+        glassesEnabled: Bool,
+        contentScale: CGFloat
+    ) async throws {
         if isPrepared {
             stop()
         }
         self.glassesService = glassesService
         self.mirrored = mirrored
-        self.usesARKitSource = glassesEnabled && glassesService.isARAvailable
+        self.glassesEnabled = glassesEnabled
+        self.contentScale = min(max(contentScale, GlassyTheme.pipScaleMinimum), GlassyTheme.pipScaleMaximum)
 
         guard await requestCameraPermission() else {
             throw GlassyRecordError.permissionDenied("камере")
         }
 
-        if usesARKitSource {
-            glassesService.frameConsumer = { [weak self] pixelBuffer, time in
-                self?.enqueueFrame(pixelBuffer, presentationTime: time)
-            }
-        } else {
-            glassesService.frameConsumer = nil
-            try configureCaptureSession()
-        }
-
+        glassesService.stopTracking()
+        glassesService.frameConsumer = nil
+        try configureCaptureSession()
+        configureAudioSession()
+        installDisplayLayer()
         configurePictureInPicture()
+        framePipeline.configure(
+            contentScale: self.contentScale,
+            glassesEnabled: glassesEnabled,
+            glassesService: glassesEnabled ? glassesService : nil
+        )
+        applyPresetRenderSizes()
         isPrepared = true
     }
 
@@ -62,45 +162,123 @@ final class PiPCameraManager: NSObject, ObservableObject {
             throw GlassyRecordError.screenRecordingFailed("Picture in Picture недоступен на этом устройстве")
         }
 
-        streamStartTime = CMTime(seconds: CACurrentMediaTime(), preferredTimescale: 600)
-        frameIndex = 0
         isStreaming = true
+        wantsPiPActive = startPiP
+        pendingPiPActivation = startPiP
+        beginBackgroundKeepAlive()
+        audioKeepAlive.start()
+        installDisplayLayer()
+        framePipeline.start()
 
-        if usesARKitSource {
-            glassesService?.startTracking()
-        } else if let captureSession, !captureSession.isRunning {
-            videoQueue.async { captureSession.startRunning() }
+        if glassesEnabled {
+            glassesService?.startTrackingForPiP()
         }
 
-        if startPiP, pipController?.isPictureInPictureActive != true {
-            pipController?.startPictureInPicture()
+        startCaptureSessionIfNeeded()
+
+        if startPiP, framePipeline.hasDeliveredFrame {
+            activatePiP()
+        }
+    }
+
+    private func installDisplayLayer() {
+        PiPDisplayLayerHost.install(displayLayer)
+    }
+
+    private func startCaptureSessionIfNeeded() {
+        guard let captureSession, !captureSession.isRunning else { return }
+        sessionQueue.async {
+            captureSession.startRunning()
         }
     }
 
     func activatePiP() {
-        guard isStreaming, pipController?.isPictureInPictureActive != true else { return }
+        guard isStreaming, wantsPiPActive else { return }
+        guard pipController?.isPictureInPictureActive != true else { return }
+
+        if !framePipeline.hasDeliveredFrame {
+            pendingPiPActivation = true
+            return
+        }
+
+        // PiP можно запустить только пока приложение ещё на экране.
+        let appState = UIApplication.shared.applicationState
+        guard appState == .active || appState == .inactive else {
+            pendingPiPActivation = true
+            return
+        }
+
+        pendingPiPActivation = false
+        installDisplayLayer()
         pipController?.startPictureInPicture()
+    }
+
+    private func activatePiPIfPending() {
+        guard pendingPiPActivation else { return }
+        activatePiP()
+    }
+
+    func handleScenePhase(_ phase: ScenePhase) {
+        guard isStreaming else { return }
+        switch phase {
+        case .inactive:
+            beginBackgroundKeepAlive()
+            audioKeepAlive.start()
+            installDisplayLayer()
+            activatePiP()
+            resumeCaptureIfNeeded()
+        case .background:
+            beginBackgroundKeepAlive()
+            audioKeepAlive.start()
+            installDisplayLayer()
+            resumeCaptureIfNeeded()
+        case .active:
+            installDisplayLayer()
+            rotationHandler?.refreshRotation()
+            if wantsPiPActive, pipController?.isPictureInPictureActive != true {
+                activatePiP()
+            }
+            resumeCaptureIfNeeded()
+        @unknown default:
+            break
+        }
     }
 
     func stopStreaming() {
         isStreaming = false
         isPiPActive = false
+        wantsPiPActive = false
+        pendingPiPActivation = false
+        framePipeline.stop()
         pipController?.stopPictureInPicture()
         glassesService?.frameConsumer = nil
         glassesService?.stopTracking()
+        audioKeepAlive.stop()
+        endBackgroundKeepAlive()
 
-        if let captureSession, captureSession.isRunning {
-            videoQueue.async { captureSession.stopRunning() }
+        sessionQueue.async { [captureSession] in
+            captureSession?.stopRunning()
         }
     }
 
     func stop() {
         stopStreaming()
+        if let interruptionObserver {
+            NotificationCenter.default.removeObserver(interruptionObserver)
+            self.interruptionObserver = nil
+        }
+        if let interruptionEndedObserver {
+            NotificationCenter.default.removeObserver(interruptionEndedObserver)
+            self.interruptionEndedObserver = nil
+        }
         captureSession = nil
         videoOutput = nil
+        rotationHandler = nil
+        captureDevice = nil
         pipController = nil
         isPrepared = false
-        displayLayer.flushAndRemoveImage()
+        PiPSampleBufferFactory.reset()
+        PiPDisplayLayerHost.detach(displayLayer)
     }
 
     // MARK: - Capture
@@ -111,6 +289,9 @@ final class PiPCameraManager: NSObject, ObservableObject {
         defer { session.commitConfiguration() }
 
         session.sessionPreset = .vga640x480
+        if session.isMultitaskingCameraAccessSupported {
+            session.isMultitaskingCameraAccessEnabled = true
+        }
 
         guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front) else {
             throw GlassyRecordError.cameraUnavailable
@@ -132,51 +313,98 @@ final class PiPCameraManager: NSObject, ObservableObject {
         session.addOutput(output)
 
         if let connection = output.connection(with: .video) {
-            connection.isVideoMirrored = mirrored
-            CaptureConnectionSupport.applyPortrait(to: connection)
+            captureDevice = device
+            rotationHandler = CaptureRotationHandler(
+                device: device,
+                captureConnection: connection,
+                previewLayer: rotationPreviewLayer,
+                mirrored: mirrored
+            )
+            rotationHandler?.onRotationChanged = { [weak self] in
+                self?.pipController?.invalidatePlaybackState()
+            }
         }
 
         captureSession = session
         videoOutput = output
+        rotationPreviewLayer.session = session
+        observeCaptureInterruptions()
+    }
+
+    private func configureAudioSession() {
+        let session = AVAudioSession.sharedInstance()
+        try? session.setCategory(
+            .playAndRecord,
+            mode: .videoChat,
+            options: [.defaultToSpeaker, .allowBluetoothHFP, .mixWithOthers]
+        )
+        try? session.setActive(true)
     }
 
     private func configurePictureInPicture() {
         guard pipController == nil, isPictureInPictureSupported else { return }
+
+        displayLayer.controlTimebase = nil
 
         let source = AVPictureInPictureController.ContentSource(
             sampleBufferDisplayLayer: displayLayer,
             playbackDelegate: self
         )
         let controller = AVPictureInPictureController(contentSource: source)
-        controller.canStartPictureInPictureAutomaticallyFromInline = true
+        controller.canStartPictureInPictureAutomaticallyFromInline = false
         controller.delegate = self
         pipController = controller
     }
 
-    fileprivate func enqueueFrame(_ pixelBuffer: CVPixelBuffer, presentationTime: CMTime? = nil) {
+    private func observeCaptureInterruptions() {
+        guard interruptionObserver == nil else { return }
+        interruptionObserver = NotificationCenter.default.addObserver(
+            forName: .AVCaptureSessionWasInterrupted,
+            object: captureSession,
+            queue: .main
+        ) { [weak self] notification in
+            guard let self else { return }
+            if let reason = notification.userInfo?[AVCaptureSessionInterruptionReasonKey] as? Int,
+               reason == AVCaptureSession.InterruptionReason.videoDeviceNotAvailableInBackground.rawValue {
+                Task { @MainActor in
+                    self.activatePiP()
+                }
+            }
+        }
+
+        interruptionEndedObserver = NotificationCenter.default.addObserver(
+            forName: .AVCaptureSessionInterruptionEnded,
+            object: captureSession,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.resumeCaptureIfNeeded()
+            }
+        }
+    }
+
+    private func resumeCaptureIfNeeded() {
         guard isStreaming else { return }
+        startCaptureSessionIfNeeded()
+    }
 
-        let processed: CVPixelBuffer
-        if let glassesService, glassesService.isEnabled {
-            processed = glassesService.processFrame(pixelBuffer)
-        } else {
-            processed = pixelBuffer
+    private func beginBackgroundKeepAlive() {
+        guard backgroundTaskID == .invalid else { return }
+        backgroundTaskID = UIApplication.shared.beginBackgroundTask { [weak self] in
+            Task { @MainActor in self?.endBackgroundKeepAlive() }
         }
+    }
 
-        let pts = presentationTime ?? CMTimeAdd(
-            streamStartTime,
-            CMTime(value: frameIndex, timescale: 30)
-        )
-        frameIndex += 1
+    private func endBackgroundKeepAlive() {
+        guard backgroundTaskID != .invalid else { return }
+        UIApplication.shared.endBackgroundTask(backgroundTaskID)
+        backgroundTaskID = .invalid
+    }
 
-        guard let sample = PiPSampleBufferFactory.makeSampleBuffer(from: processed, presentationTime: pts) else {
-            return
-        }
-
-        if displayLayer.status == .failed {
-            displayLayer.flush()
-        }
-        displayLayer.enqueue(sample)
+    func requestPiPActive() {
+        wantsPiPActive = true
+        pendingPiPActivation = true
+        activatePiP()
     }
 
     private func requestCameraPermission() async -> Bool {
@@ -198,10 +426,7 @@ extension PiPCameraManager: AVCaptureVideoDataOutputSampleBufferDelegate {
         from connection: AVCaptureConnection
     ) {
         guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
-        let pts = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
-        Task { @MainActor [weak self] in
-            self?.enqueueFrame(pixelBuffer, presentationTime: pts)
-        }
+        framePipeline.process(pixelBuffer: pixelBuffer)
     }
 }
 
@@ -236,7 +461,30 @@ extension PiPCameraManager: AVPictureInPictureSampleBufferPlaybackDelegate {
     nonisolated func pictureInPictureController(
         _ pictureInPictureController: AVPictureInPictureController,
         didTransitionToRenderSize newRenderSize: CMVideoDimensions
-    ) {}
+    ) {
+        Task { @MainActor [weak self] in
+            self?.syncSourceLayerToSystemPiP(newRenderSize)
+        }
+    }
+
+    private func syncSourceLayerToSystemPiP(_ dimensions: CMVideoDimensions) {
+        let pixelSize = PiPPixelGeometry.pixelSize(from: dimensions)
+        let pointSize = PiPPixelGeometry.pointSizeForLayer(from: dimensions)
+
+        framePipeline.setTargetRenderSize(pixelSize)
+        PiPDisplayLayerHost.updateRenderSize(pointSize, displayLayer: displayLayer)
+        PiPDisplayLayerHost.setSourceHidden(true)
+
+        if displayLayer.status == .failed {
+            displayLayer.flush()
+        }
+        if #available(iOS 14.0, *), displayLayer.requiresFlushToResumeDecoding {
+            displayLayer.flush()
+        }
+        if previewDisplayLayer.status == .failed {
+            previewDisplayLayer.flush()
+        }
+    }
 }
 
 // MARK: - AVPictureInPictureControllerDelegate
@@ -247,6 +495,7 @@ extension PiPCameraManager: AVPictureInPictureControllerDelegate {
     ) {
         Task { @MainActor [weak self] in
             self?.isPiPActive = true
+            PiPDisplayLayerHost.setSourceHidden(true)
         }
     }
 
@@ -254,7 +503,16 @@ extension PiPCameraManager: AVPictureInPictureControllerDelegate {
         _ pictureInPictureController: AVPictureInPictureController
     ) {
         Task { @MainActor [weak self] in
-            self?.isPiPActive = false
+            guard let self else { return }
+            self.isPiPActive = false
+            PiPDisplayLayerHost.setSourceHidden(true)
+            guard self.isStreaming, self.wantsPiPActive else { return }
+            let state = UIApplication.shared.applicationState
+            guard state == .active else {
+                self.pendingPiPActivation = true
+                return
+            }
+            self.activatePiP()
         }
     }
 
@@ -265,5 +523,12 @@ extension PiPCameraManager: AVPictureInPictureControllerDelegate {
         Task { @MainActor [weak self] in
             self?.isPiPActive = false
         }
+    }
+
+    nonisolated func pictureInPictureController(
+        _ pictureInPictureController: AVPictureInPictureController,
+        restoreUserInterfaceForPictureInPictureStopWithCompletionHandler completionHandler: @escaping (Bool) -> Void
+    ) {
+        completionHandler(true)
     }
 }

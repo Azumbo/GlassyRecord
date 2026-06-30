@@ -3,56 +3,51 @@ import AVKit
 
 @MainActor
 final class EditorViewModel: ObservableObject {
-    @Published var selectedTab: EditorTab = .trim
     @Published var trimStart: Double = 0
     @Published var trimEnd: Double = 1
-    @Published var micVolume: Float = 1.0
-    @Published var systemVolume: Float = 1.0
-    @Published var selectedFilter: VideoFilter = .none
-    @Published var exportCodec: ExportCodec = .hevc
     @Published var isExporting = false
     @Published var player: AVPlayer?
     @Published var duration: TimeInterval = 0
     @Published var errorMessage: String?
+    @Published var exportSucceeded = false
 
     let session: RecordingSession
     private let exportService = ExportService()
 
     init(session: RecordingSession) {
         self.session = session
-        if let url = session.fileURL {
-            let asset = AVURLAsset(url: url)
-            player = AVPlayer(url: url)
-            Task {
-                duration = (try? await asset.load(.duration).seconds) ?? session.duration
-                trimEnd = duration
-            }
+        let url = session.fileURL
+        let asset = AVURLAsset(url: url)
+        player = AVPlayer(url: url)
+        Task {
+            duration = (try? await asset.load(.duration).seconds) ?? session.duration
+            trimEnd = duration
         }
     }
 
     func exportToGallery() async {
-        guard let url = session.fileURL else {
-            errorMessage = GlassyRecordError.fileNotFound.localizedDescription
-            return
-        }
         isExporting = true
         defer { isExporting = false }
 
         do {
-            let asset = AVURLAsset(url: url)
-            let start = CMTime(seconds: trimStart, preferredTimescale: 600)
-            let end = CMTime(seconds: trimEnd, preferredTimescale: 600)
-            let range = CMTimeRange(start: start, end: end)
+            let url = session.fileURL
+            let isFullRange = trimStart <= 0.01 && trimEnd >= max(duration - 0.05, 0)
 
-            let renderService = RenderService()
-            let exported = try await exportService.export(
-                asset: asset,
-                codec: exportCodec,
-                trimRange: range,
-                filter: selectedFilter,
-                renderService: renderService ?? RenderService()!
-            )
-            try await exportService.saveToPhotoLibrary(url: exported)
+            if isFullRange {
+                try await exportService.saveToPhotoLibrary(url: url)
+            } else {
+                let asset = AVURLAsset(url: url)
+                let start = CMTime(seconds: trimStart, preferredTimescale: 600)
+                let end = CMTime(seconds: trimEnd, preferredTimescale: 600)
+                let range = CMTimeRange(start: start, end: end)
+                let exported = try await exportService.export(
+                    asset: asset,
+                    codec: .hevc,
+                    trimRange: range
+                )
+                try await exportService.saveToPhotoLibrary(url: exported)
+            }
+            exportSucceeded = true
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -71,8 +66,7 @@ struct EditorView: View {
     var body: some View {
         VStack(spacing: 0) {
             preview
-            editorTabs
-            tabContent
+            trimControls
             exportBar
         }
         .navigationTitle("Редактор")
@@ -84,6 +78,11 @@ struct EditorView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(viewModel.errorMessage ?? "")
+        }
+        .alert("Готово", isPresented: $viewModel.exportSucceeded) {
+            Button("OK") { coordinator.popToRoot() }
+        } message: {
+            Text("Видео сохранено в «Фото»")
         }
     }
 
@@ -101,34 +100,19 @@ struct EditorView: View {
         .padding()
     }
 
-    private var editorTabs: some View {
-        Picker("Инструмент", selection: $viewModel.selectedTab) {
-            ForEach(EditorTab.allCases) { tab in
-                Label(tab.title, systemImage: tab.systemImage).tag(tab)
-            }
-        }
-        .pickerStyle(.segmented)
-        .padding(.horizontal)
-    }
-
-  @ViewBuilder
-    private var tabContent: some View {
-        switch viewModel.selectedTab {
-        case .trim:
-            trimControls
-        case .audio:
-            audioControls
-        case .filters:
-            filterControls
-        case .text:
-            textControls
-        }
-    }
-
     private var trimControls: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Обрезка")
                 .font(.headline)
+            HStack {
+                Text(viewModel.trimStart.formattedDuration)
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(GlassyTheme.labelSecondary)
+                Spacer()
+                Text(viewModel.trimEnd.formattedDuration)
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(GlassyTheme.labelSecondary)
+            }
             TimelineView(
                 duration: viewModel.duration,
                 trimStart: $viewModel.trimStart,
@@ -140,58 +124,11 @@ struct EditorView: View {
         .padding()
     }
 
-    private var audioControls: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Громкость дорожек")
-                .font(.headline)
-            LabeledContent("Микрофон") {
-                Slider(value: $viewModel.micVolume, in: 0...2)
-            }
-            LabeledContent("Системный звук") {
-                Slider(value: $viewModel.systemVolume, in: 0...2)
-            }
-        }
-        .padding()
-    }
-
-    private var filterControls: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 12) {
-                ForEach(VideoFilter.allCases) { filter in
-                    Button {
-                        viewModel.selectedFilter = filter
-                    } label: {
-                        Text(filter.displayName)
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 8)
-                            .background(viewModel.selectedFilter == filter ? Color.accentColor : Color(.secondarySystemFill))
-                            .foregroundStyle(viewModel.selectedFilter == filter ? .white : .primary)
-                            .clipShape(Capsule())
-                    }
-                }
-            }
-            .padding(.horizontal)
-        }
-        .padding(.vertical)
-    }
-
-    private var textControls: some View {
-        PlaceholderStateView(
-            title: "Текст и фигуры",
-            systemImage: "text.badge.plus",
-            subtitle: "Добавьте подписи в следующем обновлении"
-        )
-        .frame(height: 120)
-    }
-
     private var exportBar: some View {
         HStack {
-            Picker("Кодек", selection: $viewModel.exportCodec) {
-                ForEach(ExportCodec.allCases) { codec in
-                    Text(codec.displayName).tag(codec)
-                }
-            }
-            .pickerStyle(.menu)
+            Text("ReplayKit MP4")
+                .font(.caption)
+                .foregroundStyle(GlassyTheme.labelSecondary)
 
             Spacer()
 
@@ -201,7 +138,7 @@ struct EditorView: View {
                 if viewModel.isExporting {
                     ProgressView()
                 } else {
-                    Label("Экспорт", systemImage: "square.and.arrow.up")
+                    Label("Сохранить в «Фото»", systemImage: "square.and.arrow.down")
                 }
             }
             .buttonStyle(.borderedProminent)
@@ -229,7 +166,6 @@ struct TimelineView: View {
                     .frame(width: selectionWidth(in: geo.size.width))
                     .offset(x: startOffset(in: geo.size.width))
 
-                // Trim handles
                 trimHandle(at: startOffset(in: geo.size.width))
                 trimHandle(at: startOffset(in: geo.size.width) + selectionWidth(in: geo.size.width))
             }

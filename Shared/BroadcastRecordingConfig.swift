@@ -24,7 +24,6 @@ enum BroadcastConfigStore {
         defaults.set(data, forKey: BroadcastDefaultsKey.config)
         defaults.set(BroadcastState.idle.rawValue, forKey: BroadcastDefaultsKey.state)
         defaults.removeObject(forKey: BroadcastDefaultsKey.screenOutputPath)
-        defaults.removeObject(forKey: BroadcastDefaultsKey.selfieOutputPath)
         defaults.removeObject(forKey: BroadcastDefaultsKey.errorMessage)
     }
 
@@ -50,10 +49,6 @@ enum BroadcastConfigStore {
         defaults?.string(forKey: BroadcastDefaultsKey.screenOutputPath)
     }
 
-    static var selfieOutputPath: String? {
-        defaults?.string(forKey: BroadcastDefaultsKey.selfieOutputPath)
-    }
-
     static var errorMessage: String? {
         defaults?.string(forKey: BroadcastDefaultsKey.errorMessage)
     }
@@ -71,18 +66,7 @@ enum BroadcastConfigStore {
 
     static func markScreenFinished(path: String) {
         defaults?.set(path, forKey: BroadcastDefaultsKey.screenOutputPath)
-        if state == .recording {
-            state = .composing
-        }
-    }
-
-    static func markSelfieFinished(path: String) {
-        defaults?.set(path, forKey: BroadcastDefaultsKey.selfieOutputPath)
-    }
-
-    static func markComposedFinished(path: String) {
         state = .finished
-        defaults?.set(path, forKey: BroadcastDefaultsKey.screenOutputPath)
     }
 
     static func markFailed(_ message: String) {
@@ -93,7 +77,6 @@ enum BroadcastConfigStore {
     static func reset() {
         state = .idle
         defaults?.removeObject(forKey: BroadcastDefaultsKey.screenOutputPath)
-        defaults?.removeObject(forKey: BroadcastDefaultsKey.selfieOutputPath)
         defaults?.removeObject(forKey: BroadcastDefaultsKey.errorMessage)
         defaults?.removeObject(forKey: BroadcastDefaultsKey.startTimestamp)
     }
@@ -102,7 +85,6 @@ enum BroadcastConfigStore {
 enum BroadcastState: String, Codable {
     case idle
     case recording
-    case composing
     case finished
     case failed
 }
@@ -111,7 +93,6 @@ enum BroadcastDefaultsKey {
     static let config = "broadcast.config"
     static let state = "broadcast.state"
     static let screenOutputPath = "broadcast.screenOutputPath"
-    static let selfieOutputPath = "broadcast.selfieOutputPath"
     static let errorMessage = "broadcast.errorMessage"
     static let startTimestamp = "broadcast.startTimestamp"
 }

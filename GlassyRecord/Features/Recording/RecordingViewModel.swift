@@ -34,6 +34,7 @@ final class RecordingViewModel: ObservableObject {
     @Published private(set) var usesBroadcastMode = !SimulatorSupport.isRunning
     @Published private(set) var isPiPPreviewReady = false
     @Published var lastError: GlassyRecordError?
+    @Published private(set) var completedSession: RecordingSession?
 
     let broadcastService = BroadcastRecordingService()
     let pipCameraManager = PiPCameraManager()
@@ -43,6 +44,7 @@ final class RecordingViewModel: ObservableObject {
     let glassesService = GlassesOverlayService()
 
     private var sessionTask: Task<Void, Never>?
+    private var isFinalizingRecording = false
     private var controlsHideTask: Task<Void, Never>?
     private var timerHideTask: Task<Void, Never>?
     private var stateRefreshTask: Task<Void, Never>?
@@ -52,7 +54,7 @@ final class RecordingViewModel: ObservableObject {
     init(settings: AppSettings) {
         self.settings = settings
         self.glassesEnabled = settings.glassesEnabledByDefault
-        self.faceCamScale = settings.faceCamScale
+        self.faceCamScale = settings.pipContentScaleFactor
         self.faceCamPosition = settings.faceCamCorner.normalizedPosition
 
         if usesBroadcastMode {
@@ -72,6 +74,8 @@ final class RecordingViewModel: ObservableObject {
         bindScreenCaptureObserver()
 
         pipCameraManager.$isPrepared
+            .combineLatest(pipCameraManager.$isStreaming)
+            .map { $0 && $1 }
             .receive(on: DispatchQueue.main)
             .assign(to: &$isPiPPreviewReady)
     }
@@ -93,7 +97,7 @@ final class RecordingViewModel: ObservableObject {
                         Task { await self.beginActiveBroadcastSession() }
                     }
                 } else if self.isRecording {
-                    self.refreshBroadcastState()
+                    Task { await self.handleBroadcastEndedExternally() }
                 }
             }
             .store(in: &cancellables)
@@ -103,7 +107,8 @@ final class RecordingViewModel: ObservableObject {
         glassesService.lensTransparency = settings.lensTransparency
         glassesService.frameBrightness = settings.frameBrightness
         glassesService.setFrameColor(settings.glassesColor)
-        glassesService.setEnabled(glassesEnabled)
+        glassesService.setEnabled(glassesEnabled, usesPiPCapture: usesBroadcastMode)
+        applyFaceCamScaleFromSettings()
 
         if usesBroadcastMode {
             setupPhase = .idle
@@ -123,13 +128,15 @@ final class RecordingViewModel: ObservableObject {
     }
 
     private func preparePiPCamera() async {
+        applyFaceCamScaleFromSettings()
         do {
             try await pipCameraManager.prepare(
                 glassesService: glassesService,
                 mirrored: settings.faceCamMirrored,
-                glassesEnabled: glassesEnabled
+                glassesEnabled: glassesEnabled,
+                contentScale: faceCamScale
             )
-            try pipCameraManager.startStreaming(startPiP: false)
+            try pipCameraManager.startStreaming(startPiP: true)
         } catch {
             fail(with: error)
         }
@@ -137,8 +144,16 @@ final class RecordingViewModel: ObservableObject {
 
     func prepareBroadcastConfig() {
         guard AppGroup.isConfigured else { return }
+        applyFaceCamScaleFromSettings()
+        pipCameraManager.setContentScale(faceCamScale, invalidatePiP: true)
         BroadcastConfigStore.saveConfig(makeBroadcastConfig())
         RPScreenRecorder.shared().isMicrophoneEnabled = settings.microphoneEnabled
+        pipCameraManager.requestPiPActive()
+    }
+
+    func handleScenePhase(_ phase: ScenePhase) {
+        guard usesBroadcastMode else { return }
+        pipCameraManager.handleScenePhase(phase)
     }
 
     private func beginActiveBroadcastSession() async {
@@ -146,6 +161,7 @@ final class RecordingViewModel: ObservableObject {
             broadcastService.startDurationTimer()
             return
         }
+        applyFaceCamScaleFromSettings()
         broadcastService.resolveActiveControllerIfNeeded()
         broadcastService.startDurationTimer()
         isRecording = true
@@ -159,8 +175,10 @@ final class RecordingViewModel: ObservableObject {
 
         do {
             if !pipCameraManager.isStreaming {
-                try pipCameraManager.startStreaming(startPiP: false)
+                try pipCameraManager.startStreaming(startPiP: true)
             }
+            pipCameraManager.requestPiPActive()
+            await pipCameraManager.waitForFirstFrame()
             pipCameraManager.activatePiP()
             RecordingNotificationService.showRecordingStarted()
         } catch {
@@ -172,6 +190,11 @@ final class RecordingViewModel: ObservableObject {
         guard usesBroadcastMode else { return }
 
         broadcastService.refreshState()
+
+        if BroadcastConfigStore.state == .finished, isRecording {
+            Task { await handleBroadcastEndedExternally() }
+            return
+        }
 
         let active = broadcastService.isBroadcasting || BroadcastConfigStore.state == .recording
         if active {
@@ -201,10 +224,6 @@ final class RecordingViewModel: ObservableObject {
                 quality: settings.quality,
                 mirrored: settings.faceCamMirrored
             )
-            cameraService.onFrame { [weak self] buffer in
-                guard let self, self.glassesEnabled else { return }
-                _ = self.glassesService.processFrame(buffer)
-            }
             cameraService.start()
 
             guard !Task.isCancelled else { return }
@@ -247,8 +266,60 @@ final class RecordingViewModel: ObservableObject {
     var isSaving: Bool { setupPhase == .saving }
     var isAwaitingBroadcast: Bool { usesBroadcastMode && setupPhase == .idle }
 
-    func stopRecordingAndSave() async -> URL? {
+    var pipPreviewSession: AVCaptureSession? {
+        guard usesBroadcastMode else { return nil }
+        return pipCameraManager.previewSession
+    }
+
+    var pipProcessedPreviewLayer: AVSampleBufferDisplayLayer? {
+        guard usesBroadcastMode, pipCameraManager.isPrepared else { return nil }
+        return pipCameraManager.previewDisplayLayer
+    }
+
+    var faceCamSizePreset: PiPFaceSizePreset {
+        PiPFaceSizePreset.nearest(to: faceCamScale)
+    }
+
+    /// Синхронизирует крупность из сохранённых настроек и передаёт в PiP-пайплайн (`PiPFrameScaler`).
+    func applyFaceCamScaleFromSettings() {
+        applyFaceCamScale(settings.pipContentScaleFactor)
+    }
+
+    func applyFaceCamScale(_ scale: CGFloat) {
+        let preset = PiPFaceSizePreset.nearest(to: scale)
+        faceCamScale = preset.scaleFactor
+        pipCameraManager.setContentScale(faceCamScale, invalidatePiP: true)
+    }
+
+    func selectFaceCamSize(_ preset: PiPFaceSizePreset) {
+        applyFaceCamScale(preset.scaleFactor)
+    }
+
+    func updateFaceCamScale(_ scale: CGFloat) {
+        applyFaceCamScale(scale)
+    }
+
+    func stopRecording() async {
+        _ = await finalizeRecording(stopActiveBroadcast: true)
+    }
+
+    func handleBroadcastEndedExternally() async {
+        guard usesBroadcastMode, isRecording else { return }
+        guard setupPhase == .recording || setupPhase == .saving else { return }
+        _ = await finalizeRecording(stopActiveBroadcast: false)
+    }
+
+    func clearCompletedSession() {
+        completedSession = nil
+    }
+
+    private func finalizeRecording(stopActiveBroadcast: Bool) async -> RecordingSession? {
+        guard !isFinalizingRecording else { return nil }
+        isFinalizingRecording = true
+        defer { isFinalizingRecording = false }
+
         setupPhase = .saving
+        let recordedDuration = duration
 
         if usesBroadcastMode {
             broadcastService.stopDurationTimer()
@@ -256,13 +327,20 @@ final class RecordingViewModel: ObservableObject {
             pipCameraManager.stopStreaming()
 
             do {
-                let screenURL = try await broadcastService.stopBroadcast()
-                try await ExportService().saveToPhotoLibrary(url: screenURL)
+                let url: URL
+                if stopActiveBroadcast {
+                    url = try await broadcastService.stopBroadcast()
+                } else {
+                    url = try await broadcastService.waitForFinishedRecording()
+                }
                 BroadcastConfigStore.reset()
                 pipCameraManager.stop()
                 isRecording = false
                 setupPhase = .idle
-                return screenURL
+
+                let session = try await makeRecordingSession(from: url, duration: recordedDuration)
+                completedSession = session
+                return session
             } catch let error as GlassyRecordError {
                 lastError = error
                 fail(with: error)
@@ -280,10 +358,12 @@ final class RecordingViewModel: ObservableObject {
 
         do {
             let url = try await screenRecorder.stopRecording()
-            try await ExportService().saveToPhotoLibrary(url: url)
             isRecording = false
             setupPhase = .idle
-            return url
+
+            let session = try await makeRecordingSession(from: url, duration: recordedDuration)
+            completedSession = session
+            return session
         } catch let error as GlassyRecordError {
             lastError = error
             fail(with: error)
@@ -295,8 +375,10 @@ final class RecordingViewModel: ObservableObject {
         }
     }
 
-    func stopRecording() async -> RecordingSession? {
-        guard let url = await stopRecordingAndSave() else { return nil }
+    private func makeRecordingSession(from url: URL, duration: TimeInterval) async throws -> RecordingSession {
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            throw GlassyRecordError.fileNotFound
+        }
         let thumb = await ExportService().generateThumbnail(for: url)
         return RecordingSession(
             title: "Запись \(Date.now.formatted(date: .abbreviated, time: .shortened))",
@@ -311,7 +393,7 @@ final class RecordingViewModel: ObservableObject {
 
     func toggleGlasses() {
         glassesEnabled.toggle()
-        glassesService.setEnabled(glassesEnabled)
+        glassesService.setEnabled(glassesEnabled, usesPiPCapture: usesBroadcastMode)
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
         if usesBroadcastMode, pipCameraManager.isPrepared {
             Task {
@@ -369,7 +451,7 @@ final class RecordingViewModel: ObservableObject {
         NotificationCenter.default.publisher(for: .NSProcessInfoPowerStateDidChange)
             .sink { [weak self] _ in
                 if ProcessInfo.processInfo.isLowPowerModeEnabled {
-                    self?.faceCamScale = min(self?.faceCamScale ?? 1, 0.85)
+                    self?.selectFaceCamSize(.minus25)
                 }
             }
             .store(in: &cancellables)

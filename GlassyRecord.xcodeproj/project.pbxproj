@@ -16,9 +16,9 @@
 		255E767BF14C133F98A2AB03 /* SimulatorSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D4C5E04716960CA2770082E /* SimulatorSupport.swift */; };
 		30E649262D2DA20FF2FD891B /* PlaceholderStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89251BDCED63D7E24AE0937E /* PlaceholderStateView.swift */; };
 		30FD6BF9769A32EE252DF9DC /* RecordingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E5F5CE54715F372DBEA388D /* RecordingViewModel.swift */; };
-		33812DA01B40A2D3AF764D28 /* RenderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5624C9016DF7B1B2AB6BAF18 /* RenderService.swift */; };
 		34805ED2BE1E5C9B848F369D /* SampleHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01AB36E976CA117446430AE9 /* SampleHandler.swift */; };
 		35AF0CD47BDC5F0663E7D6A0 /* BroadcastRecordingConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF74A7FDF64760581864A65A /* BroadcastRecordingConfig.swift */; };
+		3670D17B0D8184EC3021DAA0 /* PiPAudioKeepAlive.swift in Sources */ = {isa = PBXBuildFile; fileRef = 640F4434AEAB0CB5CCFFDE9E /* PiPAudioKeepAlive.swift */; };
 		3A66F31496882176DB98681C /* ReplayKitCameraPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 303819C5AD289B1209DB7571 /* ReplayKitCameraPreviewView.swift */; };
 		3BE479E5E2B812B0C0A78614 /* BroadcastRecordingConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF74A7FDF64760581864A65A /* BroadcastRecordingConfig.swift */; };
 		3DB3F13B72EC285406F59D1D /* ScreenRecorderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03D3B81FA1DBFB5C823D601D /* ScreenRecorderService.swift */; };
@@ -34,6 +34,7 @@
 		5E003757DCFF8E861E128D84 /* BroadcastErrorMessages.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3317C6BCDF460865E2C5F868 /* BroadcastErrorMessages.swift */; };
 		62E6500C3F2CA06E3D5DC4F8 /* BroadcastExtensionLocator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B93FD21ADFA63673A34FA11 /* BroadcastExtensionLocator.swift */; };
 		636E2390D54C27E8C3355362 /* RecordingControlPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23695972DE2E5EDCE9B21DDB /* RecordingControlPanel.swift */; };
+		707D0450D111A829287557FD /* PiPDisplayLayerHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57544E4236AD282F93B89845 /* PiPDisplayLayerHost.swift */; };
 		714EC08C4443FC6D59DA72A0 /* GlassyRecordBroadcastUpload.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B72ADBBE3EC29702D46B59C7 /* GlassyRecordBroadcastUpload.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		738CDE5196C1D6783E626010 /* GlassesSelectionCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD931DB28865D6F738F8926D /* GlassesSelectionCard.swift */; };
 		74288262944F6557BCDEBADC /* AppCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 681BD2B173991E4C9D3ACC5E /* AppCoordinator.swift */; };
@@ -45,14 +46,18 @@
 		8DBD22E6F8B1F5ED333A2709 /* ExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 136DED63C26E570333DAAAD7 /* ExportService.swift */; };
 		92BC7AAFE03BAFC2C74D5613 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D6511CFDFE92E63F5CD0935 /* SettingsView.swift */; };
 		98124590B18FC77166BA7E80 /* PiPSampleBufferFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95CAEE938A4089FA85E73B90 /* PiPSampleBufferFactory.swift */; };
+		AA11BB22CC33DD44EE55FF66 /* PiPPixelGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11BB22CC33DD44EE55FF6600 /* PiPPixelGeometry.swift */; };
+		BB22CC33DD44EE55FF660011 /* PiPProcessedPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22CC33DD44EE55FF66001122 /* PiPProcessedPreviewView.swift */; };
 		A9376D3D2E820D7F95101C5E /* GlassyRecordApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C7DC9080B2FA08697B47D6B /* GlassyRecordApp.swift */; };
 		AB295386626C7B0FA48F85C2 /* PiPCameraManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83BBC7E1A8E90F732E110E82 /* PiPCameraManager.swift */; };
+		ADCE2364A17E0DC899B85737 /* PiPFramePipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF18DD590789D4F04902E55D /* PiPFramePipeline.swift */; };
 		B9AAF379A426D24BE56FF0A4 /* BroadcastVideoWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A2FB0B7A7B583A351A3816C /* BroadcastVideoWriter.swift */; };
 		BAAADC2C260F72452087C7DA /* ReplayKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8E6742E1AF10D86EEF0813B5 /* ReplayKit.framework */; };
 		BCC8B874B37FEFB62E75FA3D /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 046FA003957AEF0948F9CBF2 /* HomeView.swift */; };
 		C16F343A31538853020AE170 /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = B350EA4E988F1F8736FCF212 /* AppGroup.swift */; };
 		C29718E0A5D9BC39255F2B18 /* RecordingNotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03BBF58B5781554DB64879B3 /* RecordingNotificationService.swift */; };
 		C469B0AD12D289D82E530B3B /* AudioService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAA585C2382ABFC53C259C81 /* AudioService.swift */; };
+		C56B3C4AEE230A30F2C0CBAE /* PiPFrameScaler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82973469374DF229D32297A3 /* PiPFrameScaler.swift */; };
 		CB18F6C058AE928410DB0273 /* GlassyTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8259450C32901A4FAF470D1 /* GlassyTheme.swift */; };
 		CCDA3C23047D566A3C800811 /* Photos.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F7A5B1C41A3A5188B70042F2 /* Photos.framework */; };
 		CEE9DB30A61A3016CC94BE42 /* SettingsStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97B72739C579B73E8636AB57 /* SettingsStoreTests.swift */; };
@@ -61,14 +66,13 @@
 		D597494C98459C585D81FC8E /* AppModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0CA0295AE5AF1B40063E59F /* AppModels.swift */; };
 		D676826707FB3F146A310DA3 /* ActiveBroadcastController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6DA46E1E8402AB34783518A /* ActiveBroadcastController.swift */; };
 		D77E825C895918C408BD8A7B /* GlassesOverlayService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2587041F22AEB1C4C7978BD /* GlassesOverlayService.swift */; };
+		E1A2B3C4D5E6F708192A3B4C /* GlassesFrameProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B3C4D5E6F708192A3B4C5D /* GlassesFrameProcessor.swift */; };
 		DACCDDBC2DC25F076B409422 /* ARKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 94452E549370531E1C6B73B5 /* ARKit.framework */; };
-		DAE2E3ECCE22B410C32E9E61 /* PiPInlinePreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = F59A4F7792A98847984F6F8F /* PiPInlinePreview.swift */; };
 		DE17AFB9801217F3C3FB2A3E /* GlassyRecordUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0812929F4F54F04B77ED2309 /* GlassyRecordUITests.swift */; };
 		E0C47269F504444BF5056BB2 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1BB6B82A0832DAF8928AD637 /* Metal.framework */; };
 		E9A045E2F5510509EF8565FE /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2C4C45C7A2DBE80E48490FF /* AVFoundation.framework */; };
 		F4F046E04238E26FA358BFC4 /* EditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B563952FF986F44428A582 /* EditorView.swift */; };
 		FAD3456328266F3426C3CF38 /* SimulatorFaceCamPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = A65D1DC8C2C77683BD61F0AE /* SimulatorFaceCamPreview.swift */; };
-		FF4151A15FFAA79FB915DA74 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F2AAFE44A385E934FF6AD43 /* MetalKit.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -127,9 +131,10 @@
 		3A2FB0B7A7B583A351A3816C /* BroadcastVideoWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BroadcastVideoWriter.swift; sourceTree = "<group>"; };
 		53BA6576A22907866A43A0A3 /* CameraService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraService.swift; sourceTree = "<group>"; };
 		5564FCF8E23075E0146BA56D /* SystemBroadcastPickerRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemBroadcastPickerRepresentable.swift; sourceTree = "<group>"; };
-		5624C9016DF7B1B2AB6BAF18 /* RenderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenderService.swift; sourceTree = "<group>"; };
+		57544E4236AD282F93B89845 /* PiPDisplayLayerHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiPDisplayLayerHost.swift; sourceTree = "<group>"; };
 		5C7DC9080B2FA08697B47D6B /* GlassyRecordApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassyRecordApp.swift; sourceTree = "<group>"; };
 		5DC4691AB15AD501C496BDC8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		640F4434AEAB0CB5CCFFDE9E /* PiPAudioKeepAlive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiPAudioKeepAlive.swift; sourceTree = "<group>"; };
 		645A5C64CFBFFB1BC767243F /* BroadcastRecordingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BroadcastRecordingService.swift; sourceTree = "<group>"; };
 		681BD2B173991E4C9D3ACC5E /* AppCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCoordinator.swift; sourceTree = "<group>"; };
 		69D40CD04597AF2379C79D97 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -137,6 +142,7 @@
 		7315BE8BDACA80507B69D09B /* RecordingOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingOverlayView.swift; sourceTree = "<group>"; };
 		788F5BC4419037711452B4BA /* SettingsUserDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsUserDefaults.swift; sourceTree = "<group>"; };
 		7EA17FC413A53F98D9130E62 /* BroadcastConfig+App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BroadcastConfig+App.swift"; sourceTree = "<group>"; };
+		82973469374DF229D32297A3 /* PiPFrameScaler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiPFrameScaler.swift; sourceTree = "<group>"; };
 		83BBC7E1A8E90F732E110E82 /* PiPCameraManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiPCameraManager.swift; sourceTree = "<group>"; };
 		89251BDCED63D7E24AE0937E /* PlaceholderStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceholderStateView.swift; sourceTree = "<group>"; };
 		8B93FD21ADFA63673A34FA11 /* BroadcastExtensionLocator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BroadcastExtensionLocator.swift; sourceTree = "<group>"; };
@@ -144,11 +150,12 @@
 		92CF581198F963727B0356F0 /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
 		94452E549370531E1C6B73B5 /* ARKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ARKit.framework; path = System/Library/Frameworks/ARKit.framework; sourceTree = SDKROOT; };
 		95CAEE938A4089FA85E73B90 /* PiPSampleBufferFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiPSampleBufferFactory.swift; sourceTree = "<group>"; };
+		11BB22CC33DD44EE55FF6600 /* PiPPixelGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiPPixelGeometry.swift; sourceTree = "<group>"; };
+		22CC33DD44EE55FF66001122 /* PiPProcessedPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiPProcessedPreviewView.swift; sourceTree = "<group>"; };
 		97B72739C579B73E8636AB57 /* SettingsStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStoreTests.swift; sourceTree = "<group>"; };
 		9D6511CFDFE92E63F5CD0935 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		9F2AAFE44A385E934FF6AD43 /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
 		A0CA0295AE5AF1B40063E59F /* AppModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModels.swift; sourceTree = "<group>"; };
-		A650576ED14DDB7FFA55F0A1 /* GlassyRecord.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GlassyRecord.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A650576ED14DDB7FFA55F0A1 /* GlassyRecord.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GlassyRecord.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A65D1DC8C2C77683BD61F0AE /* SimulatorFaceCamPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimulatorFaceCamPreview.swift; sourceTree = "<group>"; };
 		A6DA46E1E8402AB34783518A /* ActiveBroadcastController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveBroadcastController.swift; sourceTree = "<group>"; };
 		AA5555C9D5798F58015CCF0F /* MockRecordingWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockRecordingWriter.swift; sourceTree = "<group>"; };
@@ -156,9 +163,10 @@
 		ACBEC9967909386252E6D88A /* Vision.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Vision.framework; path = System/Library/Frameworks/Vision.framework; sourceTree = SDKROOT; };
 		AD9D76AC1B2F5CBFB80E0EC2 /* ARFaceCamPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ARFaceCamPreviewView.swift; sourceTree = "<group>"; };
 		AF168E2AB4E05873579A0657 /* SceneKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SceneKit.framework; path = System/Library/Frameworks/SceneKit.framework; sourceTree = SDKROOT; };
+		AF18DD590789D4F04902E55D /* PiPFramePipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiPFramePipeline.swift; sourceTree = "<group>"; };
 		B350EA4E988F1F8736FCF212 /* AppGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroup.swift; sourceTree = "<group>"; };
 		B57D952722AB5215A74401AF /* MockCameraFeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockCameraFeed.swift; sourceTree = "<group>"; };
-		B72ADBBE3EC29702D46B59C7 /* GlassyRecordBroadcastUpload.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = GlassyRecordBroadcastUpload.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		B72ADBBE3EC29702D46B59C7 /* GlassyRecordBroadcastUpload.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = GlassyRecordBroadcastUpload.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		B8259450C32901A4FAF470D1 /* GlassyTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassyTheme.swift; sourceTree = "<group>"; };
 		BDD2FD2CB2F0EBDF831062B9 /* PencilKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PencilKit.framework; path = System/Library/Frameworks/PencilKit.framework; sourceTree = SDKROOT; };
 		C2B563952FF986F44428A582 /* EditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorView.swift; sourceTree = "<group>"; };
@@ -166,12 +174,12 @@
 		CBED1809A878013EB9CCD62D /* GlassyRecordUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = GlassyRecordUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		CCA6AF08BFFBBCEFFE923B63 /* CaptureConnectionSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureConnectionSupport.swift; sourceTree = "<group>"; };
 		D2587041F22AEB1C4C7978BD /* GlassesOverlayService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassesOverlayService.swift; sourceTree = "<group>"; };
+		F2B3C4D5E6F708192A3B4C5D /* GlassesFrameProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassesFrameProcessor.swift; sourceTree = "<group>"; };
 		DD931DB28865D6F738F8926D /* GlassesSelectionCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassesSelectionCard.swift; sourceTree = "<group>"; };
 		E14261FC021668744BC15F85 /* GlassyRecord.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GlassyRecord.entitlements; sourceTree = "<group>"; };
 		E5347329ADA3E098E824D87F /* AppModelsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModelsTests.swift; sourceTree = "<group>"; };
 		EA57AF857F3C40BB1C26A3FE /* GlassyRecordBroadcastUpload.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GlassyRecordBroadcastUpload.entitlements; sourceTree = "<group>"; };
 		EF74A7FDF64760581864A65A /* BroadcastRecordingConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BroadcastRecordingConfig.swift; sourceTree = "<group>"; };
-		F59A4F7792A98847984F6F8F /* PiPInlinePreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiPInlinePreview.swift; sourceTree = "<group>"; };
 		F7A5B1C41A3A5188B70042F2 /* Photos.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Photos.framework; path = System/Library/Frameworks/Photos.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -193,7 +201,6 @@
 				E9A045E2F5510509EF8565FE /* AVFoundation.framework in Frameworks */,
 				BAAADC2C260F72452087C7DA /* ReplayKit.framework in Frameworks */,
 				E0C47269F504444BF5056BB2 /* Metal.framework in Frameworks */,
-				FF4151A15FFAA79FB915DA74 /* MetalKit.framework in Frameworks */,
 				558AD8517D30483E3E042691 /* Vision.framework in Frameworks */,
 				55D9D63E3B20AC13F23ED05D /* SceneKit.framework in Frameworks */,
 				CCDA3C23047D566A3C800811 /* Photos.framework in Frameworks */,
@@ -296,11 +303,11 @@
 				53BA6576A22907866A43A0A3 /* CameraService.swift */,
 				136DED63C26E570333DAAAD7 /* ExportService.swift */,
 				D2587041F22AEB1C4C7978BD /* GlassesOverlayService.swift */,
+				F2B3C4D5E6F708192A3B4C5D /* GlassesFrameProcessor.swift */,
 				B57D952722AB5215A74401AF /* MockCameraFeed.swift */,
 				AA5555C9D5798F58015CCF0F /* MockRecordingWriter.swift */,
 				83BBC7E1A8E90F732E110E82 /* PiPCameraManager.swift */,
 				03BBF58B5781554DB64879B3 /* RecordingNotificationService.swift */,
-				5624C9016DF7B1B2AB6BAF18 /* RenderService.swift */,
 				03D3B81FA1DBFB5C823D601D /* ScreenRecorderService.swift */,
 			);
 			path = Services;
@@ -313,7 +320,6 @@
 				C2C4C45C7A2DBE80E48490FF /* AVFoundation.framework */,
 				92CF581198F963727B0356F0 /* AVKit.framework */,
 				1BB6B82A0832DAF8928AD637 /* Metal.framework */,
-				9F2AAFE44A385E934FF6AD43 /* MetalKit.framework */,
 				BDD2FD2CB2F0EBDF831062B9 /* PencilKit.framework */,
 				F7A5B1C41A3A5188B70042F2 /* Photos.framework */,
 				8E6742E1AF10D86EEF0813B5 /* ReplayKit.framework */,
@@ -348,6 +354,11 @@
 				7EA17FC413A53F98D9130E62 /* BroadcastConfig+App.swift */,
 				3317C6BCDF460865E2C5F868 /* BroadcastErrorMessages.swift */,
 				CCA6AF08BFFBBCEFFE923B63 /* CaptureConnectionSupport.swift */,
+				640F4434AEAB0CB5CCFFDE9E /* PiPAudioKeepAlive.swift */,
+				57544E4236AD282F93B89845 /* PiPDisplayLayerHost.swift */,
+				AF18DD590789D4F04902E55D /* PiPFramePipeline.swift */,
+				82973469374DF229D32297A3 /* PiPFrameScaler.swift */,
+				11BB22CC33DD44EE55FF6600 /* PiPPixelGeometry.swift */,
 				95CAEE938A4089FA85E73B90 /* PiPSampleBufferFactory.swift */,
 				6D4C5E04716960CA2770082E /* SimulatorSupport.swift */,
 			);
@@ -422,10 +433,10 @@
 			children = (
 				AD9D76AC1B2F5CBFB80E0EC2 /* ARFaceCamPreviewView.swift */,
 				DD931DB28865D6F738F8926D /* GlassesSelectionCard.swift */,
-				F59A4F7792A98847984F6F8F /* PiPInlinePreview.swift */,
 				89251BDCED63D7E24AE0937E /* PlaceholderStateView.swift */,
 				23695972DE2E5EDCE9B21DDB /* RecordingControlPanel.swift */,
 				303819C5AD289B1209DB7571 /* ReplayKitCameraPreviewView.swift */,
+				22CC33DD44EE55FF66001122 /* PiPProcessedPreviewView.swift */,
 				A65D1DC8C2C77683BD61F0AE /* SimulatorFaceCamPreview.swift */,
 				5564FCF8E23075E0146BA56D /* SystemBroadcastPickerRepresentable.swift */,
 			);
@@ -538,12 +549,10 @@
 				LastUpgradeCheck = 2600;
 				TargetAttributes = {
 					37A8FC07AE371F20BFEF09B3 = {
-						DevelopmentTeam = YSSY28XABK;
 						ProvisioningStyle = Automatic;
 						SystemCapabilities = "[\"com.apple.ApplicationGroups.iOS\": [\"enabled\": 1]]";
 					};
 					3985885A057BF20FC5736A43 = {
-						DevelopmentTeam = YSSY28XABK;
 						ProvisioningStyle = Automatic;
 						SystemCapabilities = "[\"com.apple.ApplicationGroups.iOS\": [\"enabled\": 1]]";
 					};
@@ -643,21 +652,26 @@
 				F4F046E04238E26FA358BFC4 /* EditorView.swift in Sources */,
 				8DBD22E6F8B1F5ED333A2709 /* ExportService.swift in Sources */,
 				D77E825C895918C408BD8A7B /* GlassesOverlayService.swift in Sources */,
+				E1A2B3C4D5E6F708192A3B4C /* GlassesFrameProcessor.swift in Sources */,
 				738CDE5196C1D6783E626010 /* GlassesSelectionCard.swift in Sources */,
 				A9376D3D2E820D7F95101C5E /* GlassyRecordApp.swift in Sources */,
 				CB18F6C058AE928410DB0273 /* GlassyTheme.swift in Sources */,
 				BCC8B874B37FEFB62E75FA3D /* HomeView.swift in Sources */,
 				1E58D8C9A6443E11EA39CCB9 /* MockCameraFeed.swift in Sources */,
 				5359F5B389A1332D0DECB1EA /* MockRecordingWriter.swift in Sources */,
+				3670D17B0D8184EC3021DAA0 /* PiPAudioKeepAlive.swift in Sources */,
 				AB295386626C7B0FA48F85C2 /* PiPCameraManager.swift in Sources */,
-				DAE2E3ECCE22B410C32E9E61 /* PiPInlinePreview.swift in Sources */,
+				707D0450D111A829287557FD /* PiPDisplayLayerHost.swift in Sources */,
+				ADCE2364A17E0DC899B85737 /* PiPFramePipeline.swift in Sources */,
+				C56B3C4AEE230A30F2C0CBAE /* PiPFrameScaler.swift in Sources */,
+				AA11BB22CC33DD44EE55FF66 /* PiPPixelGeometry.swift in Sources */,
 				98124590B18FC77166BA7E80 /* PiPSampleBufferFactory.swift in Sources */,
+				BB22CC33DD44EE55FF660011 /* PiPProcessedPreviewView.swift in Sources */,
 				30E649262D2DA20FF2FD891B /* PlaceholderStateView.swift in Sources */,
 				636E2390D54C27E8C3355362 /* RecordingControlPanel.swift in Sources */,
 				C29718E0A5D9BC39255F2B18 /* RecordingNotificationService.swift in Sources */,
 				86B610C04FA5897DC545A47C /* RecordingOverlayView.swift in Sources */,
 				30FD6BF9769A32EE252DF9DC /* RecordingViewModel.swift in Sources */,
-				33812DA01B40A2D3AF764D28 /* RenderService.swift in Sources */,
 				3A66F31496882176DB98681C /* ReplayKitCameraPreviewView.swift in Sources */,
 				3DB3F13B72EC285406F59D1D /* ScreenRecorderService.swift in Sources */,
 				7FECA9844022DF40E346A28C /* SettingsUserDefaults.swift in Sources */,
@@ -747,6 +761,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = GlassyRecord/Resources/GlassyRecord.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = PRPL734V4V;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = GlassyRecord/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -763,7 +778,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = GlassyRecordBroadcastUpload/GlassyRecordBroadcastUpload.entitlements;
+				DEVELOPMENT_TEAM = PRPL734V4V;
 				INFOPLIST_FILE = GlassyRecordBroadcastUpload/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = GlassyRecord;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -771,6 +788,10 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.glassyrecord.app.broadcast;
 				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
@@ -782,6 +803,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = GlassyRecord/Resources/GlassyRecord.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = PRPL734V4V;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = GlassyRecord/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -863,7 +885,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = GlassyRecordBroadcastUpload/GlassyRecordBroadcastUpload.entitlements;
+				DEVELOPMENT_TEAM = PRPL734V4V;
 				INFOPLIST_FILE = GlassyRecordBroadcastUpload/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = GlassyRecord;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -871,6 +895,10 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.glassyrecord.app.broadcast;
 				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;

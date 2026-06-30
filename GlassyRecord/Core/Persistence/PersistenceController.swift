@@ -115,20 +115,21 @@ final class RecordingEntity {
         self.title = session.title
         self.createdAt = session.createdAt
         self.duration = session.duration
-        self.filePath = session.fileURL?.path
+        self.filePath = session.fileURL.path
         self.thumbnailData = session.thumbnailData
         self.qualityRaw = session.quality.rawValue
         self.glassesEnabled = session.glassesEnabled
         self.glassesColorRaw = session.glassesColor.rawValue
     }
 
-    func toRecordingSession() -> RecordingSession {
-        RecordingSession(
+    func toRecordingSession() -> RecordingSession? {
+        guard let path = filePath else { return nil }
+        return RecordingSession(
             id: id,
             title: title,
             createdAt: createdAt,
             duration: duration,
-            fileURL: filePath.map { URL(fileURLWithPath: $0) },
+            fileURL: URL(fileURLWithPath: path),
             thumbnailData: thumbnailData,
             quality: RecordingQuality(rawValue: qualityRaw) ?? .hd1080p,
             glassesEnabled: glassesEnabled,

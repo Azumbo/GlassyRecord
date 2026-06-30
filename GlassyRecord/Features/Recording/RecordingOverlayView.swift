@@ -18,6 +18,10 @@ struct RecordingOverlayContent: View {
     @StateObject private var viewModel: RecordingViewModel
     @GestureState private var pinchScale: CGFloat = 1.0
 
+    private var pipPreviewSize: CGSize {
+        CGSize(width: GlassyTheme.pipPreviewBaseWidth, height: GlassyTheme.pipPreviewBaseHeight)
+    }
+
     init(settings: AppSettings) {
         _viewModel = StateObject(wrappedValue: RecordingViewModel(settings: settings))
     }
@@ -70,9 +74,19 @@ struct RecordingOverlayContent: View {
         .statusBarHidden(!viewModel.showTimer)
         .onAppear { viewModel.onAppear() }
         .onDisappear { viewModel.cleanup() }
+        .onChange(of: settingsStore.settings.faceCamScale) { scale in
+            viewModel.applyFaceCamScale(scale)
+        }
         .onTapGesture { viewModel.userInteraction() }
+        .onChange(of: viewModel.completedSession?.id) { _ in
+            guard let session = viewModel.completedSession else { return }
+            coordinator.showEditor(for: session)
+            viewModel.clearCompletedSession()
+        }
         .onChange(of: scenePhase) { phase in
+            viewModel.handleScenePhase(phase)
             if phase == .active {
+                viewModel.applyFaceCamScaleFromSettings()
                 viewModel.refreshBroadcastState()
             }
         }
@@ -94,20 +108,64 @@ struct RecordingOverlayContent: View {
         VStack {
             HStack {
                 Spacer()
-                if viewModel.isPiPPreviewReady {
-                    PiPInlinePreview(displayLayer: viewModel.pipCameraManager.displayLayer)
-                        .frame(width: 112, height: 148)
+                VStack(alignment: .trailing, spacing: 8) {
+                    if let previewLayer = viewModel.pipProcessedPreviewLayer {
+                        ZStack {
+                            PiPProcessedPreviewView(displayLayer: previewLayer)
+                            if viewModel.glassesEnabled {
+                                SimulatorGlassesOverlay(color: viewModel.glassesService.frameColor)
+                                    .scaleEffect(0.85)
+                            }
+                        }
+                        .frame(
+                            width: pipPreviewSize.width * viewModel.faceCamScale,
+                            height: pipPreviewSize.height * viewModel.faceCamScale
+                        )
+                        .clipped()
                         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                         .overlay {
                             RoundedRectangle(cornerRadius: 14, style: .continuous)
                                 .strokeBorder(.white.opacity(0.25), lineWidth: 1)
                         }
-                        .padding(.top, 12)
-                        .padding(.trailing, 12)
+                    } else if viewModel.isAwaitingBroadcast || viewModel.isRecording {
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .fill(GlassyTheme.fillTertiary)
+                            .frame(width: pipPreviewSize.width, height: pipPreviewSize.height)
+                            .overlay { ProgressView() }
+                    }
+
+                    if viewModel.isAwaitingBroadcast || viewModel.isRecording {
+                        pipSizePresetControl
+                            .frame(width: 200)
+                    }
                 }
+                .padding(.top, 12)
+                .padding(.trailing, 12)
             }
             Spacer()
         }
+    }
+
+    private var pipSizePresetControl: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Label("Крупность", systemImage: "person.crop.rectangle")
+                .font(.caption2.weight(.medium))
+
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 44), spacing: 4)], spacing: 4) {
+                ForEach(PiPFaceSizePreset.allCases) { preset in
+                    Button(preset.shortLabel) {
+                        viewModel.selectFaceCamSize(preset)
+                        settingsStore.update { $0.applyPipFaceSizePreset(preset) }
+                        viewModel.userInteraction()
+                    }
+                    .buttonStyle(SelectableCapsuleStyle(isSelected: viewModel.faceCamSizePreset == preset))
+                    .font(.caption2.weight(.medium))
+                }
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .liquidGlass(cornerRadius: 10)
     }
 
     private var preparingOverlay: some View {
@@ -115,7 +173,7 @@ struct RecordingOverlayContent: View {
     }
 
     private var savingOverlay: some View {
-        statusOverlay(title: "Сохранение…", subtitle: "Добавляем видео в «Фото»")
+        statusOverlay(title: "Загрузка…", subtitle: "Получаем MP4 из Broadcast Extension")
     }
 
     private var broadcastSetupOverlay: some View {
@@ -124,7 +182,7 @@ struct RecordingOverlayContent: View {
             VStack(spacing: 16) {
                 Text("Face Cam через системный PiP")
                     .font(.headline)
-                Text("После старта записи селфи уйдёт в плавающее окно iOS. Позицию и размер задаёт система (4 угла, pinch, свайп за край). AR-очки накладываются до PiP — в видео попадёт то же, что в окошке.")
+                Text("Справа — превью камеры. Выберите крупность кнопками (−50%…+150%, S — стандарт). После «Начать трансляцию» свайп вверх — PiP останется на экране.")
                     .font(.subheadline)
                     .foregroundStyle(GlassyTheme.labelSecondary)
                     .multilineTextAlignment(.center)
@@ -322,7 +380,7 @@ struct RecordingOverlayContent: View {
                     glassesEnabled: viewModel.glassesEnabled,
                     glassesColor: viewModel.glassesService.frameColor,
                     drawingTool: viewModel.drawingTool,
-                    onStop: { Task { await stopAndSave() } },
+                    onStop: { Task { await viewModel.stopRecording() } },
                     onToggleGlasses: viewModel.toggleGlasses,
                     onGlassesColor: viewModel.setGlassesColor,
                     onToolChange: { viewModel.drawingTool = $0 }
@@ -347,14 +405,6 @@ struct RecordingOverlayContent: View {
         }
     }
 
-    private func stopAndSave() async {
-        if await viewModel.stopRecordingAndSave() != nil {
-            coordinator.alertMessage = "Видео сохранено в «Фото»"
-            coordinator.popToRoot()
-        } else if case .failed(let message) = viewModel.setupPhase {
-            coordinator.alertMessage = message
-        }
-    }
 }
 
 struct FaceCamView: View {

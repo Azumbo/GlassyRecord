@@ -12,9 +12,7 @@ actor ExportService {
     func export(
         asset: AVAsset,
         codec: ExportCodec,
-        trimRange: CMTimeRange?,
-        filter: VideoFilter,
-        renderService: RenderService
+        trimRange: CMTimeRange?
     ) async throws -> URL {
         let composition = AVMutableComposition()
         let videoTracks = try await asset.loadTracks(withMediaType: .video)

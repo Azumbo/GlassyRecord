@@ -21,7 +21,8 @@ final class AppModelsTests: XCTestCase {
     }
 
     func testRecordingSessionCodable() throws {
-        let session = RecordingSession(duration: 42, glassesEnabled: true, glassesColor: .blue)
+        let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent("test.mp4")
+        let session = RecordingSession(duration: 42, fileURL: fileURL, glassesEnabled: true, glassesColor: .blue)
         let data = try JSONEncoder().encode(session)
         let decoded = try JSONDecoder().decode(RecordingSession.self, from: data)
         XCTAssertEqual(decoded.id, session.id)

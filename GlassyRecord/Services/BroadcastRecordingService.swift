@@ -56,6 +56,11 @@ final class BroadcastRecordingService: ObservableObject {
         return try await waitForScreenFile()
     }
 
+    /// Ждёт MP4 после остановки трансляции (в т.ч. из Пункта управления).
+    func waitForFinishedRecording() async throws -> URL {
+        try await waitForScreenFile()
+    }
+
     func startDurationTimer() {
         timer?.invalidate()
         timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in

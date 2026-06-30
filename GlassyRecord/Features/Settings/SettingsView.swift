@@ -40,10 +40,21 @@ struct SettingsView: View {
                 }
             }
             Toggle("Зеркальное отражение", isOn: binding(\.faceCamMirrored))
-            LabeledContent("Масштаб") {
-                Slider(value: bindingCGFloat(\.faceCamScale), in: 0.6...1.8)
+            Picker("Крупность PiP", selection: faceCamSizePresetBinding) {
+                ForEach(PiPFaceSizePreset.allCases) { preset in
+                    Text(preset.menuLabel).tag(preset)
+                }
             }
         }
+    }
+
+    private var faceCamSizePresetBinding: Binding<PiPFaceSizePreset> {
+        Binding(
+            get: { PiPFaceSizePreset.nearest(to: settingsStore.settings.faceCamScale) },
+            set: { preset in
+                settingsStore.update { $0.applyPipFaceSizePreset(preset) }
+            }
+        )
     }
 
     private var audioSection: some View {
