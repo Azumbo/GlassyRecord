@@ -22,6 +22,7 @@ final class SampleHandler: RPBroadcastSampleHandler {
             return
         }
         self.config = config
+        BroadcastConfigStore.clearFailure()
     }
 
     override func processSampleBuffer(_ sampleBuffer: CMSampleBuffer, with sampleBufferType: RPSampleBufferType) {
@@ -37,11 +38,13 @@ final class SampleHandler: RPBroadcastSampleHandler {
     }
 
     override func broadcastFinished() {
-        writer?.finishSync()
-        if writer?.didWriteFrames == true, let path = writer?.outputURL.path {
+        let wroteFrames = writer?.finishSync() ?? false
+        if wroteFrames, let path = writer?.outputURL.path {
             BroadcastConfigStore.markScreenFinished(path: path)
+        } else if writer != nil {
+            BroadcastConfigStore.markFailed("Не получены кадры экрана. Держите запись хотя бы 2–3 секунды.")
         } else {
-            BroadcastConfigStore.markFailed("Не получены кадры экрана")
+            BroadcastConfigStore.markCancelled()
         }
         writer = nil
     }

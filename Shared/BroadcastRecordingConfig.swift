@@ -74,6 +74,19 @@ enum BroadcastConfigStore {
         defaults?.set(message, forKey: BroadcastDefaultsKey.errorMessage)
     }
 
+    static func markCancelled() {
+        state = .idle
+        defaults?.removeObject(forKey: BroadcastDefaultsKey.errorMessage)
+        defaults?.removeObject(forKey: BroadcastDefaultsKey.startTimestamp)
+    }
+
+    static func clearFailure() {
+        if state == .failed {
+            state = .idle
+        }
+        defaults?.removeObject(forKey: BroadcastDefaultsKey.errorMessage)
+    }
+
     static func reset() {
         state = .idle
         defaults?.removeObject(forKey: BroadcastDefaultsKey.screenOutputPath)

@@ -1,24 +1,19 @@
 @preconcurrency import AVFoundation
 import ReplayKit
 
-private struct UncheckedSendableSampleBuffer: @unchecked Sendable {
-    let value: CMSampleBuffer
-}
-
 /// Запись экрана и аудио в extension. Face Cam — через системный PiP в main app.
 final class BroadcastVideoWriter: @unchecked Sendable {
     let outputURL: URL
 
     private var assetWriter: AVAssetWriter?
     private var videoInput: AVAssetWriterInput?
+    private var pixelBufferAdaptor: AVAssetWriterInputPixelBufferAdaptor?
     private var systemAudioInput: AVAssetWriterInput?
     private var microphoneAudioInput: AVAssetWriterInput?
     private let config: BroadcastRecordingConfig
-    private let writeQueue = DispatchQueue(label: "com.glassyrecord.broadcast.writer", qos: .utility)
+    private let writeQueue = DispatchQueue(label: "com.glassyrecord.broadcast.writer", qos: .userInitiated)
     private var sessionStarted = false
-    private(set) var didWriteFrames = false
-    private var poolWidth = 0
-    private var poolHeight = 0
+    private var didWriteFrames = false
 
     init(
         outputURL: URL,
@@ -32,14 +27,14 @@ final class BroadcastVideoWriter: @unchecked Sendable {
             throw NSError(domain: "Writer", code: 1, userInfo: [NSLocalizedDescriptionKey: "No pixel buffer"])
         }
 
-        poolWidth = CVPixelBufferGetWidth(pixelBuffer)
-        poolHeight = CVPixelBufferGetHeight(pixelBuffer)
+        let width = CVPixelBufferGetWidth(pixelBuffer)
+        let height = CVPixelBufferGetHeight(pixelBuffer)
 
         let writer = try AVAssetWriter(outputURL: outputURL, fileType: .mp4)
         let videoSettings: [String: Any] = [
             AVVideoCodecKey: AVVideoCodecType.h264,
-            AVVideoWidthKey: poolWidth,
-            AVVideoHeightKey: poolHeight,
+            AVVideoWidthKey: width,
+            AVVideoHeightKey: height,
             AVVideoCompressionPropertiesKey: [
                 AVVideoAverageBitRateKey: 4_000_000,
                 AVVideoMaxKeyFrameIntervalKey: 30
@@ -52,6 +47,15 @@ final class BroadcastVideoWriter: @unchecked Sendable {
             throw NSError(domain: "Writer", code: 2, userInfo: [NSLocalizedDescriptionKey: "Cannot add video"])
         }
         writer.add(vInput)
+
+        let adaptor = AVAssetWriterInputPixelBufferAdaptor(
+            assetWriterInput: vInput,
+            sourcePixelBufferAttributes: [
+                kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
+                kCVPixelBufferWidthKey as String: width,
+                kCVPixelBufferHeightKey as String: height
+            ]
+        )
 
         let audioSettings: [String: Any] = [
             AVFormatIDKey: kAudioFormatMPEG4AAC,
@@ -83,33 +87,38 @@ final class BroadcastVideoWriter: @unchecked Sendable {
 
         assetWriter = writer
         videoInput = vInput
+        pixelBufferAdaptor = adaptor
         systemAudioInput = sysInput
         microphoneAudioInput = micInput
     }
 
     func appendVideo(_ sampleBuffer: CMSampleBuffer) {
-        let boxed = UncheckedSendableSampleBuffer(value: sampleBuffer)
-        writeQueue.async { [self] in
-            let sampleBuffer = boxed.value
-            guard let videoInput, let assetWriter else { return }
-            guard videoInput.isReadyForMoreMediaData else { return }
+        writeQueue.sync {
+            guard let videoInput,
+                  let pixelBufferAdaptor,
+                  let assetWriter,
+                  let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
+
+            let pts = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
 
             if !sessionStarted {
-                assetWriter.startWriting()
-                assetWriter.startSession(atSourceTime: CMSampleBufferGetPresentationTimeStamp(sampleBuffer))
+                guard assetWriter.startWriting() else { return }
+                assetWriter.startSession(atSourceTime: pts)
                 sessionStarted = true
             }
 
-            if videoInput.append(sampleBuffer) {
+            guard pixelBufferAdaptor.assetWriterInput.isReadyForMoreMediaData else { return }
+
+            if pixelBufferAdaptor.append(pixelBuffer, withPresentationTime: pts) {
+                didWriteFrames = true
+            } else if videoInput.isReadyForMoreMediaData, videoInput.append(sampleBuffer) {
                 didWriteFrames = true
             }
         }
     }
 
     func appendAudio(_ sampleBuffer: CMSampleBuffer, type: RPSampleBufferType) {
-        let boxed = UncheckedSendableSampleBuffer(value: sampleBuffer)
-        writeQueue.async { [self] in
-            let sampleBuffer = boxed.value
+        writeQueue.sync {
             guard sessionStarted else { return }
 
             switch type {
@@ -129,9 +138,10 @@ final class BroadcastVideoWriter: @unchecked Sendable {
         }
     }
 
-    func finishSync() {
+    @discardableResult
+    func finishSync() -> Bool {
         writeQueue.sync {
-            guard sessionStarted, let videoInput, let assetWriter else { return }
+            guard sessionStarted, let videoInput, let assetWriter else { return didWriteFrames }
             videoInput.markAsFinished()
             systemAudioInput?.markAsFinished()
             microphoneAudioInput?.markAsFinished()
@@ -139,6 +149,7 @@ final class BroadcastVideoWriter: @unchecked Sendable {
             group.enter()
             assetWriter.finishWriting { group.leave() }
             group.wait()
+            return didWriteFrames
         }
     }
 }

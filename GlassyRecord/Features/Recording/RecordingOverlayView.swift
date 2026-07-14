@@ -98,6 +98,11 @@ struct RecordingOverlayContent: View {
             guard !SimulatorSupport.isRunning, let message else { return }
             coordinator.alertMessage = message
         }
+        .onChange(of: coordinator.alertMessage) { message in
+            if message == nil, viewModel.isFailed {
+                viewModel.dismissFailure()
+            }
+        }
     }
 
     private var showPiPInlinePreview: Bool {
@@ -300,10 +305,13 @@ struct RecordingOverlayContent: View {
                     .frame(maxHeight: 180)
                 }
                 HStack(spacing: 12) {
-                    Button("Назад") { viewModel.exitToHome { coordinator.popToRoot() } }
+                    Button("Назад") {
+                        viewModel.dismissFailure()
+                        viewModel.exitToHome { coordinator.popToRoot() }
+                    }
                         .buttonStyle(.bordered)
                     Button("Повторить") {
-                        viewModel.setupPhase = .idle
+                        viewModel.dismissFailure()
                         viewModel.prepareBroadcastConfig()
                     }
                     .buttonStyle(.borderedProminent)

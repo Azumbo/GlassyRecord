@@ -86,6 +86,8 @@ final class RecordingViewModel: ObservableObject {
             .assign(to: &$isPiPActive)
     }
 
+    private var recordingStartedAt: Date?
+
     private func bindScreenCaptureObserver() {
         guard usesBroadcastMode else { return }
         NotificationCenter.default.publisher(for: UIScreen.capturedDidChangeNotification)
@@ -103,6 +105,8 @@ final class RecordingViewModel: ObservableObject {
                         Task { await self.beginActiveBroadcastSession() }
                     }
                 } else if self.isRecording {
+                    let elapsed = self.recordingStartedAt.map { Date().timeIntervalSince($0) } ?? 0
+                    guard elapsed > 2 else { return }
                     Task { await self.handleBroadcastEndedExternally() }
                 }
             }
@@ -173,6 +177,7 @@ final class RecordingViewModel: ObservableObject {
         broadcastService.startDurationTimer()
         isRecording = true
         setupPhase = .recording
+        recordingStartedAt = Date()
         resetControlAutoHide()
         resetTimerAutoHide()
 
@@ -201,9 +206,14 @@ final class RecordingViewModel: ObservableObject {
 
         if BroadcastConfigStore.state == .failed,
            let message = BroadcastConfigStore.errorMessage,
-           setupPhase != .saving {
+           setupPhase != .saving,
+           isRecording || isScreenCaptured {
             fail(with: message)
             return
+        }
+
+        if BroadcastConfigStore.state == .failed, !isRecording, !isScreenCaptured {
+            BroadcastConfigStore.clearFailure()
         }
 
         if BroadcastConfigStore.state == .finished, isRecording {
@@ -487,7 +497,17 @@ final class RecordingViewModel: ObservableObject {
         }
     }
 
+    func dismissFailure() {
+        lastError = nil
+        setupPhase = .idle
+        isRecording = false
+        recordingStartedAt = nil
+        BroadcastConfigStore.clearFailure()
+        broadcastService.stopDurationTimer()
+    }
+
     func exitToHome(_ completion: () -> Void) {
+        dismissFailure()
         pipCameraManager.stopStreaming()
         pipCameraManager.stop()
         cleanup()
