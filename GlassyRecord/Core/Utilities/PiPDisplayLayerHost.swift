@@ -137,8 +137,9 @@ enum PiPDisplayLayerHost {
 
     @MainActor
     private static func ensureWindow() {
-        if hostWindow != nil {
-            hostWindow?.isHidden = false
+        if let hostWindow {
+            hostWindow.isHidden = false
+            configurePassThrough(on: hostWindow)
             return
         }
 
@@ -151,7 +152,8 @@ enum PiPDisplayLayerHost {
 
         let window = UIWindow(windowScene: scene)
         window.frame = scene.screen.bounds
-        window.windowLevel = .normal
+        // Ниже основного окна приложения — не перехватывает касания UI.
+        window.windowLevel = .init(rawValue: UIWindow.Level.normal.rawValue - 1)
         window.backgroundColor = .clear
         window.isHidden = false
 
@@ -160,5 +162,12 @@ enum PiPDisplayLayerHost {
         controller.view.frame = scene.screen.bounds
         window.rootViewController = controller
         hostWindow = window
+        configurePassThrough(on: window)
+    }
+
+    @MainActor
+    private static func configurePassThrough(on window: UIWindow) {
+        window.isUserInteractionEnabled = false
+        window.rootViewController?.view.isUserInteractionEnabled = false
     }
 }

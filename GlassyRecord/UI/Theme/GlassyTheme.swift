@@ -88,6 +88,21 @@ struct SelectableCapsuleStyle: ButtonStyle {
     }
 }
 
+/// Кнопка пресета крупности PiP (компактная, для сетки).
+struct PipPresetButtonStyle: ButtonStyle {
+    let isSelected: Bool
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
+            .background(isSelected ? GlassyTheme.tint : GlassyTheme.fillSecondary)
+            .foregroundStyle(isSelected ? Color.white : GlassyTheme.labelPrimary)
+            .clipShape(Capsule())
+            .opacity(configuration.isPressed ? 0.75 : 1)
+    }
+}
+
 extension View {
     func liquidGlass(cornerRadius: CGFloat = GlassyTheme.cornerRadius) -> some View {
         modifier(LiquidGlassModifier(cornerRadius: cornerRadius))

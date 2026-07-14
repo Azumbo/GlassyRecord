@@ -29,10 +29,7 @@ struct RecordingOverlayContent: View {
     var body: some View {
         ZStack {
             GlassyTheme.backgroundSecondary.ignoresSafeArea()
-
-            if showPiPInlinePreview {
-                pipInlineOverlay
-            }
+                .onTapGesture { viewModel.userInteraction() }
 
             if showFaceCamPlacement {
                 faceCamOverlay
@@ -52,6 +49,16 @@ struct RecordingOverlayContent: View {
                     SimulatorBanner()
                     Spacer()
                 }
+                .allowsHitTesting(false)
+            }
+
+            if viewModel.showBroadcastSetupCard {
+                broadcastSetupOverlay
+            }
+
+            if showPiPInlinePreview {
+                pipInlineOverlay
+                    .zIndex(10)
             }
 
             if viewModel.isPreparing {
@@ -66,9 +73,7 @@ struct RecordingOverlayContent: View {
                 failedOverlay
             }
 
-            if viewModel.isAwaitingBroadcast {
-                broadcastSetupOverlay
-            }
+            recordingExitButton
         }
         .navigationBarHidden(true)
         .statusBarHidden(!viewModel.showTimer)
@@ -77,7 +82,6 @@ struct RecordingOverlayContent: View {
         .onChange(of: settingsStore.settings.faceCamScale) { scale in
             viewModel.applyFaceCamScale(scale)
         }
-        .onTapGesture { viewModel.userInteraction() }
         .onChange(of: viewModel.completedSession?.id) { _ in
             guard let session = viewModel.completedSession else { return }
             coordinator.showEditor(for: session)
@@ -102,6 +106,29 @@ struct RecordingOverlayContent: View {
 
     private var showFaceCamPlacement: Bool {
         !viewModel.usesBroadcastMode
+    }
+
+    private var recordingExitButton: some View {
+        VStack {
+            HStack {
+                Button {
+                    viewModel.exitToHome { coordinator.popToRoot() }
+                } label: {
+                    Label("Назад", systemImage: "chevron.left")
+                        .font(.body.weight(.semibold))
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 10)
+                        .liquidGlass(cornerRadius: 12)
+                }
+                .buttonStyle(.plain)
+                .padding(.leading, 16)
+                .padding(.top, 8)
+                Spacer()
+            }
+            Spacer()
+                .allowsHitTesting(false)
+        }
+        .zIndex(20)
     }
 
     private var pipInlineOverlay: some View {
@@ -143,7 +170,9 @@ struct RecordingOverlayContent: View {
                 .padding(.trailing, 12)
             }
             Spacer()
+                .allowsHitTesting(false)
         }
+        .allowsHitTesting(true)
     }
 
     private var pipSizePresetControl: some View {
@@ -153,13 +182,16 @@ struct RecordingOverlayContent: View {
 
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 44), spacing: 4)], spacing: 4) {
                 ForEach(PiPFaceSizePreset.allCases) { preset in
-                    Button(preset.shortLabel) {
-                        viewModel.selectFaceCamSize(preset)
+                    Button {
                         settingsStore.update { $0.applyPipFaceSizePreset(preset) }
                         viewModel.userInteraction()
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    } label: {
+                        Text(preset.shortLabel)
+                            .font(.caption2.weight(.medium))
+                            .frame(minWidth: 40, minHeight: 32)
                     }
-                    .buttonStyle(SelectableCapsuleStyle(isSelected: viewModel.faceCamSizePreset == preset))
-                    .font(.caption2.weight(.medium))
+                    .buttonStyle(PipPresetButtonStyle(isSelected: viewModel.faceCamSizePreset == preset))
                 }
             }
         }
@@ -179,10 +211,11 @@ struct RecordingOverlayContent: View {
     private var broadcastSetupOverlay: some View {
         VStack {
             Spacer()
+                .allowsHitTesting(false)
             VStack(spacing: 16) {
                 Text("Face Cam через системный PiP")
                     .font(.headline)
-                Text("Справа — превью камеры. Выберите крупность кнопками (−50%…+150%, S — стандарт). После «Начать трансляцию» свайп вверх — PiP останется на экране.")
+                Text("Справа — превью камеры. Выберите крупность кнопками (½…+150%, S — стандарт). PiP слева внизу — это камера, не запись экрана. Для записи нажмите красную кнопку ниже.")
                     .font(.subheadline)
                     .foregroundStyle(GlassyTheme.labelSecondary)
                     .multilineTextAlignment(.center)
@@ -218,11 +251,21 @@ struct RecordingOverlayContent: View {
             .padding(.horizontal, 24)
             .padding(.bottom, 120)
         }
+        .allowsHitTesting(true)
     }
 
     private var broadcastBanner: some View {
         VStack {
-            if viewModel.usesBroadcastMode, viewModel.isRecording {
+            if viewModel.usesBroadcastMode, viewModel.isPiPActive, !viewModel.isRecording {
+                Text("Face Cam в PiP готов. Запись экрана ещё не начата — нажмите «Начать запись экрана».")
+                    .font(.caption.weight(.medium))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+                    .liquidGlass(cornerRadius: 12)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 8)
+            } else if viewModel.usesBroadcastMode, viewModel.isRecording {
                 Text("Запись идёт — переключитесь в любое приложение. Face Cam останется в системном PiP. Вернитесь сюда, чтобы остановить.")
                     .font(.caption.weight(.medium))
                     .multilineTextAlignment(.center)
@@ -233,7 +276,9 @@ struct RecordingOverlayContent: View {
                     .padding(.top, 8)
             }
             Spacer()
+                .allowsHitTesting(false)
         }
+        .allowsHitTesting(false)
     }
 
     private var failedOverlay: some View {
@@ -255,7 +300,7 @@ struct RecordingOverlayContent: View {
                     .frame(maxHeight: 180)
                 }
                 HStack(spacing: 12) {
-                    Button("Назад") { coordinator.popToRoot() }
+                    Button("Назад") { viewModel.exitToHome { coordinator.popToRoot() } }
                         .buttonStyle(.bordered)
                     Button("Повторить") {
                         viewModel.setupPhase = .idle
@@ -372,8 +417,7 @@ struct RecordingOverlayContent: View {
     }
 
     private var controlsOverlay: some View {
-        VStack {
-            Spacer()
+        ZStack(alignment: .bottom) {
             if viewModel.showControls, viewModel.isRecording || !viewModel.usesBroadcastMode {
                 RecordingControlPanel(
                     isRecording: viewModel.isRecording,
@@ -388,11 +432,13 @@ struct RecordingOverlayContent: View {
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+        .allowsHitTesting(viewModel.showControls && (viewModel.isRecording || !viewModel.usesBroadcastMode))
         .animation(GlassyTheme.spring, value: viewModel.showControls)
     }
 
     private var timerBadge: some View {
-        VStack {
+        ZStack(alignment: .top) {
             if viewModel.showTimer, viewModel.isRecording {
                 Text(viewModel.duration.formattedDuration)
                     .font(.caption.monospacedDigit().weight(.semibold))
@@ -401,8 +447,9 @@ struct RecordingOverlayContent: View {
                     .liquidGlass(cornerRadius: 10)
                     .padding(.top, 8)
             }
-            Spacer()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .allowsHitTesting(false)
     }
 
 }

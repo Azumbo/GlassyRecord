@@ -49,6 +49,8 @@ final class PiPCameraManager: NSObject, ObservableObject {
     private var rotationHandler: CaptureRotationHandler?
     private var backgroundTaskID: UIBackgroundTaskIdentifier = .invalid
     private var pendingPiPActivation = false
+    private var pendingPiPRestartForScaleChange = false
+    private var ignoresSystemRenderSizeSync = false
     private var wantsPiPActive = false
     private let audioKeepAlive = PiPAudioKeepAlive()
 
@@ -65,15 +67,31 @@ final class PiPCameraManager: NSObject, ObservableObject {
     }
 
     @MainActor
-    private func applyPresetRenderSizes(invalidatePiP: Bool = false) {
+    private func applyPresetRenderSizes(restartPiPIfActive: Bool = false) {
         let pointSize = PiPDisplayLayerHost.renderSize(for: contentScale)
         let pixelSize = PiPPixelGeometry.pixelSize(fromPoints: pointSize)
         framePipeline.setTargetRenderSize(pixelSize)
         PiPDisplayLayerHost.updateScale(contentScale, displayLayer: displayLayer)
 
-        if invalidatePiP {
-            refreshPiPGeometryAfterScaleChange()
+        if restartPiPIfActive {
+            restartPiPIfActiveForScaleChange()
         }
+    }
+
+    /// Gracefully restarts PiP so iOS picks up new source-layer bounds and buffer size.
+    @MainActor
+    private func restartPiPIfActiveForScaleChange() {
+        let pipActive = pipController?.isPictureInPictureActive == true || isPiPActive
+        guard pipActive else { return }
+
+        pendingPiPRestartForScaleChange = true
+        ignoresSystemRenderSizeSync = true
+        installDisplayLayer()
+        displayLayer.flush()
+        if #available(iOS 14.0, *), displayLayer.requiresFlushToResumeDecoding {
+            displayLayer.flush()
+        }
+        pipController?.stopPictureInPicture()
     }
 
     func setContentScale(_ scale: CGFloat, invalidatePiP: Bool = true) {
@@ -98,14 +116,9 @@ final class PiPCameraManager: NSObject, ObservableObject {
             previewDisplayLayer.flush()
         }
 
-        applyPresetRenderSizes(invalidatePiP: sizeChanged || invalidatePiP)
-    }
-
-    /// Заставляет систему пересчитать размер PiP после смены физических bounds слоя.
-    private func refreshPiPGeometryAfterScaleChange() {
-        displayLayer.flush()
-        if #available(iOS 15.0, *) {
-            pipController?.invalidatePlaybackState()
+        applyPresetRenderSizes(restartPiPIfActive: sizeChanged || invalidatePiP)
+        if !sizeChanged, !invalidatePiP {
+            ignoresSystemRenderSizeSync = false
         }
     }
 
@@ -249,6 +262,7 @@ final class PiPCameraManager: NSObject, ObservableObject {
         isPiPActive = false
         wantsPiPActive = false
         pendingPiPActivation = false
+        pendingPiPRestartForScaleChange = false
         framePipeline.stop()
         pipController?.stopPictureInPicture()
         glassesService?.frameConsumer = nil
@@ -468,6 +482,8 @@ extension PiPCameraManager: AVPictureInPictureSampleBufferPlaybackDelegate {
     }
 
     private func syncSourceLayerToSystemPiP(_ dimensions: CMVideoDimensions) {
+        guard !pendingPiPRestartForScaleChange, !ignoresSystemRenderSizeSync else { return }
+
         let pixelSize = PiPPixelGeometry.pixelSize(from: dimensions)
         let pointSize = PiPPixelGeometry.pointSizeForLayer(from: dimensions)
 
@@ -495,6 +511,7 @@ extension PiPCameraManager: AVPictureInPictureControllerDelegate {
     ) {
         Task { @MainActor [weak self] in
             self?.isPiPActive = true
+            self?.ignoresSystemRenderSizeSync = false
             PiPDisplayLayerHost.setSourceHidden(true)
         }
     }
@@ -506,6 +523,14 @@ extension PiPCameraManager: AVPictureInPictureControllerDelegate {
             guard let self else { return }
             self.isPiPActive = false
             PiPDisplayLayerHost.setSourceHidden(true)
+
+            if self.pendingPiPRestartForScaleChange {
+                self.pendingPiPRestartForScaleChange = false
+                guard self.isStreaming, self.wantsPiPActive else { return }
+                self.activatePiP()
+                return
+            }
+
             guard self.isStreaming, self.wantsPiPActive else { return }
             let state = UIApplication.shared.applicationState
             guard state == .active else {
@@ -521,7 +546,12 @@ extension PiPCameraManager: AVPictureInPictureControllerDelegate {
         failedToStartPictureInPictureWithError error: Error
     ) {
         Task { @MainActor [weak self] in
-            self?.isPiPActive = false
+            guard let self else { return }
+            self.isPiPActive = false
+            if self.pendingPiPRestartForScaleChange {
+                self.pendingPiPRestartForScaleChange = false
+                self.pendingPiPActivation = true
+            }
         }
     }
 

@@ -52,6 +52,7 @@ struct SystemBroadcastPickerRepresentable: UIViewRepresentable {
 
             guard installedPicker !== picker else { return }
             installedPicker = picker
+            button.addAction(UIAction { [onPrepare] _ in onPrepare() }, for: .touchDown)
             button.addAction(UIAction { [onPrepare] _ in onPrepare() }, for: .touchUpInside)
         }
     }

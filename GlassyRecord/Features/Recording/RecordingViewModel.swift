@@ -33,6 +33,8 @@ final class RecordingViewModel: ObservableObject {
     @Published var glassesEnabled = false
     @Published private(set) var usesBroadcastMode = !SimulatorSupport.isRunning
     @Published private(set) var isPiPPreviewReady = false
+    @Published private(set) var isScreenCaptured = false
+    @Published private(set) var isPiPActive = false
     @Published var lastError: GlassyRecordError?
     @Published private(set) var completedSession: RecordingSession?
 
@@ -78,6 +80,10 @@ final class RecordingViewModel: ObservableObject {
             .map { $0 && $1 }
             .receive(on: DispatchQueue.main)
             .assign(to: &$isPiPPreviewReady)
+
+        pipCameraManager.$isPiPActive
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$isPiPActive)
     }
 
     private func bindScreenCaptureObserver() {
@@ -112,6 +118,7 @@ final class RecordingViewModel: ObservableObject {
 
         if usesBroadcastMode {
             setupPhase = .idle
+            prepareBroadcastConfig()
             refreshBroadcastState()
             if isRecording {
                 setupPhase = .recording
@@ -189,7 +196,15 @@ final class RecordingViewModel: ObservableObject {
     func refreshBroadcastState() {
         guard usesBroadcastMode else { return }
 
+        isScreenCaptured = UIScreen.main.isCaptured
         broadcastService.refreshState()
+
+        if BroadcastConfigStore.state == .failed,
+           let message = BroadcastConfigStore.errorMessage,
+           setupPhase != .saving {
+            fail(with: message)
+            return
+        }
 
         if BroadcastConfigStore.state == .finished, isRecording {
             Task { await handleBroadcastEndedExternally() }
@@ -264,7 +279,11 @@ final class RecordingViewModel: ObservableObject {
     var isPreparing: Bool { setupPhase == .preparing }
     var isFailed: Bool { setupPhase.isFailed }
     var isSaving: Bool { setupPhase == .saving }
-    var isAwaitingBroadcast: Bool { usesBroadcastMode && setupPhase == .idle }
+    var isAwaitingBroadcast: Bool {
+        usesBroadcastMode && setupPhase == .idle && !isRecording && !isScreenCaptured
+    }
+
+    var showBroadcastSetupCard: Bool { isAwaitingBroadcast }
 
     var pipPreviewSession: AVCaptureSession? {
         guard usesBroadcastMode else { return nil }
@@ -287,6 +306,7 @@ final class RecordingViewModel: ObservableObject {
 
     func applyFaceCamScale(_ scale: CGFloat) {
         let preset = PiPFaceSizePreset.nearest(to: scale)
+        guard abs(faceCamScale - preset.scaleFactor) > 0.02 else { return }
         faceCamScale = preset.scaleFactor
         pipCameraManager.setContentScale(faceCamScale, invalidatePiP: true)
     }
@@ -465,6 +485,13 @@ final class RecordingViewModel: ObservableObject {
                 try? await Task.sleep(for: .seconds(1))
             }
         }
+    }
+
+    func exitToHome(_ completion: () -> Void) {
+        pipCameraManager.stopStreaming()
+        pipCameraManager.stop()
+        cleanup()
+        completion()
     }
 
     func cleanup() {
