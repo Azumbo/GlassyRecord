@@ -30,6 +30,8 @@ struct RootView: View {
                         EditorView(session: session)
                     case .settings:
                         SettingsView()
+                    case .usageStats:
+                        UsageStatsView()
                     }
                 }
         }

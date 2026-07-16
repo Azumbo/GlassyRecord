@@ -513,6 +513,7 @@ extension PiPCameraManager: AVPictureInPictureControllerDelegate {
             self?.isPiPActive = true
             self?.ignoresSystemRenderSizeSync = false
             PiPDisplayLayerHost.setSourceHidden(true)
+            UsageTracker.shared.track(.pipActivated)
         }
     }
 

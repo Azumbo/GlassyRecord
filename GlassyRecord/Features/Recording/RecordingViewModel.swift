@@ -160,6 +160,14 @@ final class RecordingViewModel: ObservableObject {
         BroadcastConfigStore.saveConfig(makeBroadcastConfig())
         RPScreenRecorder.shared().isMicrophoneEnabled = settings.microphoneEnabled
         pipCameraManager.requestPiPActive()
+        UsageTracker.shared.track(
+            .broadcastPrepare,
+            params: [
+                "mic": String(settings.microphoneEnabled),
+                "system_audio": String(settings.systemAudioEnabled),
+                "pip_preset": faceCamSizePreset.rawValue
+            ]
+        )
     }
 
     func handleScenePhase(_ phase: ScenePhase) {
@@ -180,6 +188,14 @@ final class RecordingViewModel: ObservableObject {
         recordingStartedAt = Date()
         resetControlAutoHide()
         resetTimerAutoHide()
+        UsageTracker.shared.track(
+            .broadcastStarted,
+            params: [
+                "glasses": String(glassesEnabled),
+                "pip_preset": faceCamSizePreset.rawValue,
+                "quality": settings.quality.rawValue
+            ]
+        )
 
         if !pipCameraManager.isPrepared {
             await preparePiPCamera()
@@ -270,11 +286,15 @@ final class RecordingViewModel: ObservableObject {
     }
 
     private func fail(with error: Error) {
-        setupPhase = .failed(BroadcastErrorMessages.message(for: error))
+        let message = BroadcastErrorMessages.message(for: error)
+        setupPhase = .failed(message)
+        UsageTracker.shared.track(.recordingFailed, params: ["reason": String(message.prefix(120))])
     }
 
     private func fail(with message: String) {
-        setupPhase = .failed(BroadcastErrorMessages.message(forOptionalReason: message))
+        let text = BroadcastErrorMessages.message(forOptionalReason: message)
+        setupPhase = .failed(text)
+        UsageTracker.shared.track(.recordingFailed, params: ["reason": String(text.prefix(120))])
     }
 
     func makeBroadcastConfig() -> BroadcastRecordingConfig {
@@ -323,6 +343,7 @@ final class RecordingViewModel: ObservableObject {
 
     func selectFaceCamSize(_ preset: PiPFaceSizePreset) {
         applyFaceCamScale(preset.scaleFactor)
+        UsageTracker.shared.track(.pipSizePreset, params: ["preset": preset.rawValue, "source": "recording"])
     }
 
     func updateFaceCamScale(_ scale: CGFloat) {
@@ -370,6 +391,13 @@ final class RecordingViewModel: ObservableObject {
 
                 let session = try await makeRecordingSession(from: url, duration: recordedDuration)
                 completedSession = session
+                UsageTracker.shared.track(
+                    .broadcastFinished,
+                    params: [
+                        "duration_s": String(format: "%.1f", recordedDuration),
+                        "glasses": String(glassesEnabled)
+                    ]
+                )
                 return session
             } catch let error as GlassyRecordError {
                 lastError = error
@@ -393,6 +421,13 @@ final class RecordingViewModel: ObservableObject {
 
             let session = try await makeRecordingSession(from: url, duration: recordedDuration)
             completedSession = session
+            UsageTracker.shared.track(
+                .broadcastFinished,
+                params: [
+                    "duration_s": String(format: "%.1f", recordedDuration),
+                    "mode": "simulator"
+                ]
+            )
             return session
         } catch let error as GlassyRecordError {
             lastError = error
@@ -425,6 +460,7 @@ final class RecordingViewModel: ObservableObject {
         glassesEnabled.toggle()
         glassesService.setEnabled(glassesEnabled, usesPiPCapture: usesBroadcastMode)
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        UsageTracker.shared.track(.glassesToggled, params: ["enabled": String(glassesEnabled)])
         if usesBroadcastMode, pipCameraManager.isPrepared {
             Task {
                 pipCameraManager.stop()
@@ -435,6 +471,7 @@ final class RecordingViewModel: ObservableObject {
 
     func setGlassesColor(_ color: GlassesFrameColor) {
         glassesService.setFrameColor(color)
+        UsageTracker.shared.track(.glassesColorChanged, params: ["color": color.rawValue, "source": "recording"])
     }
 
     func userInteraction() {
@@ -470,6 +507,7 @@ final class RecordingViewModel: ObservableObject {
             opacity: settings.touchIndicatorOpacity
         )
         touchIndicators.append(indicator)
+        UsageTracker.shared.track(.touchIndicatorShown)
         Task {
             try? await Task.sleep(for: .seconds(0.6))
             touchIndicators.removeAll { $0.id == indicator.id }
@@ -507,6 +545,13 @@ final class RecordingViewModel: ObservableObject {
     }
 
     func exitToHome(_ completion: () -> Void) {
+        UsageTracker.shared.track(
+            .exitRecording,
+            params: [
+                "was_recording": String(isRecording),
+                "phase": String(describing: setupPhase)
+            ]
+        )
         dismissFailure()
         pipCameraManager.stopStreaming()
         pipCameraManager.stop()

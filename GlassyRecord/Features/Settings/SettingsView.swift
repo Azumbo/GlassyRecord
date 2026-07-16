@@ -3,8 +3,20 @@ import SwiftUI
 struct SettingsView: View {
     @EnvironmentObject private var settingsStore: SettingsStore
 
+    @EnvironmentObject private var coordinator: AppCoordinator
+
     var body: some View {
         Form {
+            Section {
+                Button {
+                    coordinator.showUsageStats()
+                } label: {
+                    Label("Статистика использования", systemImage: "chart.bar")
+                }
+            } footer: {
+                Text("Счётчики локально на устройстве. Скопируйте отчёт и вставьте в Cursor, чтобы понять, что удалить.")
+            }
+
             qualitySection
             faceCamSection
             audioSection
@@ -18,28 +30,28 @@ struct SettingsView: View {
 
     private var qualitySection: some View {
         Section("Качество") {
-            Picker("Разрешение", selection: binding(\.quality)) {
+            Picker("Разрешение", selection: binding(\.quality, feature: .qualityChanged, param: { ["quality": $0.rawValue, "source": "settings"] })) {
                 ForEach(RecordingQuality.allCases) { q in
                     Text(q.displayName).tag(q)
                 }
             }
-            Toggle("Экономия энергии", isOn: binding(\.lowPowerModeAware))
+            Toggle("Экономия энергии", isOn: binding(\.lowPowerModeAware, feature: .lowPowerAwareToggled, param: { ["enabled": String($0)] }))
         }
     }
 
     private var faceCamSection: some View {
         Section("Face Cam") {
-            Picker("Положение", selection: binding(\.faceCamCorner)) {
+            Picker("Положение", selection: binding(\.faceCamCorner, feature: .faceCamCornerChanged, param: { ["corner": $0.rawValue, "source": "settings"] })) {
                 ForEach(FaceCamCorner.allCases) { c in
                     Text(c.displayName).tag(c)
                 }
             }
-            Picker("Форма", selection: binding(\.faceCamShape)) {
+            Picker("Форма", selection: binding(\.faceCamShape, feature: .faceCamShapeChanged, param: { ["shape": $0.rawValue] })) {
                 ForEach(FaceCamShape.allCases) { s in
                     Text(s.displayName).tag(s)
                 }
             }
-            Toggle("Зеркальное отражение", isOn: binding(\.faceCamMirrored))
+            Toggle("Зеркальное отражение", isOn: binding(\.faceCamMirrored, feature: .faceCamMirrorToggled, param: { ["enabled": String($0)] }))
             Picker("Крупность PiP", selection: faceCamSizePresetBinding) {
                 ForEach(PiPFaceSizePreset.allCases) { preset in
                     Text(preset.menuLabel).tag(preset)
@@ -53,14 +65,15 @@ struct SettingsView: View {
             get: { PiPFaceSizePreset.nearest(to: settingsStore.settings.faceCamScale) },
             set: { preset in
                 settingsStore.update { $0.applyPipFaceSizePreset(preset) }
+                UsageTracker.shared.track(.pipSizePreset, params: ["preset": preset.rawValue, "source": "settings"])
             }
         )
     }
 
     private var audioSection: some View {
         Section("Аудио") {
-            Toggle("Микрофон", isOn: binding(\.microphoneEnabled))
-            Toggle("Системный звук", isOn: binding(\.systemAudioEnabled))
+            Toggle("Микрофон", isOn: binding(\.microphoneEnabled, feature: .micToggled, param: { ["enabled": String($0), "source": "settings"] }))
+            Toggle("Системный звук", isOn: binding(\.systemAudioEnabled, feature: .systemAudioToggled, param: { ["enabled": String($0)] }))
             if settingsStore.settings.microphoneEnabled {
                 LabeledContent("Громкость микрофона") {
                     Slider(value: bindingFloat(\.microphoneVolume), in: 0...2)
@@ -76,9 +89,9 @@ struct SettingsView: View {
 
     private var glassesSection: some View {
         Section {
-            Toggle("Включить наложение по умолчанию", isOn: binding(\.glassesEnabledByDefault))
+            Toggle("Включить наложение по умолчанию", isOn: binding(\.glassesEnabledByDefault, feature: .glassesDefaultToggled, param: { ["enabled": String($0), "source": "settings"] }))
 
-            Picker("Цвет оправы", selection: binding(\.glassesColor)) {
+            Picker("Цвет оправы", selection: binding(\.glassesColor, feature: .glassesColorChanged, param: { ["color": $0.rawValue, "source": "settings"] })) {
                 ForEach(GlassesFrameColor.allCases) { color in
                     HStack {
                         Circle()
@@ -106,7 +119,7 @@ struct SettingsView: View {
 
     private var touchSection: some View {
         Section("Индикаторы касаний") {
-            Toggle("Показывать касания", isOn: binding(\.touchIndicatorEnabled))
+            Toggle("Показывать касания", isOn: binding(\.touchIndicatorEnabled, feature: .touchIndicatorsToggled, param: { ["enabled": String($0)] }))
             LabeledContent("Размер") {
                 Slider(value: bindingCGFloat(\.touchIndicatorSize), in: 12...48)
             }
@@ -129,10 +142,17 @@ struct SettingsView: View {
 
     // MARK: - Bindings
 
-    private func binding<T>(_ keyPath: WritableKeyPath<AppSettings, T>) -> Binding<T> {
+    private func binding<T: Equatable>(_ keyPath: WritableKeyPath<AppSettings, T>, feature: UsageFeature? = nil, param: ((T) -> [String: String])? = nil) -> Binding<T> {
         Binding(
             get: { settingsStore.settings[keyPath: keyPath] },
-            set: { newValue in settingsStore.update { $0[keyPath: keyPath] = newValue } }
+            set: { newValue in
+                let old = settingsStore.settings[keyPath: keyPath]
+                guard old != newValue else { return }
+                settingsStore.update { $0[keyPath: keyPath] = newValue }
+                if let feature {
+                    UsageTracker.shared.track(feature, params: param?(newValue) ?? [:])
+                }
+            }
         )
     }
 
@@ -153,5 +173,6 @@ struct SettingsView: View {
     NavigationStack {
         SettingsView()
             .environmentObject(SettingsStore())
+            .environmentObject(AppCoordinator(settingsStore: SettingsStore()))
     }
 }

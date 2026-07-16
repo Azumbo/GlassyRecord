@@ -36,6 +36,13 @@ final class EditorViewModel: ObservableObject {
             if isFullRange {
                 try await exportService.saveToPhotoLibrary(url: url)
             } else {
+                UsageTracker.shared.track(
+                    .trimUsed,
+                    params: [
+                        "start_s": String(format: "%.1f", trimStart),
+                        "end_s": String(format: "%.1f", trimEnd)
+                    ]
+                )
                 let asset = AVURLAsset(url: url)
                 let start = CMTime(seconds: trimStart, preferredTimescale: 600)
                 let end = CMTime(seconds: trimEnd, preferredTimescale: 600)
@@ -48,8 +55,16 @@ final class EditorViewModel: ObservableObject {
                 try await exportService.saveToPhotoLibrary(url: exported)
             }
             exportSucceeded = true
+            UsageTracker.shared.track(
+                .exportSucceeded,
+                params: ["trimmed": String(!isFullRange)]
+            )
         } catch {
             errorMessage = error.localizedDescription
+            UsageTracker.shared.track(
+                .exportFailed,
+                params: ["reason": String(error.localizedDescription.prefix(120))]
+            )
         }
     }
 }

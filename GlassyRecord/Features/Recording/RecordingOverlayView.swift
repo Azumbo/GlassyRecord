@@ -435,7 +435,10 @@ struct RecordingOverlayContent: View {
                     onStop: { Task { await viewModel.stopRecording() } },
                     onToggleGlasses: viewModel.toggleGlasses,
                     onGlassesColor: viewModel.setGlassesColor,
-                    onToolChange: { viewModel.drawingTool = $0 }
+                    onToolChange: {
+                        viewModel.drawingTool = $0
+                        UsageTracker.shared.track(.drawingToolSelected, params: ["tool": $0.rawValue])
+                    }
                 )
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }

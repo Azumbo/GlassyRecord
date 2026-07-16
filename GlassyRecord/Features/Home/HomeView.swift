@@ -32,6 +32,9 @@ struct HomeView: View {
                 .accessibilityLabel("Настройки")
             }
         }
+        .onAppear {
+            UsageTracker.shared.track(.homeOpened)
+        }
     }
 
     private var background: some View {
@@ -90,6 +93,7 @@ struct HomeView: View {
                         isSelected: settingsStore.settings.quality == quality
                     ) {
                         settingsStore.update { $0.quality = quality }
+                        UsageTracker.shared.track(.qualityChanged, params: ["quality": quality.rawValue])
                     }
                 }
             }
@@ -101,11 +105,18 @@ struct HomeView: View {
                     isOn: settingsStore.settings.microphoneEnabled
                 ) {
                     settingsStore.update { $0.microphoneEnabled.toggle() }
+                    UsageTracker.shared.track(
+                        .micToggled,
+                        params: ["enabled": String(settingsStore.settings.microphoneEnabled)]
+                    )
                 }
 
                 Picker("Face Cam", selection: Binding(
                     get: { settingsStore.settings.faceCamCorner },
-                    set: { corner in settingsStore.update { $0.faceCamCorner = corner } }
+                    set: { corner in
+                        settingsStore.update { $0.faceCamCorner = corner }
+                        UsageTracker.shared.track(.faceCamCornerChanged, params: ["corner": corner.rawValue])
+                    }
                 )) {
                     ForEach(FaceCamCorner.allCases) { corner in
                         Text(corner.displayName).tag(corner)
@@ -123,12 +134,16 @@ struct HomeView: View {
         GlassesSelectionCard(
             isEnabled: Binding(
                 get: { settingsStore.settings.glassesEnabledByDefault },
-                set: { enabled in settingsStore.update { $0.glassesEnabledByDefault = enabled } }
+                set: { enabled in
+                    settingsStore.update { $0.glassesEnabledByDefault = enabled }
+                    UsageTracker.shared.track(.glassesDefaultToggled, params: ["enabled": String(enabled)])
+                }
             ),
             selectedColor: settingsStore.settings.glassesColor,
             lensTransparency: settingsStore.settings.lensTransparency,
             onColorChange: { color in
                 settingsStore.update { $0.glassesColor = color }
+                UsageTracker.shared.track(.glassesColorChanged, params: ["color": color.rawValue, "source": "home"])
             }
         )
     }

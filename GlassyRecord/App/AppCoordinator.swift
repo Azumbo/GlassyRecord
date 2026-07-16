@@ -16,14 +16,28 @@ final class AppCoordinator: ObservableObject {
 
     func showRecording() {
         path.append(AppRoute.recording)
+        UsageTracker.shared.track(.recordingOpened)
     }
 
     func showEditor(for session: RecordingSession) {
         path.append(AppRoute.editor(session))
+        UsageTracker.shared.track(
+            .editorOpened,
+            params: [
+                "duration_s": String(format: "%.1f", session.duration),
+                "glasses": String(session.glassesEnabled),
+                "quality": session.quality.rawValue
+            ]
+        )
     }
 
     func showSettings() {
         path.append(AppRoute.settings)
+        UsageTracker.shared.track(.settingsOpened)
+    }
+
+    func showUsageStats() {
+        path.append(AppRoute.usageStats)
     }
 
     func popToRoot() {

@@ -363,4 +363,5 @@ enum AppRoute: Hashable {
     case recording
     case editor(RecordingSession)
     case settings
+    case usageStats
 }
