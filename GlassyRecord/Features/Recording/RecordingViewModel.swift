@@ -1,6 +1,5 @@
 import Combine
 import SwiftUI
-import PencilKit
 import ReplayKit
 import UIKit
 
@@ -27,9 +26,8 @@ final class RecordingViewModel: ObservableObject {
     @Published var showTimer = true
     @Published var faceCamPosition: CGPoint
     @Published var faceCamScale: CGFloat = 1.0
-    @Published var drawingTool: DrawingTool = .pen
-    @Published var canvasDrawing = PKDrawing()
     @Published var touchIndicators: [TouchIndicator] = []
+    private var lastTouchIndicatorPoint: CGPoint?
     @Published var glassesEnabled = false
     @Published private(set) var usesBroadcastMode = !SimulatorSupport.isRunning
     @Published private(set) var isPiPPreviewReady = false
@@ -499,7 +497,15 @@ final class RecordingViewModel: ObservableObject {
     }
 
     func addTouchIndicator(at point: CGPoint) {
-        guard settings.touchIndicatorEnabled, !usesBroadcastMode else { return }
+        guard settings.touchIndicatorEnabled else { return }
+
+        if let last = lastTouchIndicatorPoint {
+            let dx = point.x - last.x
+            let dy = point.y - last.y
+            guard (dx * dx + dy * dy) >= 400 else { return } // ≥20pt между точками
+        }
+        lastTouchIndicatorPoint = point
+
         let indicator = TouchIndicator(
             position: point,
             color: Color(hex: settings.touchIndicatorColorHex) ?? .red,

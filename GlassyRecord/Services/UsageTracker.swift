@@ -148,7 +148,6 @@ enum UsageFeature: String, CaseIterable, Identifiable {
     case pipSizePreset = "pip_size_preset"
     case glassesToggled = "glasses_toggled"
     case glassesColorChanged = "glasses_color_changed"
-    case drawingToolSelected = "drawing_tool_selected"
     case touchIndicatorShown = "touch_indicator_shown"
 
     case micToggled = "mic_toggled"
@@ -186,7 +185,6 @@ enum UsageFeature: String, CaseIterable, Identifiable {
         case .pipSizePreset: "Крупность PiP"
         case .glassesToggled: "Очки вкл/выкл"
         case .glassesColorChanged: "Цвет очков"
-        case .drawingToolSelected: "Инструмент рисования"
         case .touchIndicatorShown: "Индикатор касания"
         case .micToggled: "Микрофон"
         case .qualityChanged: "Качество"

@@ -43,7 +43,6 @@
 		738CDE5196C1D6783E626010 /* GlassesSelectionCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD931DB28865D6F738F8926D /* GlassesSelectionCard.swift */; };
 		74288262944F6557BCDEBADC /* AppCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 681BD2B173991E4C9D3ACC5E /* AppCoordinator.swift */; };
 		76C1A5C13D904DE5590E6CEE /* BroadcastConfig+App.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EA17FC413A53F98D9130E62 /* BroadcastConfig+App.swift */; };
-		79DA5E2008EB286C8D775636 /* PencilKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BDD2FD2CB2F0EBDF831062B9 /* PencilKit.framework */; };
 		7FECA9844022DF40E346A28C /* SettingsUserDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788F5BC4419037711452B4BA /* SettingsUserDefaults.swift */; };
 		86B610C04FA5897DC545A47C /* RecordingOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7315BE8BDACA80507B69D09B /* RecordingOverlayView.swift */; };
 		8A0E8D05AF3DB0857006F11C /* GlassesOverlayServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04A0A9EEC7EA9AF32E27636E /* GlassesOverlayServiceTests.swift */; };
@@ -172,7 +171,6 @@
 		B57D952722AB5215A74401AF /* MockCameraFeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockCameraFeed.swift; sourceTree = "<group>"; };
 		B72ADBBE3EC29702D46B59C7 /* GlassyRecordBroadcastUpload.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = GlassyRecordBroadcastUpload.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		B8259450C32901A4FAF470D1 /* GlassyTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassyTheme.swift; sourceTree = "<group>"; };
-		BDD2FD2CB2F0EBDF831062B9 /* PencilKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PencilKit.framework; path = System/Library/Frameworks/PencilKit.framework; sourceTree = SDKROOT; };
 		C2B563952FF986F44428A582 /* EditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorView.swift; sourceTree = "<group>"; };
 		C2C4C45C7A2DBE80E48490FF /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		CBED1809A878013EB9CCD62D /* GlassyRecordUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = GlassyRecordUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -208,7 +206,6 @@
 				558AD8517D30483E3E042691 /* Vision.framework in Frameworks */,
 				55D9D63E3B20AC13F23ED05D /* SceneKit.framework in Frameworks */,
 				CCDA3C23047D566A3C800811 /* Photos.framework in Frameworks */,
-				79DA5E2008EB286C8D775636 /* PencilKit.framework in Frameworks */,
 				0ADA546AFE8EEF5F23C6CA5E /* AVKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -325,7 +322,6 @@
 				C2C4C45C7A2DBE80E48490FF /* AVFoundation.framework */,
 				92CF581198F963727B0356F0 /* AVKit.framework */,
 				1BB6B82A0832DAF8928AD637 /* Metal.framework */,
-				BDD2FD2CB2F0EBDF831062B9 /* PencilKit.framework */,
 				F7A5B1C41A3A5188B70042F2 /* Photos.framework */,
 				8E6742E1AF10D86EEF0813B5 /* ReplayKit.framework */,
 				AF168E2AB4E05873579A0657 /* SceneKit.framework */,

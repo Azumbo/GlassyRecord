@@ -43,7 +43,6 @@ targets:
       - sdk: Vision.framework
       - sdk: SceneKit.framework
       - sdk: Photos.framework
-      - sdk: PencilKit.framework
       - sdk: AVKit.framework
     attributes:
       ProvisioningStyle: Automatic

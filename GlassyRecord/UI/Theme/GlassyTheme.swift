@@ -28,12 +28,6 @@ enum GlassyTheme {
     static let separator = Color(.separator)
     static let tint = Color.accentColor
 
-    // MARK: - Drawing tools (system ink colors)
-
-    static let inkPen = Color(.label)
-    static let inkMarker = Color(.systemYellow)
-    static let inkNeon = Color(.systemCyan)
-
     // MARK: - Animation
 
     static let spring = Animation.spring(response: 0.45, dampingFraction: 0.82)

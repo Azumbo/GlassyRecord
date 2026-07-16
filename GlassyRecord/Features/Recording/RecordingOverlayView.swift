@@ -1,5 +1,4 @@
 import SwiftUI
-import PencilKit
 import UIKit
 
 struct RecordingOverlayView: View {
@@ -29,16 +28,12 @@ struct RecordingOverlayContent: View {
     var body: some View {
         ZStack {
             GlassyTheme.backgroundSecondary.ignoresSafeArea()
-                .onTapGesture { viewModel.userInteraction() }
 
             if showFaceCamPlacement {
                 faceCamOverlay
             }
 
-            if !viewModel.usesBroadcastMode {
-                touchIndicatorsLayer
-                drawingLayer
-            }
+            touchIndicatorsLayer
 
             controlsOverlay
             timerBadge
@@ -75,6 +70,7 @@ struct RecordingOverlayContent: View {
 
             recordingExitButton
         }
+        .simultaneousGesture(touchTrailGesture)
         .navigationBarHidden(true)
         .statusBarHidden(!viewModel.showTimer)
         .onAppear { viewModel.onAppear() }
@@ -103,6 +99,14 @@ struct RecordingOverlayContent: View {
                 viewModel.dismissFailure()
             }
         }
+    }
+
+    private var touchTrailGesture: some Gesture {
+        DragGesture(minimumDistance: 0)
+            .onChanged { value in
+                viewModel.addTouchIndicator(at: value.location)
+                viewModel.userInteraction()
+            }
     }
 
     private var showPiPInlinePreview: Bool {
@@ -407,11 +411,6 @@ struct RecordingOverlayContent: View {
             }
     }
 
-    private var drawingLayer: some View {
-        DrawingCanvasView(drawing: $viewModel.canvasDrawing, tool: viewModel.drawingTool)
-            .allowsHitTesting(viewModel.showControls)
-    }
-
     private var touchIndicatorsLayer: some View {
         GeometryReader { _ in
             ForEach(viewModel.touchIndicators) { indicator in
@@ -431,14 +430,9 @@ struct RecordingOverlayContent: View {
                     isRecording: viewModel.isRecording,
                     glassesEnabled: viewModel.glassesEnabled,
                     glassesColor: viewModel.glassesService.frameColor,
-                    drawingTool: viewModel.drawingTool,
                     onStop: { Task { await viewModel.stopRecording() } },
                     onToggleGlasses: viewModel.toggleGlasses,
-                    onGlassesColor: viewModel.setGlassesColor,
-                    onToolChange: {
-                        viewModel.drawingTool = $0
-                        UsageTracker.shared.track(.drawingToolSelected, params: ["tool": $0.rawValue])
-                    }
+                    onGlassesColor: viewModel.setGlassesColor
                 )
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }

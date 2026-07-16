@@ -154,32 +154,6 @@ enum GlassesFrameColor: String, Codable, CaseIterable, Identifiable {
     }
 }
 
-// MARK: - Drawing
-
-enum DrawingTool: String, Codable, CaseIterable, Identifiable {
-    case pen
-    case marker
-    case neon
-
-    var id: String { rawValue }
-
-    var displayName: String {
-        switch self {
-        case .pen: "Перо"
-        case .marker: "Маркер"
-        case .neon: "Неон"
-        }
-    }
-
-    var systemImage: String {
-        switch self {
-        case .pen: "pencil.tip"
-        case .marker: "highlighter"
-        case .neon: "sparkles"
-        }
-    }
-}
-
 // MARK: - Editor
 
 enum EditorTab: String, CaseIterable, Identifiable {
