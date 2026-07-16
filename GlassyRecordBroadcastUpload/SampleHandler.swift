@@ -26,27 +26,36 @@ final class SampleHandler: RPBroadcastSampleHandler {
     }
 
     override func processSampleBuffer(_ sampleBuffer: CMSampleBuffer, with sampleBufferType: RPSampleBufferType) {
-        switch sampleBufferType {
-        case .video:
-            ensureWriterReadyIfNeeded(firstSample: sampleBuffer)
-            writer?.appendVideo(sampleBuffer)
-        case .audioApp, .audioMic:
-            writer?.appendAudio(sampleBuffer, type: sampleBufferType)
-        @unknown default:
-            break
+        autoreleasepool {
+            switch sampleBufferType {
+            case .video:
+                ensureWriterReadyIfNeeded(firstSample: sampleBuffer)
+                writer?.appendVideo(sampleBuffer)
+            case .audioApp, .audioMic:
+                writer?.appendAudio(sampleBuffer, type: sampleBufferType)
+            @unknown default:
+                break
+            }
         }
     }
 
     override func broadcastFinished() {
-        let wroteFrames = writer?.finishSync() ?? false
-        if wroteFrames, let path = writer?.outputURL.path {
-            BroadcastConfigStore.markScreenFinished(path: path)
-        } else if writer != nil {
-            BroadcastConfigStore.markFailed("Не получены кадры экрана. Держите запись хотя бы 2–3 секунды.")
-        } else {
+        guard let writer else {
             BroadcastConfigStore.markCancelled()
+            return
         }
-        writer = nil
+
+        let result = writer.finishSync()
+        if result.success {
+            // Относительное имя — надёжнее абсолютного пути между процессами App Group.
+            BroadcastConfigStore.markScreenFinished(relativeFileName: result.relativeFileName)
+        } else {
+            BroadcastConfigStore.markFailed(
+                result.errorMessage ?? "Не удалось сохранить запись экрана"
+            )
+            try? FileManager.default.removeItem(at: result.outputURL)
+        }
+        self.writer = nil
     }
 
     private func ensureWriterReadyIfNeeded(firstSample: CMSampleBuffer) {
@@ -54,17 +63,27 @@ final class SampleHandler: RPBroadcastSampleHandler {
         let needsSetup = writer == nil && !setupStarted
         if needsSetup { setupStarted = true }
         setupLock.unlock()
-        guard needsSetup, let config, let container = AppGroup.containerURLOptional else { return }
+        guard needsSetup, let config, let container = AppGroup.containerURLOptional else {
+            if needsSetup, AppGroup.containerURLOptional == nil {
+                finishBroadcastWithError(makeError("App Group контейнер недоступен"))
+            }
+            return
+        }
 
         do {
-            let outputURL = container.appendingPathComponent("screen_\(UUID().uuidString).mp4")
+            let recordingsDir = container.appendingPathComponent("Recordings", isDirectory: true)
+            try FileManager.default.createDirectory(at: recordingsDir, withIntermediateDirectories: true)
+            let fileName = "screen_\(UUID().uuidString).mp4"
+            let outputURL = recordingsDir.appendingPathComponent(fileName)
             writer = try BroadcastVideoWriter(
                 outputURL: outputURL,
+                relativeFileName: "Recordings/\(fileName)",
                 config: config,
                 firstSample: firstSample
             )
             BroadcastConfigStore.markRecordingStarted()
         } catch {
+            setupStarted = false
             finishBroadcastWithError(error as NSError)
         }
     }

@@ -22,9 +22,13 @@ enum BroadcastConfigStore {
         guard let defaults else { return }
         let data = try? JSONEncoder().encode(config)
         defaults.set(data, forKey: BroadcastDefaultsKey.config)
-        defaults.set(BroadcastState.idle.rawValue, forKey: BroadcastDefaultsKey.state)
-        defaults.removeObject(forKey: BroadcastDefaultsKey.screenOutputPath)
-        defaults.removeObject(forKey: BroadcastDefaultsKey.errorMessage)
+        // Не затираем handoff, если extension уже пишет/закончил файл.
+        if state != .recording && state != .finished {
+            defaults.set(BroadcastState.idle.rawValue, forKey: BroadcastDefaultsKey.state)
+            defaults.removeObject(forKey: BroadcastDefaultsKey.screenOutputPath)
+            defaults.removeObject(forKey: BroadcastDefaultsKey.errorMessage)
+        }
+        defaults.synchronize()
     }
 
     static func loadConfig() -> BroadcastRecordingConfig? {
@@ -42,11 +46,22 @@ enum BroadcastConfigStore {
         }
         set {
             defaults?.set(newValue.rawValue, forKey: BroadcastDefaultsKey.state)
+            defaults?.synchronize()
         }
     }
 
     static var screenOutputPath: String? {
         defaults?.string(forKey: BroadcastDefaultsKey.screenOutputPath)
+    }
+
+    /// Полный URL к MP4 в App Group (relative или absolute path из extension).
+    static var screenOutputURL: URL? {
+        guard let path = screenOutputPath, !path.isEmpty else { return nil }
+        if path.hasPrefix("/") {
+            return URL(fileURLWithPath: path)
+        }
+        guard let container = AppGroup.containerURLOptional else { return nil }
+        return container.appendingPathComponent(path)
     }
 
     static var errorMessage: String? {
@@ -62,22 +77,31 @@ enum BroadcastConfigStore {
         defaults?.set(Date().timeIntervalSince1970, forKey: BroadcastDefaultsKey.startTimestamp)
         defaults?.removeObject(forKey: BroadcastDefaultsKey.screenOutputPath)
         defaults?.removeObject(forKey: BroadcastDefaultsKey.errorMessage)
+        defaults?.synchronize()
     }
 
-    static func markScreenFinished(path: String) {
-        defaults?.set(path, forKey: BroadcastDefaultsKey.screenOutputPath)
+    static func markScreenFinished(relativeFileName: String) {
+        defaults?.set(relativeFileName, forKey: BroadcastDefaultsKey.screenOutputPath)
         state = .finished
+        defaults?.synchronize()
+    }
+
+    /// Обратная совместимость со старыми absolute path.
+    static func markScreenFinished(path: String) {
+        markScreenFinished(relativeFileName: path)
     }
 
     static func markFailed(_ message: String) {
         state = .failed
         defaults?.set(message, forKey: BroadcastDefaultsKey.errorMessage)
+        defaults?.synchronize()
     }
 
     static func markCancelled() {
         state = .idle
         defaults?.removeObject(forKey: BroadcastDefaultsKey.errorMessage)
         defaults?.removeObject(forKey: BroadcastDefaultsKey.startTimestamp)
+        defaults?.synchronize()
     }
 
     static func clearFailure() {
@@ -85,6 +109,7 @@ enum BroadcastConfigStore {
             state = .idle
         }
         defaults?.removeObject(forKey: BroadcastDefaultsKey.errorMessage)
+        defaults?.synchronize()
     }
 
     static func reset() {
@@ -92,6 +117,7 @@ enum BroadcastConfigStore {
         defaults?.removeObject(forKey: BroadcastDefaultsKey.screenOutputPath)
         defaults?.removeObject(forKey: BroadcastDefaultsKey.errorMessage)
         defaults?.removeObject(forKey: BroadcastDefaultsKey.startTimestamp)
+        defaults?.synchronize()
     }
 }
 

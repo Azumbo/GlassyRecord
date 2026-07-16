@@ -83,20 +83,40 @@ final class BroadcastRecordingService: ObservableObject {
         duration = max(0, Date().timeIntervalSince1970 - start)
     }
 
-    private func waitForScreenFile(timeout: TimeInterval = 30) async throws -> URL {
+    private func waitForScreenFile(timeout: TimeInterval = 45) async throws -> URL {
         let deadline = Date().addingTimeInterval(timeout)
+        var sawFinishedWithoutFile = false
+
         while Date() < deadline {
             if BroadcastConfigStore.state == .failed,
                let message = BroadcastConfigStore.errorMessage {
                 throw GlassyRecordError.screenRecordingFailed(message)
             }
-            if let path = BroadcastConfigStore.screenOutputPath {
-                let url = URL(fileURLWithPath: path)
-                if FileManager.default.fileExists(atPath: path) {
-                    return url
+
+            if let url = BroadcastConfigStore.screenOutputURL {
+                if FileManager.default.fileExists(atPath: url.path) {
+                    let size = (try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? NSNumber)?.intValue ?? 0
+                    if size > 0 {
+                        return url
+                    }
+                }
+                if BroadcastConfigStore.state == .finished {
+                    sawFinishedWithoutFile = true
                 }
             }
-            try await Task.sleep(for: .milliseconds(250))
+
+            try await Task.sleep(for: .milliseconds(200))
+        }
+
+        if sawFinishedWithoutFile {
+            throw GlassyRecordError.screenRecordingFailed(
+                "Extension сообщил о завершении, но MP4 в App Group пуст или недоступен."
+            )
+        }
+        if BroadcastConfigStore.state == .recording {
+            throw GlassyRecordError.screenRecordingFailed(
+                "Запись не завершилась вовремя. Остановите трансляцию экрана в Пункте управления и попробуйте снова."
+            )
         }
         throw GlassyRecordError.fileNotFound
     }
