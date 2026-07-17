@@ -6,6 +6,7 @@ final class SampleHandler: RPBroadcastSampleHandler {
     private var writer: BroadcastVideoWriter?
     private var config: BroadcastRecordingConfig?
     private var setupStarted = false
+    private var isFinishingBroadcast = false
     private let setupLock = NSLock()
 
     override func broadcastStarted(withSetupInfo setupInfo: [String: NSObject]?) {
@@ -23,14 +24,17 @@ final class SampleHandler: RPBroadcastSampleHandler {
         }
         self.config = config
         BroadcastConfigStore.clearFailure()
+        BroadcastConfigStore.markExtensionAlive(event: "broadcast_started")
     }
 
     override func processSampleBuffer(_ sampleBuffer: CMSampleBuffer, with sampleBufferType: RPSampleBufferType) {
+        if isFinishingBroadcast { return }
         autoreleasepool {
             switch sampleBufferType {
             case .video:
                 ensureWriterReadyIfNeeded(firstSample: sampleBuffer)
                 writer?.appendVideo(sampleBuffer)
+                BroadcastConfigStore.touchExtensionHeartbeat()
             case .audioApp, .audioMic:
                 writer?.appendAudio(sampleBuffer, type: sampleBufferType)
             @unknown default:
@@ -40,6 +44,10 @@ final class SampleHandler: RPBroadcastSampleHandler {
     }
 
     override func broadcastFinished() {
+        isFinishingBroadcast = true
+        // Сразу сообщаем app, что extension жив и финализирует — до долгого finishWriting.
+        BroadcastConfigStore.markFinalizing()
+
         guard let writer else {
             BroadcastConfigStore.markCancelled()
             return
@@ -47,13 +55,22 @@ final class SampleHandler: RPBroadcastSampleHandler {
 
         let result = writer.finishSync()
         if result.success {
-            // Относительное имя — надёжнее абсолютного пути между процессами App Group.
             BroadcastConfigStore.markScreenFinished(relativeFileName: result.relativeFileName)
+            BroadcastConfigStore.markExtensionAlive(
+                event: "finished_ok",
+                extra: "size=\(result.fileSize)"
+            )
         } else {
             BroadcastConfigStore.markFailed(
                 result.errorMessage ?? "Не удалось сохранить запись экрана"
             )
-            try? FileManager.default.removeItem(at: result.outputURL)
+            BroadcastConfigStore.markExtensionAlive(
+                event: "finished_fail",
+                extra: result.errorMessage ?? ""
+            )
+            if !result.wroteFrames || result.fileSize == 0 {
+                try? FileManager.default.removeItem(at: result.outputURL)
+            }
         }
         self.writer = nil
     }
@@ -82,6 +99,7 @@ final class SampleHandler: RPBroadcastSampleHandler {
                 firstSample: firstSample
             )
             BroadcastConfigStore.markRecordingStarted()
+            BroadcastConfigStore.markExtensionAlive(event: "writer_ready")
         } catch {
             setupStarted = false
             finishBroadcastWithError(error as NSError)

@@ -230,12 +230,14 @@ final class RecordingViewModel: ObservableObject {
             BroadcastConfigStore.clearFailure()
         }
 
-        if BroadcastConfigStore.state == .finished, isRecording {
+        if BroadcastConfigStore.state == .finished, isRecording || setupPhase == .saving {
             Task { await handleBroadcastEndedExternally() }
             return
         }
 
-        let active = broadcastService.isBroadcasting || BroadcastConfigStore.state == .recording
+        let active = broadcastService.isBroadcasting
+            || BroadcastConfigStore.state == .recording
+            || BroadcastConfigStore.state == .finalizing
         if active {
             if !isRecording {
                 Task { await beginActiveBroadcastSession() }
@@ -389,11 +391,13 @@ final class RecordingViewModel: ObservableObject {
 
                 let session = try await makeRecordingSession(from: url, duration: recordedDuration)
                 completedSession = session
+                let fileSize = (try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? NSNumber)?.intValue ?? 0
                 UsageTracker.shared.track(
                     .broadcastFinished,
                     params: [
                         "duration_s": String(format: "%.1f", recordedDuration),
-                        "glasses": String(glassesEnabled)
+                        "glasses": String(glassesEnabled),
+                        "size": String(fileSize)
                     ]
                 )
                 return session
@@ -550,7 +554,7 @@ final class RecordingViewModel: ObservableObject {
         broadcastService.stopDurationTimer()
     }
 
-    func exitToHome(_ completion: () -> Void) {
+    func exitToHome(_ completion: @escaping () -> Void) {
         UsageTracker.shared.track(
             .exitRecording,
             params: [
@@ -558,6 +562,18 @@ final class RecordingViewModel: ObservableObject {
                 "phase": String(describing: setupPhase)
             ]
         )
+
+        if usesBroadcastMode, isRecording || setupPhase == .recording || setupPhase == .saving {
+            Task {
+                _ = await finalizeRecording(stopActiveBroadcast: true)
+                pipCameraManager.stopStreaming()
+                pipCameraManager.stop()
+                cleanup()
+                completion()
+            }
+            return
+        }
+
         dismissFailure()
         pipCameraManager.stopStreaming()
         pipCameraManager.stop()

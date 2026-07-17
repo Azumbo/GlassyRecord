@@ -3,7 +3,8 @@ import ReplayKit
 import CoreMedia
 
 /// Запись экрана/аудио в Broadcast Extension по практике Apple ReplayKit:
-/// H.264 MP4, real-time inputs, чётные размеры кадра, блокирующий finishWriting.
+/// H.264 MP4, real-time inputs, чётные размеры кадра.
+/// Важно: `finishWriting` ждём ВНЕ writeQueue — иначе возможен deadlock с ReplayKit.
 final class BroadcastVideoWriter: @unchecked Sendable {
     let outputURL: URL
     let relativeFileName: String
@@ -17,10 +18,11 @@ final class BroadcastVideoWriter: @unchecked Sendable {
     private let writeQueue = DispatchQueue(label: "com.glassyrecord.broadcast.writer", qos: .userInitiated)
     private var sessionStarted = false
     private var didWriteFrames = false
+    private var isFinishing = false
     private var lastVideoPTS: CMTime = .invalid
     private let videoWidth: Int
     private let videoHeight: Int
-    private(set) var lastErrorMessage: String?
+    private var lastErrorMessage: String?
 
     init(
         outputURL: URL,
@@ -122,8 +124,10 @@ final class BroadcastVideoWriter: @unchecked Sendable {
     }
 
     func appendVideo(_ sampleBuffer: CMSampleBuffer) {
+        // Sync обязателен: CMSampleBuffer от ReplayKit невалиден после return из processSampleBuffer.
         writeQueue.sync {
             autoreleasepool {
+                guard !isFinishing else { return }
                 guard let videoInput,
                       let pixelBufferAdaptor,
                       let assetWriter,
@@ -143,7 +147,8 @@ final class BroadcastVideoWriter: @unchecked Sendable {
                 }
 
                 guard assetWriter.status == .writing else {
-                    lastErrorMessage = assetWriter.error?.localizedDescription ?? "writer status=\(assetWriter.status.rawValue)"
+                    lastErrorMessage = assetWriter.error?.localizedDescription
+                        ?? "writer status=\(assetWriter.status.rawValue)"
                     return
                 }
                 guard videoInput.isReadyForMoreMediaData else { return }
@@ -175,6 +180,7 @@ final class BroadcastVideoWriter: @unchecked Sendable {
     func appendAudio(_ sampleBuffer: CMSampleBuffer, type: RPSampleBufferType) {
         writeQueue.sync {
             autoreleasepool {
+                guard !isFinishing else { return }
                 guard sessionStarted,
                       CMSampleBufferDataIsReady(sampleBuffer),
                       let assetWriter,
@@ -198,23 +204,26 @@ final class BroadcastVideoWriter: @unchecked Sendable {
         }
     }
 
-    /// Результат финализации: успех только если writer completed и файл на диске.
     struct FinishResult {
         let success: Bool
         let relativeFileName: String
         let outputURL: URL
         let errorMessage: String?
+        let wroteFrames: Bool
+        let fileSize: Int
     }
 
     func finishSync() -> FinishResult {
-        writeQueue.sync {
+        // 1) Закрываем входы на writeQueue, но НЕ ждём finishWriting здесь (deadlock с ReplayKit).
+        let prepare: (
+            writer: AVAssetWriter?,
+            shouldFinish: Bool,
+            wroteFrames: Bool,
+            errorMessage: String?
+        ) = writeQueue.sync {
+            isFinishing = true
             guard let assetWriter else {
-                return FinishResult(
-                    success: false,
-                    relativeFileName: relativeFileName,
-                    outputURL: outputURL,
-                    errorMessage: lastErrorMessage ?? "Writer не создан"
-                )
+                return (nil, false, false, lastErrorMessage ?? "Writer не создан")
             }
 
             guard sessionStarted, didWriteFrames else {
@@ -222,18 +231,9 @@ final class BroadcastVideoWriter: @unchecked Sendable {
                     videoInput?.markAsFinished()
                     systemAudioInput?.markAsFinished()
                     microphoneAudioInput?.markAsFinished()
-                    let group = DispatchGroup()
-                    group.enter()
-                    assetWriter.finishWriting { group.leave() }
-                    group.wait()
+                    return (assetWriter, true, false, lastErrorMessage)
                 }
-                try? FileManager.default.removeItem(at: outputURL)
-                return FinishResult(
-                    success: false,
-                    relativeFileName: relativeFileName,
-                    outputURL: outputURL,
-                    errorMessage: lastErrorMessage ?? "Не получены кадры экрана. Держите запись хотя бы 2–3 секунды."
-                )
+                return (assetWriter, false, false, lastErrorMessage ?? "Не получены кадры экрана. Держите запись хотя бы 2–3 секунды.")
             }
 
             videoInput?.markAsFinished()
@@ -242,39 +242,51 @@ final class BroadcastVideoWriter: @unchecked Sendable {
             if lastVideoPTS.isValid {
                 assetWriter.endSession(atSourceTime: lastVideoPTS)
             }
+            return (assetWriter, true, true, lastErrorMessage)
+        }
 
+        // 2) Ждём finishWriting на потоке SampleHandler, writeQueue свободен для хвоста.
+        if let writer = prepare.writer, prepare.shouldFinish, writer.status == .writing {
             let group = DispatchGroup()
             group.enter()
-            assetWriter.finishWriting { group.leave() }
-            _ = group.wait(timeout: .now() + 20)
+            writer.finishWriting { group.leave() }
+            _ = group.wait(timeout: .now() + 15)
+        }
 
-            let completed = assetWriter.status == .completed
-            let exists = FileManager.default.fileExists(atPath: outputURL.path)
-            let size = (try? FileManager.default.attributesOfItem(atPath: outputURL.path)[.size] as? NSNumber)?.intValue ?? 0
+        let size = (try? FileManager.default.attributesOfItem(atPath: outputURL.path)[.size] as? NSNumber)?.intValue ?? 0
+        let exists = FileManager.default.fileExists(atPath: outputURL.path)
+        let status = prepare.writer?.status
+        let writerError = prepare.writer?.error?.localizedDescription
 
-            if completed, exists, size > 0 {
-                return FinishResult(
-                    success: true,
-                    relativeFileName: relativeFileName,
-                    outputURL: outputURL,
-                    errorMessage: nil
-                )
-            }
-
-            let message = assetWriter.error?.localizedDescription
-                ?? lastErrorMessage
-                ?? "Файл записи повреждён или пуст (status=\(assetWriter.status.rawValue), size=\(size))"
+        if prepare.wroteFrames, status == .completed, exists, size > 0 {
             return FinishResult(
-                success: false,
+                success: true,
                 relativeFileName: relativeFileName,
                 outputURL: outputURL,
-                errorMessage: message
+                errorMessage: nil,
+                wroteFrames: true,
+                fileSize: size
             )
         }
+
+        if !prepare.wroteFrames {
+            try? FileManager.default.removeItem(at: outputURL)
+        }
+
+        let message = writerError
+            ?? prepare.errorMessage
+            ?? "Файл записи повреждён или пуст (status=\(status?.rawValue ?? -1), size=\(size))"
+        return FinishResult(
+            success: false,
+            relativeFileName: relativeFileName,
+            outputURL: outputURL,
+            errorMessage: message,
+            wroteFrames: prepare.wroteFrames,
+            fileSize: size
+        )
     }
 
     private static func transform(forOrientationAttachment orientation: CFTypeRef) -> CGAffineTransform {
-        // ReplayKit передаёт CGImagePropertyOrientation как NSNumber.
         let value = (orientation as? NSNumber)?.uint32Value ?? CGImagePropertyOrientation.up.rawValue
         switch CGImagePropertyOrientation(rawValue: value) {
         case .down, .downMirrored:

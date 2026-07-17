@@ -1,4 +1,8 @@
 import Foundation
+import UIKit
+#if canImport(Darwin)
+import Darwin
+#endif
 
 /// Локальный трекер фич: без сети. Нужен, чтобы понять, что реально используют на устройстве.
 @MainActor
@@ -106,6 +110,16 @@ final class UsageTracker: ObservableObject {
         lines.append("control_auto_hide_s=\(Int(settings.controlPanelAutoHideSeconds))")
         lines.append("timer_auto_hide_s=\(Int(settings.timerAutoHideSeconds))")
         lines.append("")
+        lines.append("--- DIAGNOSTICS ---")
+        lines.append("ios=\(UIDevice.current.systemVersion)")
+        lines.append("model=\(deviceModelIdentifier)")
+        lines.append("app_group_ok=\(AppGroup.isConfigured)")
+        lines.append("extension_embedded=\(BroadcastExtensionLocator.isExtensionEmbedded)")
+        lines.append("low_power_mode=\(ProcessInfo.processInfo.isLowPowerModeEnabled)")
+        lines.append("thermal=\(thermalLabel)")
+        lines.append("screen_captured=\(UIScreen.main.isCaptured)")
+        lines.append(BroadcastConfigStore.diagnosticSnapshot(isScreenCaptured: UIScreen.main.isCaptured))
+        lines.append("")
         lines.append("--- HINT ---")
         lines.append("Paste this whole report into Cursor chat.")
         lines.append("Items under NEVER USED are candidates to remove.")
@@ -119,6 +133,25 @@ final class UsageTracker: ObservableObject {
         #else
         "device"
         #endif
+    }
+
+    private var deviceModelIdentifier: String {
+        var systemInfo = utsname()
+        uname(&systemInfo)
+        return withUnsafeBytes(of: &systemInfo.machine) { raw in
+            guard let base = raw.baseAddress else { return "unknown" }
+            return String(cString: base.assumingMemoryBound(to: CChar.self))
+        }
+    }
+
+    private var thermalLabel: String {
+        switch ProcessInfo.processInfo.thermalState {
+        case .nominal: "nominal"
+        case .fair: "fair"
+        case .serious: "serious"
+        case .critical: "critical"
+        @unknown default: "unknown"
+        }
     }
 
     private func persist() {
@@ -140,6 +173,9 @@ enum UsageFeature: String, CaseIterable, Identifiable {
     case recordingOpened = "recording_opened"
     case broadcastPrepare = "broadcast_prepare"
     case broadcastStarted = "broadcast_started"
+    case broadcastStopRequested = "broadcast_stop_requested"
+    case broadcastStopSucceeded = "broadcast_stop_succeeded"
+    case broadcastStopFailed = "broadcast_stop_failed"
     case broadcastFinished = "broadcast_finished"
     case recordingFailed = "recording_failed"
     case exitRecording = "exit_recording"
@@ -178,6 +214,9 @@ enum UsageFeature: String, CaseIterable, Identifiable {
         case .recordingOpened: "Экран записи"
         case .broadcastPrepare: "Подготовка записи экрана"
         case .broadcastStarted: "Запись экрана начата"
+        case .broadcastStopRequested: "Запрос остановки записи"
+        case .broadcastStopSucceeded: "Остановка broadcast OK"
+        case .broadcastStopFailed: "Остановка broadcast сбой"
         case .broadcastFinished: "Запись экрана завершена"
         case .recordingFailed: "Ошибка записи"
         case .exitRecording: "Выход с экрана записи"

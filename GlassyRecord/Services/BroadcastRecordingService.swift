@@ -24,7 +24,9 @@ final class BroadcastRecordingService: ObservableObject {
 
     func refreshState() {
         resolveActiveControllerIfNeeded()
-        isBroadcasting = activeController?.isBroadcasting == true || BroadcastConfigStore.state == .recording
+        isBroadcasting = activeController?.isBroadcasting == true
+            || BroadcastConfigStore.state == .recording
+            || BroadcastConfigStore.state == .finalizing
         updateDuration()
     }
 
@@ -36,19 +38,35 @@ final class BroadcastRecordingService: ObservableObject {
     func stopBroadcast() async throws -> URL {
         resolveActiveControllerIfNeeded()
 
-        if let controller = activeController, controller.isBroadcasting {
-            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-                controller.finishBroadcast { error in
-                    if let error {
-                        continuation.resume(throwing: GlassyRecordError.screenRecordingFailed(error.localizedDescription))
-                    } else {
-                        continuation.resume()
-                    }
-                }
+        let controller = activeController ?? ActiveBroadcastController.current()
+        let hadController = controller?.isBroadcasting == true
+        UsageTracker.shared.track(
+            .broadcastStopRequested,
+            params: [
+                "controller": String(hadController),
+                "captured": String(UIScreen.main.isCaptured),
+                "state": BroadcastConfigStore.state.rawValue
+            ]
+        )
+
+        if let controller, controller.isBroadcasting {
+            activeController = controller
+            do {
+                try await finishBroadcastWithTimeout(controller, seconds: 20)
+                UsageTracker.shared.track(.broadcastStopSucceeded, params: ["via": "controller"])
+            } catch {
+                UsageTracker.shared.track(
+                    .broadcastStopFailed,
+                    params: ["reason": String(error.localizedDescription.prefix(80))]
+                )
+                // Даже при ошибке finish — ждём handoff: extension мог успеть записать файл.
             }
         } else if UIScreen.main.isCaptured {
-            throw GlassyRecordError.screenRecordingFailed(
-                "Не удалось остановить трансляцию. Завершите запись через Пункт управления → трансляция экрана, затем откройте Glassy Record снова."
+            // Контроллер не найден — ждём, пока пользователь/система снимет capture,
+            // либо extension сам финализирует.
+            UsageTracker.shared.track(
+                .broadcastStopFailed,
+                params: ["reason": "no_controller_still_captured"]
             )
         }
 
@@ -58,7 +76,15 @@ final class BroadcastRecordingService: ObservableObject {
 
     /// Ждёт MP4 после остановки трансляции (в т.ч. из Пункта управления).
     func waitForFinishedRecording() async throws -> URL {
-        try await waitForScreenFile()
+        UsageTracker.shared.track(
+            .broadcastStopRequested,
+            params: [
+                "via": "external",
+                "captured": String(UIScreen.main.isCaptured),
+                "state": BroadcastConfigStore.state.rawValue
+            ]
+        )
+        return try await waitForScreenFile()
     }
 
     func startDurationTimer() {
@@ -76,21 +102,56 @@ final class BroadcastRecordingService: ObservableObject {
 
     private func updateDuration() {
         let start = BroadcastConfigStore.startTimestamp
-        guard start > 0, isBroadcasting || BroadcastConfigStore.state == .recording else {
+        guard start > 0,
+              isBroadcasting
+                || BroadcastConfigStore.state == .recording
+                || BroadcastConfigStore.state == .finalizing else {
             duration = 0
             return
         }
         duration = max(0, Date().timeIntervalSince1970 - start)
     }
 
+    private func finishBroadcastWithTimeout(_ controller: RPBroadcastController, seconds: TimeInterval) async throws {
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            group.addTask { @MainActor in
+                try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                    controller.finishBroadcast { error in
+                        if let error {
+                            continuation.resume(throwing: GlassyRecordError.screenRecordingFailed(error.localizedDescription))
+                        } else {
+                            continuation.resume()
+                        }
+                    }
+                }
+            }
+            group.addTask {
+                try await Task.sleep(for: .seconds(seconds))
+                throw GlassyRecordError.screenRecordingFailed(
+                    "Таймаут остановки broadcast (\(Int(seconds)) с). Проверьте Пункт управления."
+                )
+            }
+            _ = try await group.next()
+            group.cancelAll()
+        }
+    }
+
     private func waitForScreenFile(timeout: TimeInterval = 45) async throws -> URL {
         let deadline = Date().addingTimeInterval(timeout)
         var sawFinishedWithoutFile = false
+        var sawFinalizing = false
 
         while Date() < deadline {
+            // Подтягиваем свежие значения App Group.
+            _ = BroadcastConfigStore.state
+
             if BroadcastConfigStore.state == .failed,
                let message = BroadcastConfigStore.errorMessage {
                 throw GlassyRecordError.screenRecordingFailed(message)
+            }
+
+            if BroadcastConfigStore.state == .finalizing {
+                sawFinalizing = true
             }
 
             if let url = BroadcastConfigStore.screenOutputURL {
@@ -105,19 +166,32 @@ final class BroadcastRecordingService: ObservableObject {
                 }
             }
 
+            // Файл уже finished по state, но path мог появиться чуть позже synchronize.
+            if BroadcastConfigStore.state == .finished, BroadcastConfigStore.screenOutputURL == nil {
+                sawFinishedWithoutFile = true
+            }
+
             try await Task.sleep(for: .milliseconds(200))
         }
 
+        let snapshot = BroadcastConfigStore.diagnosticSnapshot(isScreenCaptured: UIScreen.main.isCaptured)
+        UsageTracker.shared.track(.recordingFailed, params: ["diag": String(snapshot.prefix(160))])
+
         if sawFinishedWithoutFile {
             throw GlassyRecordError.screenRecordingFailed(
-                "Extension сообщил о завершении, но MP4 в App Group пуст или недоступен."
+                "Extension сообщил о завершении, но MP4 в App Group пуст или недоступен. \(snapshot)"
+            )
+        }
+        if sawFinalizing {
+            throw GlassyRecordError.screenRecordingFailed(
+                "Extension завис на финализации MP4. \(snapshot)"
             )
         }
         if BroadcastConfigStore.state == .recording {
             throw GlassyRecordError.screenRecordingFailed(
-                "Запись не завершилась вовремя. Остановите трансляцию экрана в Пункте управления и попробуйте снова."
+                "Запись не завершилась вовремя. Остановите трансляцию в Пункте управления. \(snapshot)"
             )
         }
-        throw GlassyRecordError.fileNotFound
+        throw GlassyRecordError.screenRecordingFailed("Файл записи не найден. \(snapshot)")
     }
 }
