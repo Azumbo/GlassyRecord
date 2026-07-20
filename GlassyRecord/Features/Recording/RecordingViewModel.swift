@@ -467,14 +467,11 @@ final class RecordingViewModel: ObservableObject {
     func toggleGlasses() {
         glassesEnabled.toggle()
         glassesService.setEnabled(glassesEnabled, usesPiPCapture: usesBroadcastMode)
+        if usesBroadcastMode {
+            pipCameraManager.setGlassesEnabled(glassesEnabled)
+        }
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
         UsageTracker.shared.track(.glassesToggled, params: ["enabled": String(glassesEnabled)])
-        if usesBroadcastMode, pipCameraManager.isPrepared {
-            Task {
-                pipCameraManager.stop()
-                await preparePiPCamera()
-            }
-        }
     }
 
     func setGlassesColor(_ color: GlassesFrameColor) {

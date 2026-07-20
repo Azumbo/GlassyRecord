@@ -4,7 +4,7 @@ import SceneKit
 import UIKit
 import Vision
 
-/// Потокобезопасный рендер очков (Vision + SceneKit) для PiP и фоновых очередей захвата.
+/// Потокобезопасный рендер очков (Vision 2D + SceneKit для ARKit) для PiP и фоновых очередей захвата.
 final class GlassesFrameProcessor: @unchecked Sendable {
     private let lock = NSLock()
     private var isEnabled = false
@@ -20,8 +20,10 @@ final class GlassesFrameProcessor: @unchecked Sendable {
     private var redGlassesNode: SCNNode?
     private var blueGlassesNode: SCNNode?
     private var visionSequenceHandler = VNSequenceRequestHandler()
-    private var smoothedVisionTransform = matrix_identity_float4x4
-    private var hasSmoothedVisionTransform = false
+    private var smoothedLeftEye = CGPoint.zero
+    private var smoothedRightEye = CGPoint.zero
+    private var smoothedEyeDistance: CGFloat = 0
+    private var hasSmoothedEyes = false
 
     init() {
         let device = MTLCreateSystemDefaultDevice()
@@ -48,7 +50,7 @@ final class GlassesFrameProcessor: @unchecked Sendable {
         lock.withLock {
             useVisionFallback = true
             trackingState = FaceTrackingState()
-            hasSmoothedVisionTransform = false
+            hasSmoothedEyes = false
         }
     }
 
@@ -85,7 +87,7 @@ final class GlassesFrameProcessor: @unchecked Sendable {
     func resetTracking() {
         lock.withLock {
             trackingState = FaceTrackingState()
-            hasSmoothedVisionTransform = false
+            hasSmoothedEyes = false
         }
     }
 
@@ -94,99 +96,170 @@ final class GlassesFrameProcessor: @unchecked Sendable {
             (
                 isEnabled: isEnabled,
                 useVisionFallback: useVisionFallback,
-                trackingState: trackingState
+                trackingState: trackingState,
+                frameColor: frameColor,
+                lensTransparency: lensTransparency,
+                frameBrightness: frameBrightness
             )
         }
         guard snapshot.isEnabled else { return pixelBuffer }
 
-        var tracking = snapshot.trackingState
         if snapshot.useVisionFallback {
-            guard processWithVision(pixelBuffer, tracking: &tracking) else { return pixelBuffer }
-        } else {
-            guard tracking.isTracking else { return pixelBuffer }
+            // PiP / AVCapture: рисуем очки в пиксельный буфер — один кадр для превью и системного PiP.
+            return drawVisionGlasses(
+                onto: pixelBuffer,
+                color: snapshot.frameColor,
+                lensAlpha: CGFloat(snapshot.lensTransparency),
+                brightness: CGFloat(snapshot.frameBrightness)
+            ) ?? pixelBuffer
         }
 
-        return renderGlassesOntoBuffer(pixelBuffer, tracking: tracking, useVisionFallback: snapshot.useVisionFallback)
-            ?? pixelBuffer
+        guard snapshot.trackingState.isTracking else { return pixelBuffer }
+        return renderSceneKitGlassesOntoBuffer(pixelBuffer, tracking: snapshot.trackingState) ?? pixelBuffer
     }
 
-    // MARK: - Vision
+    // MARK: - Vision → 2D (burn into buffer)
 
-    private func processWithVision(_ pixelBuffer: CVPixelBuffer, tracking: inout FaceTrackingState) -> Bool {
+    private func drawVisionGlasses(
+        onto pixelBuffer: CVPixelBuffer,
+        color: GlassesFrameColor,
+        lensAlpha: CGFloat,
+        brightness: CGFloat
+    ) -> CVPixelBuffer? {
         let request = VNDetectFaceLandmarksRequest()
-        try? visionSequenceHandler.perform([request], on: pixelBuffer)
+        do {
+            try visionSequenceHandler.perform([request], on: pixelBuffer)
+        } catch {
+            return pixelBuffer
+        }
 
-        guard let observation = request.results?.first as? VNFaceObservation,
+        guard let observation = request.results?.first,
               let landmarks = observation.landmarks else {
-            lock.withLock {
-                trackingState.isTracking = false
-                hasSmoothedVisionTransform = false
-            }
-            return false
+            lock.withLock { hasSmoothedEyes = false }
+            return pixelBuffer
         }
 
-        tracking.isTracking = true
-
+        let width = CGFloat(CVPixelBufferGetWidth(pixelBuffer))
+        let height = CGFloat(CVPixelBufferGetHeight(pixelBuffer))
         let bbox = observation.boundingBox
-        let leftEyeCenter = eyeCenter(from: landmarks.leftEye, in: bbox)
-        let rightEyeCenter = eyeCenter(from: landmarks.rightEye, in: bbox)
 
-        let centerX: CGFloat
-        let centerY: CGFloat
-        let eyeDistance: CGFloat
-        if let leftEyeCenter, let rightEyeCenter {
-            centerX = (leftEyeCenter.x + rightEyeCenter.x) * 0.5
-            centerY = (leftEyeCenter.y + rightEyeCenter.y) * 0.5
-            eyeDistance = hypot(rightEyeCenter.x - leftEyeCenter.x, rightEyeCenter.y - leftEyeCenter.y)
+        guard let leftNorm = eyeCenter(from: landmarks.leftEye, in: bbox)
+            ?? eyeCenter(from: landmarks.leftPupil, in: bbox),
+            let rightNorm = eyeCenter(from: landmarks.rightEye, in: bbox)
+            ?? eyeCenter(from: landmarks.rightPupil, in: bbox) else {
+            return pixelBuffer
+        }
+
+        // Vision: origin bottom-left. CGContext on CVPixelBuffer: same.
+        var left = CGPoint(x: leftNorm.x * width, y: leftNorm.y * height)
+        var right = CGPoint(x: rightNorm.x * width, y: rightNorm.y * height)
+        var distance = hypot(right.x - left.x, right.y - left.y)
+
+        lock.lock()
+        if !hasSmoothedEyes {
+            smoothedLeftEye = left
+            smoothedRightEye = right
+            smoothedEyeDistance = distance
+            hasSmoothedEyes = true
         } else {
-            centerX = bbox.midX
-            centerY = bbox.midY
-            eyeDistance = bbox.width * 0.38
+            let a: CGFloat = 0.28
+            smoothedLeftEye = CGPoint(
+                x: smoothedLeftEye.x + (left.x - smoothedLeftEye.x) * a,
+                y: smoothedLeftEye.y + (left.y - smoothedLeftEye.y) * a
+            )
+            smoothedRightEye = CGPoint(
+                x: smoothedRightEye.x + (right.x - smoothedRightEye.x) * a,
+                y: smoothedRightEye.y + (right.y - smoothedRightEye.y) * a
+            )
+            smoothedEyeDistance = smoothedEyeDistance + (distance - smoothedEyeDistance) * a
+            left = smoothedLeftEye
+            right = smoothedRightEye
+            distance = max(smoothedEyeDistance, 1)
         }
+        lock.unlock()
 
-        // Поднимаем оправу в район глаз и масштабируем от межзрачкового расстояния.
-        let glassesCenterY = min(max(centerY + bbox.height * 0.06, 0), 1)
-        let normalizedScale = max(0.08, min(0.55, eyeDistance * 2.7))
-
-        var transform = matrix_identity_float4x4
-        transform.columns.3 = SIMD4<Float>(
-            Float(centerX - 0.5) * 2,
-            Float(glassesCenterY - 0.5) * 2,
-            -0.3,
-            1
+        return compositeMonokolFrames(
+            onto: pixelBuffer,
+            leftEye: left,
+            rightEye: right,
+            eyeDistance: distance,
+            color: color,
+            lensAlpha: lensAlpha,
+            brightness: brightness
         )
-        let scale = Float(normalizedScale)
-        transform.columns.0.x = scale
-        transform.columns.1.y = scale
-        transform.columns.2.z = scale
+    }
 
-        let smoothedTransform: simd_float4x4 = lock.withLock {
-            if !hasSmoothedVisionTransform {
-                smoothedVisionTransform = transform
-                hasSmoothedVisionTransform = true
-            } else {
-                // Сглаживание, чтобы очки не дёргались на каждом кадре Vision.
-                smoothedVisionTransform = interpolateTransform(
-                    from: smoothedVisionTransform,
-                    to: transform,
-                    alpha: 0.22
-                )
-            }
-            return smoothedVisionTransform
-        }
+    private func compositeMonokolFrames(
+        onto buffer: CVPixelBuffer,
+        leftEye: CGPoint,
+        rightEye: CGPoint,
+        eyeDistance: CGFloat,
+        color: GlassesFrameColor,
+        lensAlpha: CGFloat,
+        brightness: CGFloat
+    ) -> CVPixelBuffer? {
+        let width = CVPixelBufferGetWidth(buffer)
+        let height = CVPixelBufferGetHeight(buffer)
 
-        tracking.headTransform = smoothedTransform
+        CVPixelBufferLockBaseAddress(buffer, [])
+        defer { CVPixelBufferUnlockBaseAddress(buffer, []) }
 
-        if let leftEye = landmarks.leftEye, let rightEye = landmarks.rightEye {
-            tracking.leftEyeTransform = eyeTransform(from: leftEye, in: bbox)
-            tracking.rightEyeTransform = eyeTransform(from: rightEye, in: bbox)
-        }
+        guard let context = CGContext(
+            data: CVPixelBufferGetBaseAddress(buffer),
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: CVPixelBufferGetBytesPerRow(buffer),
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue
+        ) else { return buffer }
 
-        lock.withLock {
-            trackingState = tracking
-            glassesNode?.simdTransform = smoothedTransform
-        }
-        return true
+        let angle = atan2(rightEye.y - leftEye.y, rightEye.x - leftEye.x)
+        let lensW = eyeDistance * 0.72
+        let lensH = lensW * 0.78
+        let stroke = max(2.5, eyeDistance * 0.11)
+        let bridgeW = eyeDistance * 0.18
+
+        let frameUIColor: UIColor = {
+            let base: UIColor = color == .red
+                ? UIColor(red: 0.77, green: 0.12, blue: 0.16, alpha: 1)
+                : UIColor(red: 0.10, green: 0.28, blue: 0.72, alpha: 1)
+            var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+            base.getRed(&r, green: &g, blue: &b, alpha: &a)
+            return UIColor(
+                red: min(1, r * brightness),
+                green: min(1, g * brightness),
+                blue: min(1, b * brightness),
+                alpha: a
+            )
+        }()
+
+        context.saveGState()
+        context.translateBy(x: (leftEye.x + rightEye.x) * 0.5, y: (leftEye.y + rightEye.y) * 0.5)
+        context.rotate(by: angle)
+
+        let halfGap = eyeDistance * 0.5
+        let leftRect = CGRect(x: -halfGap - lensW * 0.5, y: -lensH * 0.5, width: lensW, height: lensH)
+        let rightRect = CGRect(x: halfGap - lensW * 0.5, y: -lensH * 0.5, width: lensW, height: lensH)
+
+        // Линзы
+        context.setFillColor(UIColor.white.withAlphaComponent(0.08 + (1 - lensAlpha) * 0.25).cgColor)
+        context.fill(leftRect)
+        context.fill(rightRect)
+
+        // Оправа MK295 — кубическая
+        context.setStrokeColor(frameUIColor.cgColor)
+        context.setLineWidth(stroke)
+        context.setLineJoin(.miter)
+        context.stroke(leftRect)
+        context.stroke(rightRect)
+
+        // Переносица
+        context.setFillColor(frameUIColor.cgColor)
+        context.fill(CGRect(x: -bridgeW * 0.5, y: -stroke * 0.4, width: bridgeW, height: stroke * 0.8))
+
+        context.restoreGState()
+        return buffer
     }
 
     private func eyeCenter(from region: VNFaceLandmarkRegion2D?, in bbox: CGRect) -> CGPoint? {
@@ -204,40 +277,15 @@ final class GlassesFrameProcessor: @unchecked Sendable {
         )
     }
 
-    private func interpolateTransform(from a: simd_float4x4, to b: simd_float4x4, alpha: Float) -> simd_float4x4 {
-        var out = matrix_identity_float4x4
-        out.columns.0 = simd_mix(a.columns.0, b.columns.0, SIMD4<Float>(repeating: alpha))
-        out.columns.1 = simd_mix(a.columns.1, b.columns.1, SIMD4<Float>(repeating: alpha))
-        out.columns.2 = simd_mix(a.columns.2, b.columns.2, SIMD4<Float>(repeating: alpha))
-        out.columns.3 = simd_mix(a.columns.3, b.columns.3, SIMD4<Float>(repeating: alpha))
-        out.columns.3.w = 1
-        return out
-    }
+    // MARK: - SceneKit (ARKit path)
 
-    private func eyeTransform(from region: VNFaceLandmarkRegion2D, in bbox: CGRect) -> simd_float4x4 {
-        let points = region.normalizedPoints
-        guard !points.isEmpty else { return matrix_identity_float4x4 }
-
-        let center = points.reduce(CGPoint.zero) { CGPoint(x: $0.x + $1.x, y: $0.y + $1.y) }
-        let avg = CGPoint(x: center.x / CGFloat(points.count), y: center.y / CGFloat(points.count))
-
-        var t = matrix_identity_float4x4
-        t.columns.3 = SIMD4<Float>(Float(avg.x), Float(avg.y), 0, 1)
-        return t
-    }
-
-    // MARK: - Rendering
-
-    private func renderGlassesOntoBuffer(
+    private func renderSceneKitGlassesOntoBuffer(
         _ pixelBuffer: CVPixelBuffer,
-        tracking: FaceTrackingState,
-        useVisionFallback: Bool
+        tracking: FaceTrackingState
     ) -> CVPixelBuffer? {
         let hasGlasses = lock.withLock { () -> Bool in
             guard let glassesNode else { return false }
-            if !useVisionFallback {
-                glassesNode.simdTransform = tracking.headTransform
-            }
+            glassesNode.simdTransform = tracking.headTransform
             return true
         }
         guard hasGlasses else { return nil }

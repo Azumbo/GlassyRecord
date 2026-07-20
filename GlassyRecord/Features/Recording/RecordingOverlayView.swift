@@ -160,23 +160,17 @@ struct RecordingOverlayContent: View {
                 Spacer()
                 VStack(alignment: .trailing, spacing: 8) {
                     if let previewLayer = viewModel.pipProcessedPreviewLayer {
-                        ZStack {
-                            PiPProcessedPreviewView(displayLayer: previewLayer)
-                            if viewModel.glassesEnabled {
-                                SimulatorGlassesOverlay(color: viewModel.glassesService.frameColor)
-                                    .scaleEffect(0.85)
+                        PiPProcessedPreviewView(displayLayer: previewLayer)
+                            .frame(
+                                width: pipPreviewSize.width,
+                                height: pipPreviewSize.height
+                            )
+                            .clipped()
+                            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                    .strokeBorder(.white.opacity(0.25), lineWidth: 1)
                             }
-                        }
-                        .frame(
-                            width: pipPreviewSize.width,
-                            height: pipPreviewSize.height
-                        )
-                        .clipped()
-                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                .strokeBorder(.white.opacity(0.25), lineWidth: 1)
-                        }
                     } else if viewModel.isAwaitingBroadcast || viewModel.isRecording {
                         RoundedRectangle(cornerRadius: 14, style: .continuous)
                             .fill(GlassyTheme.fillTertiary)

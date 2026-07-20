@@ -94,6 +94,20 @@ final class PiPCameraManager: NSObject, ObservableObject {
         }
     }
 
+    func setGlassesEnabled(_ enabled: Bool) {
+        glassesEnabled = enabled
+        framePipeline.configure(
+            contentScale: contentScale,
+            glassesEnabled: glassesEnabled,
+            glassesService: glassesEnabled ? glassesService : nil
+        )
+        if enabled {
+            glassesService?.startTrackingForPiP()
+        } else {
+            glassesService?.stopTracking()
+        }
+    }
+
     func setContentScale(_ scale: CGFloat, invalidatePiP: Bool = true) {
         contentScale = min(max(scale, GlassyTheme.pipScaleMinimum), GlassyTheme.pipScaleMaximum)
         ignoresSystemRenderSizeSync = true
