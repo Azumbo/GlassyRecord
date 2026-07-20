@@ -331,18 +331,19 @@ final class RecordingViewModel: ObservableObject {
 
     /// Синхронизирует крупность из сохранённых настроек и передаёт в PiP-пайплайн (`PiPFrameScaler`).
     func applyFaceCamScaleFromSettings() {
-        applyFaceCamScale(settings.pipContentScaleFactor)
+        applyFaceCamScale(settings.pipContentScaleFactor, forceRestart: false)
     }
 
-    func applyFaceCamScale(_ scale: CGFloat) {
+    func applyFaceCamScale(_ scale: CGFloat, forceRestart: Bool = true) {
         let preset = PiPFaceSizePreset.nearest(to: scale)
-        guard abs(faceCamScale - preset.scaleFactor) > 0.02 else { return }
+        let changed = abs(faceCamScale - preset.scaleFactor) > 0.02
         faceCamScale = preset.scaleFactor
+        guard changed || forceRestart else { return }
         pipCameraManager.setContentScale(faceCamScale, invalidatePiP: true)
     }
 
     func selectFaceCamSize(_ preset: PiPFaceSizePreset) {
-        applyFaceCamScale(preset.scaleFactor)
+        applyFaceCamScale(preset.scaleFactor, forceRestart: true)
         UsageTracker.shared.track(.pipSizePreset, params: ["preset": preset.rawValue, "source": "recording"])
     }
 

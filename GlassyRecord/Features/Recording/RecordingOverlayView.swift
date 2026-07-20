@@ -76,7 +76,9 @@ struct RecordingOverlayContent: View {
         .onAppear { viewModel.onAppear() }
         .onDisappear { viewModel.cleanup() }
         .onChange(of: settingsStore.settings.faceCamScale) { scale in
-            viewModel.applyFaceCamScale(scale)
+            // Пресеты с экрана записи вызывают selectFaceCamSize сами (с restart).
+            // Здесь только подтягиваем внешние изменения настроек без лишнего restart.
+            viewModel.applyFaceCamScale(scale, forceRestart: false)
         }
         .onChange(of: viewModel.completedSession?.id) { _ in
             guard let session = viewModel.completedSession else { return }
@@ -192,6 +194,7 @@ struct RecordingOverlayContent: View {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 44), spacing: 4)], spacing: 4) {
                 ForEach(PiPFaceSizePreset.allCases) { preset in
                     Button {
+                        viewModel.selectFaceCamSize(preset)
                         settingsStore.update { $0.applyPipFaceSizePreset(preset) }
                         viewModel.userInteraction()
                         UIImpactFeedbackGenerator(style: .light).impactOccurred()
