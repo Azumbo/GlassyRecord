@@ -42,9 +42,9 @@ enum FaceCamShape: String, Codable, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .circle: "Круг"
-        case .roundedRectangle: "Скруглённый"
-        case .capsule: "Пилюля"
+        case .circle: L10n.t("face.shape.circle")
+        case .roundedRectangle: L10n.t("face.shape.rounded")
+        case .capsule: L10n.t("face.shape.capsule")
         }
     }
 }
@@ -59,10 +59,10 @@ enum FaceCamCorner: String, Codable, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .topLeading: "Верх-лево"
-        case .topTrailing: "Верх-право"
-        case .bottomLeading: "Низ-лево"
-        case .bottomTrailing: "Низ-право"
+        case .topLeading: L10n.t("face.corner.top_leading")
+        case .topTrailing: L10n.t("face.corner.top_trailing")
+        case .bottomLeading: L10n.t("face.corner.bottom_leading")
+        case .bottomTrailing: L10n.t("face.corner.bottom_trailing")
         }
     }
 
@@ -112,8 +112,8 @@ enum PiPFaceSizePreset: String, CaseIterable, Codable, Identifiable {
 
     var menuLabel: String {
         switch self {
-        case .half: "В 2 раза меньше"
-        case .standard: "S — стандарт"
+        case .half: L10n.t("pip.preset.half_menu")
+        case .standard: L10n.t("pip.preset.standard_menu")
         default: shortLabel
         }
     }
@@ -133,8 +133,8 @@ enum GlassesFrameColor: String, Codable, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .red: "Красная оправа"
-        case .blue: "Синяя оправа"
+        case .red: L10n.t("glasses.red")
+        case .blue: L10n.t("glasses.blue")
         }
     }
 
@@ -166,10 +166,10 @@ enum EditorTab: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .trim: "Обрезка"
-        case .audio: "Звук"
-        case .filters: "Фильтры"
-        case .text: "Текст"
+        case .trim: L10n.t("editor.trim")
+        case .audio: L10n.t("editor.audio")
+        case .filters: L10n.t("editor.filters")
+        case .text: L10n.t("editor.text")
         }
     }
 
@@ -208,11 +208,11 @@ enum VideoFilter: String, Codable, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .none: "Оригинал"
-        case .vivid: "Яркий"
-        case .mono: "Моно"
-        case .warm: "Тёплый"
-        case .cool: "Холодный"
+        case .none: L10n.t("filter.none")
+        case .vivid: L10n.t("filter.vivid")
+        case .mono: L10n.t("filter.mono")
+        case .warm: L10n.t("filter.warm")
+        case .cool: L10n.t("filter.cool")
         }
     }
 }
@@ -310,23 +310,23 @@ enum GlassyRecordError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .cameraUnavailable:
-            "Камера недоступна на этом устройстве."
+            L10n.t("error.camera")
         case .microphoneUnavailable:
-            "Микрофон недоступен. Проверьте разрешения в Настройках."
+            L10n.t("error.mic")
         case .screenRecordingDenied:
-            "Запись экрана запрещена. Разрешите доступ в Настройках."
+            L10n.t("error.screen_denied")
         case .screenRecordingFailed(let reason):
-            "Не удалось записать экран: \(reason)"
+            L10n.format("error.screen_failed", reason)
         case .exportFailed(let reason):
-            "Ошибка экспорта: \(reason)"
+            L10n.format("error.export_failed", reason)
         case .faceTrackingUnavailable:
-            "Отслеживание лица недоступно. Требуется TrueDepth или iOS 18+ с Vision."
+            L10n.t("error.face_tracking")
         case .arSessionFailed(let reason):
-            "Ошибка AR-сессии: \(reason)"
+            L10n.format("error.ar_failed", reason)
         case .fileNotFound:
-            "Файл записи не найден."
+            L10n.t("error.file_missing")
         case .permissionDenied(let resource):
-            "Нет доступа к \(resource). Откройте Настройки → Glassy Record."
+            L10n.format("error.permission", resource)
         }
     }
 }

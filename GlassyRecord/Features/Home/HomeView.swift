@@ -13,6 +13,7 @@ struct HomeView: View {
                 VStack(spacing: 28) {
                     header
                     recordButton
+                    demoCard
                     quickSettings
                     glassesCard
                 }
@@ -20,7 +21,7 @@ struct HomeView: View {
                 .padding(.vertical, 32)
             }
         }
-        .navigationTitle("Glassy Record")
+        .navigationTitle(L10n.t("app.name"))
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -29,7 +30,7 @@ struct HomeView: View {
                 } label: {
                     Image(systemName: "gearshape")
                 }
-                .accessibilityLabel("Настройки")
+                .accessibilityLabel(L10n.t("nav.settings"))
             }
         }
         .onAppear {
@@ -44,9 +45,9 @@ struct HomeView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Запись всего экрана iPhone + Face Cam")
+            Text(L10n.t("home.headline"))
                 .font(.title2.weight(.semibold))
-            Text("Записывает экран, включая другие приложения (Duolingo и т.д.), с селфи и звуком. На iPhone — системная запись; в симуляторе — демо.")
+            Text(L10n.t("home.subtitle"))
                 .font(.subheadline)
                 .foregroundStyle(GlassyTheme.labelSecondary)
         }
@@ -78,12 +79,44 @@ struct HomeView: View {
         }
         .buttonStyle(.plain)
         .onAppear { pulse = true }
-        .accessibilityLabel("Начать запись")
+        .accessibilityLabel(L10n.t("home.record.a11y"))
+    }
+
+    private var demoCard: some View {
+        Button {
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            coordinator.showDemoRecording()
+        } label: {
+            HStack(alignment: .top, spacing: 14) {
+                Image(systemName: "safari.fill")
+                    .font(.title2)
+                    .foregroundStyle(GlassyTheme.tint)
+                    .frame(width: 36)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(L10n.t("home.demo.title"))
+                        .font(.headline)
+                        .foregroundStyle(GlassyTheme.labelPrimary)
+                    Text(L10n.t("home.demo.body"))
+                        .font(.caption)
+                        .foregroundStyle(GlassyTheme.labelSecondary)
+                        .multilineTextAlignment(.leading)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(GlassyTheme.labelTertiary)
+            }
+            .padding(16)
+            .liquidGlass()
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(L10n.t("home.demo.a11y"))
     }
 
     private var quickSettings: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Быстрые настройки")
+            Text(L10n.t("home.quick_settings"))
                 .font(.headline)
 
             HStack(spacing: 12) {
@@ -100,7 +133,7 @@ struct HomeView: View {
 
             HStack(spacing: 12) {
                 ToggleChip(
-                    title: "Микрофон",
+                    title: L10n.t("home.mic"),
                     systemImage: "mic.fill",
                     isOn: settingsStore.settings.microphoneEnabled
                 ) {
@@ -111,7 +144,7 @@ struct HomeView: View {
                     )
                 }
 
-                Picker("Face Cam", selection: Binding(
+                Picker(L10n.t("home.face_cam"), selection: Binding(
                     get: { settingsStore.settings.faceCamCorner },
                     set: { corner in
                         settingsStore.update { $0.faceCamCorner = corner }

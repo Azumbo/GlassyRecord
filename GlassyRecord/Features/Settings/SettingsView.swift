@@ -11,10 +11,8 @@ struct SettingsView: View {
                 Button {
                     coordinator.showUsageStats()
                 } label: {
-                    Label("Статистика использования", systemImage: "chart.bar")
+                    Label(L10n.t("settings.usage_stats"), systemImage: "chart.bar")
                 }
-            } footer: {
-                Text("Счётчики локально на устройстве. Скопируйте отчёт и вставьте в Cursor, чтобы понять, что удалить.")
             }
 
             qualitySection
@@ -24,13 +22,13 @@ struct SettingsView: View {
             touchSection
             gesturesSection
         }
-        .navigationTitle("Настройки")
+        .navigationTitle(L10n.t("nav.settings"))
         .navigationBarTitleDisplayMode(.inline)
     }
 
     private var qualitySection: some View {
-        Section("Качество") {
-            Picker("Разрешение", selection: binding(\.quality, feature: .qualityChanged, param: { ["quality": $0.rawValue, "source": "settings"] })) {
+        Section {
+            Picker(L10n.t("settings.quality"), selection: binding(\.quality, feature: .qualityChanged, param: { ["quality": $0.rawValue, "source": "settings"] })) {
                 ForEach(RecordingQuality.allCases) { q in
                     Text(q.displayName).tag(q)
                 }
@@ -40,19 +38,19 @@ struct SettingsView: View {
     }
 
     private var faceCamSection: some View {
-        Section("Face Cam") {
-            Picker("Положение", selection: binding(\.faceCamCorner, feature: .faceCamCornerChanged, param: { ["corner": $0.rawValue, "source": "settings"] })) {
+        Section(L10n.t("settings.face_cam")) {
+            Picker(L10n.t("settings.position"), selection: binding(\.faceCamCorner, feature: .faceCamCornerChanged, param: { ["corner": $0.rawValue, "source": "settings"] })) {
                 ForEach(FaceCamCorner.allCases) { c in
                     Text(c.displayName).tag(c)
                 }
             }
-            Picker("Форма", selection: binding(\.faceCamShape, feature: .faceCamShapeChanged, param: { ["shape": $0.rawValue] })) {
+            Picker(L10n.t("settings.shape"), selection: binding(\.faceCamShape, feature: .faceCamShapeChanged, param: { ["shape": $0.rawValue] })) {
                 ForEach(FaceCamShape.allCases) { s in
                     Text(s.displayName).tag(s)
                 }
             }
-            Toggle("Зеркальное отражение", isOn: binding(\.faceCamMirrored, feature: .faceCamMirrorToggled, param: { ["enabled": String($0)] }))
-            Picker("Крупность PiP", selection: faceCamSizePresetBinding) {
+            Toggle(L10n.t("settings.mirror"), isOn: binding(\.faceCamMirrored, feature: .faceCamMirrorToggled, param: { ["enabled": String($0)] }))
+            Picker(L10n.t("settings.pip_size"), selection: faceCamSizePresetBinding) {
                 ForEach(PiPFaceSizePreset.allCases) { preset in
                     Text(preset.menuLabel).tag(preset)
                 }
@@ -71,16 +69,16 @@ struct SettingsView: View {
     }
 
     private var audioSection: some View {
-        Section("Аудио") {
-            Toggle("Микрофон", isOn: binding(\.microphoneEnabled, feature: .micToggled, param: { ["enabled": String($0), "source": "settings"] }))
+        Section(L10n.t("settings.audio")) {
+            Toggle(L10n.t("settings.mic"), isOn: binding(\.microphoneEnabled, feature: .micToggled, param: { ["enabled": String($0), "source": "settings"] }))
             Toggle("Системный звук", isOn: binding(\.systemAudioEnabled, feature: .systemAudioToggled, param: { ["enabled": String($0)] }))
             if settingsStore.settings.microphoneEnabled {
-                LabeledContent("Громкость микрофона") {
+                LabeledContent(L10n.t("settings.mic_volume")) {
                     Slider(value: bindingFloat(\.microphoneVolume), in: 0...2)
                 }
             }
             if settingsStore.settings.systemAudioEnabled {
-                LabeledContent("Громкость системы") {
+                LabeledContent(L10n.t("settings.system_volume")) {
                     Slider(value: bindingFloat(\.systemAudioVolume), in: 0...2)
                 }
             }
@@ -89,7 +87,7 @@ struct SettingsView: View {
 
     private var glassesSection: some View {
         Section {
-            Toggle("Включить наложение по умолчанию", isOn: binding(\.glassesEnabledByDefault, feature: .glassesDefaultToggled, param: { ["enabled": String($0), "source": "settings"] }))
+            Toggle(L10n.t("settings.glasses_default"), isOn: binding(\.glassesEnabledByDefault, feature: .glassesDefaultToggled, param: { ["enabled": String($0), "source": "settings"] }))
 
             Picker("Цвет оправы", selection: binding(\.glassesColor, feature: .glassesColorChanged, param: { ["color": $0.rawValue, "source": "settings"] })) {
                 ForEach(GlassesFrameColor.allCases) { color in
@@ -103,7 +101,7 @@ struct SettingsView: View {
                 }
             }
 
-            LabeledContent("Прозрачность линз") {
+            LabeledContent(L10n.t("settings.lens_transparency")) {
                 Slider(value: bindingFloat(\.lensTransparency), in: 0.3...1.0)
             }
 
@@ -111,26 +109,24 @@ struct SettingsView: View {
                 Slider(value: bindingFloat(\.frameBrightness), in: 0.5...1.5)
             }
         } header: {
-            Label("Очки Monokol MK295", systemImage: "eyeglasses")
-        } footer: {
-            Text("Кубическая оправа c40 из глянцевого ацетата с антибликовыми линзами.")
+            Label(L10n.t("glasses.title"), systemImage: "eyeglasses")
         }
     }
 
     private var touchSection: some View {
-        Section("Индикаторы касаний") {
-            Toggle("Показывать касания", isOn: binding(\.touchIndicatorEnabled, feature: .touchIndicatorsToggled, param: { ["enabled": String($0)] }))
-            LabeledContent("Размер") {
+        Section {
+            Toggle(L10n.t("settings.show_taps"), isOn: binding(\.touchIndicatorEnabled, feature: .touchIndicatorsToggled, param: { ["enabled": String($0)] }))
+            LabeledContent(L10n.t("settings.tap_size")) {
                 Slider(value: bindingCGFloat(\.touchIndicatorSize), in: 12...48)
             }
-            LabeledContent("Прозрачность") {
+            LabeledContent(L10n.t("settings.opacity")) {
                 Slider(value: bindingDouble(\.touchIndicatorOpacity), in: 0.2...1.0)
             }
         }
     }
 
     private var gesturesSection: some View {
-        Section("Жесты и интерфейс") {
+        Section(L10n.t("settings.gestures")) {
             LabeledContent("Скрытие панели (сек)") {
                 Slider(value: bindingDouble(\.controlPanelAutoHideSeconds), in: 1...10, step: 1)
             }

@@ -507,7 +507,7 @@ final class RecordingViewModel: ObservableObject {
     }
 
     func addTouchIndicator(at point: CGPoint) {
-        guard settings.touchIndicatorEnabled, !usesBroadcastMode else { return }
+        guard settings.touchIndicatorEnabled else { return }
 
         if let last = lastTouchIndicatorPoint {
             let dx = point.x - last.x

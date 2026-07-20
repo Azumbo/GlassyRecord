@@ -14,9 +14,20 @@ final class AppCoordinator: ObservableObject {
         self.settingsStore = settingsStore
     }
 
-    func showRecording() {
+    /// Если true — после старта записи сразу открыть демо-браузер с видимыми тапами.
+    @Published var openDemoBrowserWhenRecordingStarts = false
+
+    func showRecording(openDemoOnStart: Bool = false) {
+        openDemoBrowserWhenRecordingStarts = openDemoOnStart
         path.append(AppRoute.recording)
-        UsageTracker.shared.track(.recordingOpened)
+        UsageTracker.shared.track(
+            .recordingOpened,
+            params: ["demo": openDemoOnStart ? "true" : "false"]
+        )
+    }
+
+    func showDemoRecording() {
+        showRecording(openDemoOnStart: true)
     }
 
     func showEditor(for session: RecordingSession) {

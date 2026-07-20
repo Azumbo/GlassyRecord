@@ -20,6 +20,8 @@ final class GlassesFrameProcessor: @unchecked Sendable {
     private var redGlassesNode: SCNNode?
     private var blueGlassesNode: SCNNode?
     private var visionSequenceHandler = VNSequenceRequestHandler()
+    private var smoothedVisionTransform = matrix_identity_float4x4
+    private var hasSmoothedVisionTransform = false
 
     init() {
         let device = MTLCreateSystemDefaultDevice()
@@ -46,6 +48,7 @@ final class GlassesFrameProcessor: @unchecked Sendable {
         lock.withLock {
             useVisionFallback = true
             trackingState = FaceTrackingState()
+            hasSmoothedVisionTransform = false
         }
     }
 
@@ -82,6 +85,7 @@ final class GlassesFrameProcessor: @unchecked Sendable {
     func resetTracking() {
         lock.withLock {
             trackingState = FaceTrackingState()
+            hasSmoothedVisionTransform = false
         }
     }
 
@@ -114,27 +118,64 @@ final class GlassesFrameProcessor: @unchecked Sendable {
 
         guard let observation = request.results?.first as? VNFaceObservation,
               let landmarks = observation.landmarks else {
-            lock.withLock { trackingState.isTracking = false }
+            lock.withLock {
+                trackingState.isTracking = false
+                hasSmoothedVisionTransform = false
+            }
             return false
         }
 
         tracking.isTracking = true
 
         let bbox = observation.boundingBox
+        let leftEyeCenter = eyeCenter(from: landmarks.leftEye, in: bbox)
+        let rightEyeCenter = eyeCenter(from: landmarks.rightEye, in: bbox)
+
+        let centerX: CGFloat
+        let centerY: CGFloat
+        let eyeDistance: CGFloat
+        if let leftEyeCenter, let rightEyeCenter {
+            centerX = (leftEyeCenter.x + rightEyeCenter.x) * 0.5
+            centerY = (leftEyeCenter.y + rightEyeCenter.y) * 0.5
+            eyeDistance = hypot(rightEyeCenter.x - leftEyeCenter.x, rightEyeCenter.y - leftEyeCenter.y)
+        } else {
+            centerX = bbox.midX
+            centerY = bbox.midY
+            eyeDistance = bbox.width * 0.38
+        }
+
+        // Поднимаем оправу в район глаз и масштабируем от межзрачкового расстояния.
+        let glassesCenterY = min(max(centerY + bbox.height * 0.06, 0), 1)
+        let normalizedScale = max(0.08, min(0.55, eyeDistance * 2.7))
+
         var transform = matrix_identity_float4x4
         transform.columns.3 = SIMD4<Float>(
-            Float(bbox.midX - 0.5) * 2,
-            Float(bbox.midY - 0.5) * 2,
+            Float(centerX - 0.5) * 2,
+            Float(glassesCenterY - 0.5) * 2,
             -0.3,
             1
         )
-
-        let scale = Float(bbox.width) * 1.8
+        let scale = Float(normalizedScale)
         transform.columns.0.x = scale
         transform.columns.1.y = scale
         transform.columns.2.z = scale
 
-        tracking.headTransform = transform
+        let smoothedTransform: simd_float4x4 = lock.withLock {
+            if !hasSmoothedVisionTransform {
+                smoothedVisionTransform = transform
+                hasSmoothedVisionTransform = true
+            } else {
+                // Сглаживание, чтобы очки не дёргались на каждом кадре Vision.
+                smoothedVisionTransform = interpolateTransform(
+                    from: smoothedVisionTransform,
+                    to: transform,
+                    alpha: 0.22
+                )
+            }
+            return smoothedVisionTransform
+        }
+
+        tracking.headTransform = smoothedTransform
 
         if let leftEye = landmarks.leftEye, let rightEye = landmarks.rightEye {
             tracking.leftEyeTransform = eyeTransform(from: leftEye, in: bbox)
@@ -143,9 +184,34 @@ final class GlassesFrameProcessor: @unchecked Sendable {
 
         lock.withLock {
             trackingState = tracking
-            glassesNode?.simdTransform = transform
+            glassesNode?.simdTransform = smoothedTransform
         }
         return true
+    }
+
+    private func eyeCenter(from region: VNFaceLandmarkRegion2D?, in bbox: CGRect) -> CGPoint? {
+        guard let region else { return nil }
+        let points = region.normalizedPoints
+        guard !points.isEmpty else { return nil }
+
+        let center = points.reduce(CGPoint.zero) { partial, point in
+            CGPoint(x: partial.x + CGFloat(point.x), y: partial.y + CGFloat(point.y))
+        }
+        let avg = CGPoint(x: center.x / CGFloat(points.count), y: center.y / CGFloat(points.count))
+        return CGPoint(
+            x: bbox.origin.x + avg.x * bbox.width,
+            y: bbox.origin.y + avg.y * bbox.height
+        )
+    }
+
+    private func interpolateTransform(from a: simd_float4x4, to b: simd_float4x4, alpha: Float) -> simd_float4x4 {
+        var out = matrix_identity_float4x4
+        out.columns.0 = simd_mix(a.columns.0, b.columns.0, SIMD4<Float>(repeating: alpha))
+        out.columns.1 = simd_mix(a.columns.1, b.columns.1, SIMD4<Float>(repeating: alpha))
+        out.columns.2 = simd_mix(a.columns.2, b.columns.2, SIMD4<Float>(repeating: alpha))
+        out.columns.3 = simd_mix(a.columns.3, b.columns.3, SIMD4<Float>(repeating: alpha))
+        out.columns.3.w = 1
+        return out
     }
 
     private func eyeTransform(from region: VNFaceLandmarkRegion2D, in bbox: CGRect) -> simd_float4x4 {

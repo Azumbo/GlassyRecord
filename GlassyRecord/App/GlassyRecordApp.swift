@@ -37,11 +37,11 @@ struct RootView: View {
         }
         .environmentObject(coordinator)
         .environmentObject(settingsStore)
-        .alert("Ошибка", isPresented: .init(
+        .alert(L10n.t("common.error"), isPresented: .init(
             get: { coordinator.alertMessage != nil },
             set: { if !$0 { coordinator.dismissAlert() } }
         )) {
-            Button("OK", role: .cancel) { coordinator.dismissAlert() }
+            Button(L10n.t("common.ok"), role: .cancel) { coordinator.dismissAlert() }
         } message: {
             Text(coordinator.alertMessage ?? "")
         }

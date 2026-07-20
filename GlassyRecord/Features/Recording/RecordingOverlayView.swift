@@ -16,6 +16,7 @@ struct RecordingOverlayContent: View {
 
     @StateObject private var viewModel: RecordingViewModel
     @GestureState private var pinchScale: CGFloat = 1.0
+    @State private var showDemoBrowser = false
 
     private var pipPreviewSize: CGSize {
         CGSize(width: GlassyTheme.pipPreviewBaseWidth, height: GlassyTheme.pipPreviewBaseHeight)
@@ -34,7 +35,6 @@ struct RecordingOverlayContent: View {
             }
 
             touchIndicatorsLayer
-                .opacity(viewModel.usesBroadcastMode ? 0 : 1)
 
             controlsOverlay
             timerBadge
@@ -71,7 +71,7 @@ struct RecordingOverlayContent: View {
 
             recordingExitButton
         }
-        .touchTrailGesture(touchTrailGesture, enabled: !viewModel.usesBroadcastMode)
+        .touchTrailGesture(touchTrailGesture, enabled: true)
         .navigationBarHidden(true)
         .statusBarHidden(!viewModel.showTimer)
         .onAppear { viewModel.onAppear() }
@@ -102,6 +102,17 @@ struct RecordingOverlayContent: View {
                 viewModel.dismissFailure()
             }
         }
+        .onChange(of: viewModel.isRecording) { isRecording in
+            guard isRecording, coordinator.openDemoBrowserWhenRecordingStarts else { return }
+            coordinator.openDemoBrowserWhenRecordingStarts = false
+            showDemoBrowser = true
+        }
+        .fullScreenCover(isPresented: $showDemoBrowser) {
+            DemoBrowserView {
+                showDemoBrowser = false
+            }
+            .environmentObject(settingsStore)
+        }
     }
 
     private var touchTrailGesture: some Gesture {
@@ -126,7 +137,7 @@ struct RecordingOverlayContent: View {
                 Button {
                     viewModel.exitToHome { coordinator.popToRoot() }
                 } label: {
-                    Label("Назад", systemImage: "chevron.left")
+                    Label(L10n.t("nav.back"), systemImage: "chevron.left")
                         .font(.body.weight(.semibold))
                         .padding(.horizontal, 14)
                         .padding(.vertical, 10)
@@ -189,7 +200,7 @@ struct RecordingOverlayContent: View {
 
     private var pipSizePresetControl: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Label("Крупность", systemImage: "person.crop.rectangle")
+            Label(L10n.t("pip.size"), systemImage: "person.crop.rectangle")
                 .font(.caption2.weight(.medium))
 
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 44), spacing: 4)], spacing: 4) {
@@ -214,11 +225,11 @@ struct RecordingOverlayContent: View {
     }
 
     private var preparingOverlay: some View {
-        statusOverlay(title: "Подготовка…", subtitle: "Запуск записи в симуляторе")
+        statusOverlay(title: L10n.t("recording.preparing"), subtitle: L10n.t("recording.preparing_sub"))
     }
 
     private var savingOverlay: some View {
-        statusOverlay(title: "Загрузка…", subtitle: "Получаем MP4 из Broadcast Extension")
+        statusOverlay(title: L10n.t("recording.saving"), subtitle: L10n.t("recording.saving_sub"))
     }
 
     private var broadcastSetupOverlay: some View {
@@ -226,14 +237,19 @@ struct RecordingOverlayContent: View {
             Spacer()
                 .allowsHitTesting(false)
             VStack(spacing: 16) {
-                Text("Face Cam через системный PiP")
+                Text(L10n.t("recording.pip_title"))
                     .font(.headline)
-                Text("Справа — превью камеры (тот же кадр, что в системном PiP). Крупность меняет зум лица в кадре у обоих окон.")
+                Text(L10n.t("recording.pip_preview_hint"))
                     .font(.subheadline)
                     .foregroundStyle(GlassyTheme.labelSecondary)
                     .multilineTextAlignment(.center)
 
-                Text("PiP слева — системное окно iOS (размер окна задаёт система; щипок меняет его). Для записи нажмите красную кнопку ниже.")
+                Text(L10n.t("recording.pip_system_hint"))
+                    .font(.caption)
+                    .foregroundStyle(GlassyTheme.labelSecondary)
+                    .multilineTextAlignment(.center)
+
+                Text(L10n.t("recording.demo_hint"))
                     .font(.caption)
                     .foregroundStyle(GlassyTheme.labelSecondary)
                     .multilineTextAlignment(.center)
@@ -270,7 +286,7 @@ struct RecordingOverlayContent: View {
     private var broadcastBanner: some View {
         VStack {
             if viewModel.usesBroadcastMode, viewModel.isPiPActive, !viewModel.isRecording {
-                Text("Face Cam в PiP готов. Запись экрана ещё не начата — нажмите «Начать запись экрана».")
+                Text(L10n.t("recording.banner.pip_ready"))
                     .font(.caption.weight(.medium))
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 16)
@@ -279,7 +295,7 @@ struct RecordingOverlayContent: View {
                     .padding(.horizontal, 20)
                     .padding(.top, 8)
             } else if viewModel.usesBroadcastMode, viewModel.isRecording {
-                Text("Запись идёт — переключитесь в любое приложение. Face Cam и касания останутся поверх экрана. Вернитесь сюда, чтобы остановить.")
+                Text(L10n.t("recording.banner.recording"))
                     .font(.caption.weight(.medium))
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 16)
@@ -301,7 +317,7 @@ struct RecordingOverlayContent: View {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .font(.largeTitle)
                     .foregroundStyle(GlassyTheme.warning)
-                Text("Не удалось записать")
+                Text(L10n.t("recording.failed_title"))
                     .font(.headline)
                 if case .failed(let message) = viewModel.setupPhase {
                     ScrollView {
@@ -313,12 +329,12 @@ struct RecordingOverlayContent: View {
                     .frame(maxHeight: 180)
                 }
                 HStack(spacing: 12) {
-                    Button("Назад") {
+                    Button(L10n.t("nav.back")) {
                         viewModel.dismissFailure()
                         viewModel.exitToHome { coordinator.popToRoot() }
                     }
                         .buttonStyle(.bordered)
-                    Button("Повторить") {
+                    Button(L10n.t("common.retry")) {
                         viewModel.dismissFailure()
                         viewModel.prepareBroadcastConfig()
                     }
@@ -436,7 +452,11 @@ struct RecordingOverlayContent: View {
                     glassesColor: viewModel.glassesService.frameColor,
                     onStop: { Task { await viewModel.stopRecording() } },
                     onToggleGlasses: viewModel.toggleGlasses,
-                    onGlassesColor: viewModel.setGlassesColor
+                    onGlassesColor: viewModel.setGlassesColor,
+                    onOpenDemo: viewModel.isRecording ? { showDemoBrowser = true } : nil,
+                    onAppLaunchFailed: { message in
+                        coordinator.alertMessage = message
+                    }
                 )
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
