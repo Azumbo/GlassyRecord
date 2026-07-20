@@ -90,7 +90,12 @@ final class PiPFramePipeline: @unchecked Sendable {
             }
 
             let targetSize = self.lock.withLock { self.targetRenderSize }
-            finalBuffer = PiPFrameScaler.scale(finalBuffer, targetSize: targetSize)
+            let zoom = self.lock.withLock { self.contentScale }
+            finalBuffer = PiPFrameScaler.scale(
+                finalBuffer,
+                targetSize: targetSize,
+                contentZoom: zoom
+            )
 
             let index = self.lock.withLock {
                 let current = self.frameIndex

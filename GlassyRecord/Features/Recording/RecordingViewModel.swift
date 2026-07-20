@@ -25,7 +25,7 @@ final class RecordingViewModel: ObservableObject {
     @Published var showControls = true
     @Published var showTimer = true
     @Published var faceCamPosition: CGPoint
-    @Published var faceCamScale: CGFloat = 1.0
+    @Published var faceCamScale: CGFloat = PiPFaceSizePreset.half.scaleFactor
     @Published var touchIndicators: [TouchIndicator] = []
     private var lastTouchIndicatorPoint: CGPoint?
     @Published var glassesEnabled = false
@@ -171,6 +171,9 @@ final class RecordingViewModel: ObservableObject {
     func handleScenePhase(_ phase: ScenePhase) {
         guard usesBroadcastMode else { return }
         pipCameraManager.handleScenePhase(phase)
+        if phase == .active || phase == .inactive {
+            TouchIndicatorOverlayHost.refreshWindowScene()
+        }
     }
 
     private func beginActiveBroadcastSession() async {
@@ -186,6 +189,7 @@ final class RecordingViewModel: ObservableObject {
         recordingStartedAt = Date()
         resetControlAutoHide()
         resetTimerAutoHide()
+        updateTouchIndicatorOverlay(active: true)
         UsageTracker.shared.track(
             .broadcastStarted,
             params: [
@@ -388,6 +392,7 @@ final class RecordingViewModel: ObservableObject {
                 BroadcastConfigStore.reset()
                 pipCameraManager.stop()
                 isRecording = false
+                updateTouchIndicatorOverlay(active: false)
                 setupPhase = .idle
 
                 let session = try await makeRecordingSession(from: url, duration: recordedDuration)
@@ -502,7 +507,7 @@ final class RecordingViewModel: ObservableObject {
     }
 
     func addTouchIndicator(at point: CGPoint) {
-        guard settings.touchIndicatorEnabled else { return }
+        guard settings.touchIndicatorEnabled, !usesBroadcastMode else { return }
 
         if let last = lastTouchIndicatorPoint {
             let dx = point.x - last.x
@@ -551,6 +556,7 @@ final class RecordingViewModel: ObservableObject {
         setupPhase = .idle
         isRecording = false
         recordingStartedAt = nil
+        updateTouchIndicatorOverlay(active: false)
         BroadcastConfigStore.clearFailure()
         broadcastService.stopDurationTimer()
     }
@@ -587,6 +593,7 @@ final class RecordingViewModel: ObservableObject {
         stateRefreshTask?.cancel()
         broadcastService.stopDurationTimer()
         RecordingNotificationService.clearRecordingNotification()
+        updateTouchIndicatorOverlay(active: false)
         if !isRecording {
             cameraService.stop()
             pipCameraManager.stop()
@@ -595,6 +602,25 @@ final class RecordingViewModel: ObservableObject {
         glassesService.stopTracking()
         controlsHideTask?.cancel()
         timerHideTask?.cancel()
+    }
+
+    private func updateTouchIndicatorOverlay(active: Bool) {
+        guard usesBroadcastMode else { return }
+        TouchIndicatorOverlayHost.updateStyle(touchOverlayStyle)
+        if active, settings.touchIndicatorEnabled {
+            TouchIndicatorOverlayHost.activate()
+        } else {
+            TouchIndicatorOverlayHost.deactivate()
+        }
+    }
+
+    private var touchOverlayStyle: TouchIndicatorOverlayHost.Style {
+        TouchIndicatorOverlayHost.Style(
+            enabled: settings.touchIndicatorEnabled,
+            color: UIColor(Color(hex: settings.touchIndicatorColorHex) ?? .red),
+            size: settings.touchIndicatorSize,
+            opacity: CGFloat(settings.touchIndicatorOpacity)
+        )
     }
 }
 

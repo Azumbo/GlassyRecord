@@ -34,6 +34,7 @@ struct RecordingOverlayContent: View {
             }
 
             touchIndicatorsLayer
+                .opacity(viewModel.usesBroadcastMode ? 0 : 1)
 
             controlsOverlay
             timerBadge
@@ -70,7 +71,7 @@ struct RecordingOverlayContent: View {
 
             recordingExitButton
         }
-        .simultaneousGesture(touchTrailGesture)
+        .touchTrailGesture(touchTrailGesture, enabled: !viewModel.usesBroadcastMode)
         .navigationBarHidden(true)
         .statusBarHidden(!viewModel.showTimer)
         .onAppear { viewModel.onAppear() }
@@ -156,8 +157,8 @@ struct RecordingOverlayContent: View {
                             }
                         }
                         .frame(
-                            width: pipPreviewSize.width * viewModel.faceCamScale,
-                            height: pipPreviewSize.height * viewModel.faceCamScale
+                            width: pipPreviewSize.width,
+                            height: pipPreviewSize.height
                         )
                         .clipped()
                         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
@@ -227,12 +228,12 @@ struct RecordingOverlayContent: View {
             VStack(spacing: 16) {
                 Text("Face Cam через системный PiP")
                     .font(.headline)
-                Text("Справа — превью камеры. Выберите крупность кнопками (½…+150%, S — стандарт). PiP слева внизу — это камера, не запись экрана. Для записи нажмите красную кнопку ниже.")
+                Text("Справа — превью камеры (тот же кадр, что в системном PiP). Крупность меняет зум лица в кадре у обоих окон.")
                     .font(.subheadline)
                     .foregroundStyle(GlassyTheme.labelSecondary)
                     .multilineTextAlignment(.center)
 
-                Text("Нажмите кнопку ниже и подтвердите запись экрана и микрофон в системном диалоге iOS.")
+                Text("PiP слева — системное окно iOS (размер окна задаёт система; щипок меняет его). Для записи нажмите красную кнопку ниже.")
                     .font(.caption)
                     .foregroundStyle(GlassyTheme.labelSecondary)
                     .multilineTextAlignment(.center)
@@ -278,7 +279,7 @@ struct RecordingOverlayContent: View {
                     .padding(.horizontal, 20)
                     .padding(.top, 8)
             } else if viewModel.usesBroadcastMode, viewModel.isRecording {
-                Text("Запись идёт — переключитесь в любое приложение. Face Cam останется в системном PiP. Вернитесь сюда, чтобы остановить.")
+                Text("Запись идёт — переключитесь в любое приложение. Face Cam и касания останутся поверх экрана. Вернитесь сюда, чтобы остановить.")
                     .font(.caption.weight(.medium))
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 16)
@@ -546,5 +547,16 @@ extension TimeInterval {
         let seconds = Int(self) % 60
         let fraction = Int((self.truncatingRemainder(dividingBy: 1)) * 10)
         return String(format: "%02d:%02d.%d", minutes, seconds, fraction)
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func touchTrailGesture<G: Gesture>(_ gesture: G, enabled: Bool) -> some View {
+        if enabled {
+            simultaneousGesture(gesture)
+        } else {
+            self
+        }
     }
 }

@@ -262,7 +262,7 @@ struct AppSettings: Codable, Equatable {
     var faceCamCorner: FaceCamCorner = .bottomTrailing
     var faceCamShape: FaceCamShape = .roundedRectangle
     var faceCamMirrored: Bool = true
-    var faceCamScale: CGFloat = 1.0
+    var faceCamScale: CGFloat = PiPFaceSizePreset.half.scaleFactor
     var microphoneEnabled: Bool = true
     var systemAudioEnabled: Bool = true
     var microphoneVolume: Float = 1.0

@@ -45,6 +45,7 @@
 		76C1A5C13D904DE5590E6CEE /* BroadcastConfig+App.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EA17FC413A53F98D9130E62 /* BroadcastConfig+App.swift */; };
 		7FECA9844022DF40E346A28C /* SettingsUserDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788F5BC4419037711452B4BA /* SettingsUserDefaults.swift */; };
 		86B610C04FA5897DC545A47C /* RecordingOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7315BE8BDACA80507B69D09B /* RecordingOverlayView.swift */; };
+		88BFEB187477336330E851E2 /* TouchIndicatorOverlayHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B97C2A6D6C6A1A00A1B06E3 /* TouchIndicatorOverlayHost.swift */; };
 		8A0E8D05AF3DB0857006F11C /* GlassesOverlayServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04A0A9EEC7EA9AF32E27636E /* GlassesOverlayServiceTests.swift */; };
 		8DBD22E6F8B1F5ED333A2709 /* ExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 136DED63C26E570333DAAAD7 /* ExportService.swift */; };
 		92BC7AAFE03BAFC2C74D5613 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D6511CFDFE92E63F5CD0935 /* SettingsView.swift */; };
@@ -123,6 +124,7 @@
 		0812929F4F54F04B77ED2309 /* GlassyRecordUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassyRecordUITests.swift; sourceTree = "<group>"; };
 		10F7422C59BECD1F5285CC02 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		136DED63C26E570333DAAAD7 /* ExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportService.swift; sourceTree = "<group>"; };
+		1B97C2A6D6C6A1A00A1B06E3 /* TouchIndicatorOverlayHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchIndicatorOverlayHost.swift; sourceTree = "<group>"; };
 		1BB6B82A0832DAF8928AD637 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		23695972DE2E5EDCE9B21DDB /* RecordingControlPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingControlPanel.swift; sourceTree = "<group>"; };
 		2E5F5CE54715F372DBEA388D /* RecordingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingViewModel.swift; sourceTree = "<group>"; };
@@ -362,6 +364,7 @@
 				AAE4F0D9F48375B2EC6BFDD4 /* PiPPixelGeometry.swift */,
 				95CAEE938A4089FA85E73B90 /* PiPSampleBufferFactory.swift */,
 				6D4C5E04716960CA2770082E /* SimulatorSupport.swift */,
+				1B97C2A6D6C6A1A00A1B06E3 /* TouchIndicatorOverlayHost.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -691,6 +694,7 @@
 				FAD3456328266F3426C3CF38 /* SimulatorFaceCamPreview.swift in Sources */,
 				255E767BF14C133F98A2AB03 /* SimulatorSupport.swift in Sources */,
 				D4BD1B6D6B1BCD7BAAEE75AD /* SystemBroadcastPickerRepresentable.swift in Sources */,
+				88BFEB187477336330E851E2 /* TouchIndicatorOverlayHost.swift in Sources */,
 				078490335D8CFF74D54B88B5 /* UsageStatsView.swift in Sources */,
 				D5AE82CA977DC096865A82E9 /* UsageTracker.swift in Sources */,
 			);
