@@ -5,9 +5,9 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-APP_GROUP="group.com.glassyrecord.shared"
-APP_ID="com.glassyrecord.app"
-EXT_ID="com.glassyrecord.app.broadcast"
+APP_GROUP="group.com.azumbo.glassyrecord.shared"
+APP_ID="com.azumbo.glassyrecord.app"
+EXT_ID="com.azumbo.glassyrecord.app.broadcast"
 
 echo "==> 1/4  xcodegen generate"
 xcodegen generate
@@ -33,7 +33,7 @@ if ! xcodebuild -scheme GlassyRecord \
   echo ""
   echo "Сборка не прошла. Частые причины:"
   echo "  • Xcode → Settings → Accounts — добавьте Apple ID"
-  echo "  • Выберите Team YSSY28XABK для обоих таргетов"
+  echo "  • Выберите Team PRPL734V4V для обоих таргетов"
   echo "  • developer.apple.com → Identifiers → App Groups → создайте $APP_GROUP"
   echo "  • Привяжите группу к $APP_ID и $EXT_ID"
   echo ""

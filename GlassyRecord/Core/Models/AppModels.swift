@@ -87,13 +87,13 @@ enum PiPFaceSizePreset: String, CaseIterable, Codable, Identifiable {
 
     var id: String { rawValue }
 
-    /// Множитель относительно стандартного размера иконки.
+    /// Множитель aspect-fill кропа: 1.0 = кадр заполнен, больше = ближе к лицу.
     var scaleFactor: CGFloat {
         switch self {
-        case .half: 0.5
-        case .minus25: 0.75
-        case .standard: 1.0
-        case .plus50: 1.5
+        case .half: 1.0
+        case .minus25: 1.25
+        case .standard: 1.5
+        case .plus50: 1.75
         case .plus100: 2.0
         case .plus150: 2.5
         }

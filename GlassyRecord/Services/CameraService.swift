@@ -17,7 +17,7 @@ private enum CameraSessionConfigurator {
         queue: DispatchQueue,
         quality: RecordingQuality,
         mirrored: Bool
-    ) throws {
+    ) throws -> AVCaptureDevice {
         let session = context.session
         let videoOutput = context.videoOutput
 
@@ -46,11 +46,15 @@ private enum CameraSessionConfigurator {
         session.addOutput(videoOutput)
 
         if let connection = videoOutput.connection(with: .video) {
-            connection.isVideoMirrored = mirrored
-            CaptureConnectionSupport.applyPortrait(to: connection)
+            // Поворот задаёт CaptureRotationHandler после setup (MainActor).
+            if connection.isVideoMirroringSupported {
+                connection.automaticallyAdjustsVideoMirroring = false
+                connection.isVideoMirrored = mirrored
+            }
         }
 
         try configureFrameRate(device: device, fps: min(quality.preferredFPS, 30))
+        return device
     }
 
     private static func configureFrameRate(device: AVCaptureDevice, fps: Int) throws {
@@ -82,6 +86,9 @@ final class CameraService: NSObject, ObservableObject {
     nonisolated private let sessionQueue = DispatchQueue(label: "com.glassyrecord.camera", qos: .userInitiated)
     nonisolated(unsafe) private var continuationBuffer: ((CVPixelBuffer) -> Void)?
     private let mockFeed = MockCameraFeed()
+    private var rotationHandler: CaptureRotationHandler?
+    private(set) var captureDevice: AVCaptureDevice?
+    private var mirrored = true
 
     func configure(quality: RecordingQuality, mirrored: Bool) async throws {
         if SimulatorSupport.isRunning {
@@ -93,22 +100,23 @@ final class CameraService: NSObject, ObservableObject {
             throw GlassyRecordError.permissionDenied("камере")
         }
 
+        self.mirrored = mirrored
         let ctx = CameraSessionContext(session: session, videoOutput: videoOutput)
         let queue = sessionQueue
 
-        try await withThrowingTaskGroup(of: Void.self) { group in
+        let device: AVCaptureDevice = try await withThrowingTaskGroup(of: AVCaptureDevice.self) { group in
             group.addTask {
-                try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<AVCaptureDevice, Error>) in
                     queue.async {
                         do {
-                            try CameraSessionConfigurator.setup(
+                            let configuredDevice = try CameraSessionConfigurator.setup(
                                 context: ctx,
                                 delegate: self,
                                 queue: queue,
                                 quality: quality,
                                 mirrored: mirrored
                             )
-                            continuation.resume()
+                            continuation.resume(returning: configuredDevice)
                         } catch {
                             continuation.resume(throwing: error)
                         }
@@ -119,9 +127,25 @@ final class CameraService: NSObject, ObservableObject {
                 try await Task.sleep(for: .seconds(10))
                 throw GlassyRecordError.cameraUnavailable
             }
-            try await group.next()
+            let result = try await group.next()!
             group.cancelAll()
+            return result
         }
+
+        captureDevice = device
+        rotationHandler = CaptureRotationHandler(
+            device: device,
+            captureConnection: videoOutput.connection(with: .video),
+            mirrored: mirrored
+        )
+    }
+
+    func bindPreviewLayer(_ layer: AVCaptureVideoPreviewLayer?) {
+        rotationHandler?.setPreviewLayer(layer)
+    }
+
+    func refreshRotation() {
+        rotationHandler?.refreshRotation()
     }
 
     func start() {
@@ -161,6 +185,8 @@ final class CameraService: NSObject, ObservableObject {
                 self?.latestPixelBuffer = nil
             }
         }
+        rotationHandler = nil
+        captureDevice = nil
     }
 
     func onFrame(_ handler: @escaping (CVPixelBuffer) -> Void) {
@@ -210,8 +236,12 @@ struct CameraPreviewView: UIViewRepresentable {
         let view = PreviewUIView()
         view.previewLayer.session = session
         view.previewLayer.videoGravity = .resizeAspectFill
-        if let connection = view.previewLayer.connection, connection.isEnabled == false {
+        if let connection = view.previewLayer.connection {
             connection.isEnabled = true
+            if connection.isVideoMirroringSupported {
+                connection.automaticallyAdjustsVideoMirroring = false
+                connection.isVideoMirrored = mirrored
+            }
         }
         context.coordinator.bind(layer: view.previewLayer)
         return view
@@ -221,11 +251,16 @@ struct CameraPreviewView: UIViewRepresentable {
         if uiView.previewLayer.session !== session {
             uiView.previewLayer.session = session
         }
+        if let connection = uiView.previewLayer.connection, connection.isVideoMirroringSupported {
+            connection.automaticallyAdjustsVideoMirroring = false
+            connection.isVideoMirrored = mirrored
+        }
+        context.coordinator.onPreviewLayerReady = onPreviewLayerReady
         context.coordinator.bind(layer: uiView.previewLayer)
     }
 
     final class Coordinator {
-        private let onPreviewLayerReady: ((AVCaptureVideoPreviewLayer) -> Void)?
+        var onPreviewLayerReady: ((AVCaptureVideoPreviewLayer) -> Void)?
         private weak var boundLayer: AVCaptureVideoPreviewLayer?
 
         init(onPreviewLayerReady: ((AVCaptureVideoPreviewLayer) -> Void)?) {
@@ -233,7 +268,10 @@ struct CameraPreviewView: UIViewRepresentable {
         }
 
         func bind(layer: AVCaptureVideoPreviewLayer) {
-            guard boundLayer !== layer else { return }
+            guard boundLayer !== layer else {
+                onPreviewLayerReady?(layer)
+                return
+            }
             boundLayer = layer
             onPreviewLayerReady?(layer)
         }

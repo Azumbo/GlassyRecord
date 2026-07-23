@@ -71,7 +71,8 @@ struct RecordingOverlayContent: View {
 
             recordingExitButton
         }
-        .touchTrailGesture(touchTrailGesture, enabled: true)
+        // DragGesture(minimumDistance: 0) на всём экране ломает тап по RPSystemBroadcastPickerView.
+        .touchTrailGesture(touchTrailGesture, enabled: viewModel.isRecording)
         .navigationBarHidden(true)
         .statusBarHidden(!viewModel.showTimer)
         .onAppear { viewModel.onAppear() }
@@ -197,6 +198,11 @@ struct RecordingOverlayContent: View {
             Label(L10n.t("pip.size"), systemImage: "person.crop.rectangle")
                 .font(.caption2.weight(.medium))
 
+            Text(L10n.t("pip.size.hint"))
+                .font(.caption2)
+                .foregroundStyle(GlassyTheme.labelSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 44), spacing: 4)], spacing: 4) {
                 ForEach(PiPFaceSizePreset.allCases) { preset in
                     Button {
@@ -248,11 +254,26 @@ struct RecordingOverlayContent: View {
                     .foregroundStyle(GlassyTheme.labelSecondary)
                     .multilineTextAlignment(.center)
 
-                SystemBroadcastPickerRepresentable(
-                    showsMicrophoneButton: settingsStore.settings.microphoneEnabled,
-                    onPrepare: viewModel.prepareBroadcastConfig
-                )
-                .frame(height: 44)
+                Button {
+                    viewModel.prepareBroadcastConfig()
+                    viewModel.userInteraction()
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                } label: {
+                    Label("Готов к записи", systemImage: "checkmark.circle.fill")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.red)
+
+                VStack(spacing: 6) {
+                    Text("Дальше начните запись из Пункта управления iOS:")
+                    Text("Зажмите кнопку записи экрана → выберите GlassyRecord → Start Broadcast.")
+                }
+                .font(.caption)
+                .foregroundStyle(GlassyTheme.labelSecondary)
+                .multilineTextAlignment(.center)
                 .padding(.horizontal, 8)
 
                 if !AppGroup.isConfigured {
@@ -371,7 +392,10 @@ struct RecordingOverlayContent: View {
                 shape: settingsStore.settings.faceCamShape,
                 glassesEnabled: viewModel.glassesEnabled,
                 glassesColor: viewModel.glassesService.frameColor,
-                mirrored: settingsStore.settings.faceCamMirrored
+                mirrored: settingsStore.settings.faceCamMirrored,
+                onPreviewLayerReady: { layer in
+                    viewModel.cameraService.bindPreviewLayer(layer)
+                }
             )
             .frame(width: size, height: size)
             .clipShape(faceCamClipShape)
@@ -488,6 +512,7 @@ struct FaceCamView: View {
     let glassesEnabled: Bool
     let glassesColor: GlassesFrameColor
     var mirrored: Bool = true
+    var onPreviewLayerReady: ((AVCaptureVideoPreviewLayer) -> Void)? = nil
 
     var body: some View {
         ZStack {
@@ -505,7 +530,11 @@ struct FaceCamView: View {
             } else if usesARKitFaceCam, let arSession, let arScene {
                 ARFaceCamPreviewView(arSession: arSession, scene: arScene)
             } else if let session {
-                CameraPreviewView(session: session)
+                CameraPreviewView(
+                    session: session,
+                    mirrored: mirrored,
+                    onPreviewLayerReady: onPreviewLayerReady
+                )
                 if glassesEnabled {
                     SimulatorGlassesOverlay(color: glassesColor)
                         .scaleEffect(0.9)

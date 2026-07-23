@@ -2,9 +2,9 @@ import Foundation
 
 /// Общий контейнер между приложением и Broadcast Extension.
 enum AppGroup {
-    static let identifier = "group.com.glassyrecord.shared"
-    static let broadcastExtensionBundleID = "com.glassyrecord.app.broadcast"
-    static let fallbackBroadcastExtensionBundleID = "com.glassyrecord.app.broadcast"
+    static let identifier = "group.com.azumbo.glassyrecord.shared"
+    static let broadcastExtensionBundleID = "com.azumbo.glassyrecord.app.broadcast"
+    static let fallbackBroadcastExtensionBundleID = "com.azumbo.glassyrecord.app.broadcast"
 
     /// Без fatalError — extension крашится и выглядит как «зависание» приложения.
     static var containerURLOptional: URL? {

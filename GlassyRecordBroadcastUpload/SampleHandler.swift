@@ -12,7 +12,7 @@ final class SampleHandler: RPBroadcastSampleHandler {
     override func broadcastStarted(withSetupInfo setupInfo: [String: NSObject]?) {
         guard AppGroup.isConfigured else {
             finishBroadcastWithError(makeError(
-                "App Group не настроен. Включите group.com.glassyrecord.shared в Xcode."
+                "App Group не настроен. Включите group.com.azumbo.glassyrecord.shared в Xcode."
             ))
             return
         }

@@ -3,7 +3,10 @@ import UIKit
 
 /// Единственное место для `AVSampleBufferDisplayLayer` — не переносить слой в SwiftUI.
 enum PiPDisplayLayerHost {
-    static let baseRenderSize = CGSize(width: 180, height: 240)
+    /// Стартовый буфер до ответа системы. Портрет 68×120 (минимум сообщества 120×68, повёрнутый).
+    static let baseRenderSize = CGSize(width: 68, height: 120)
+    /// Минимальная сторона, которую принимаем от системы при щипке.
+    static let minimumSide: CGFloat = 68
 
     private static var hostWindow: UIWindow?
     private static weak var boundDisplayLayer: AVSampleBufferDisplayLayer?
@@ -19,32 +22,40 @@ enum PiPDisplayLayerHost {
         return view
     }()
 
-    /// Целевой размер кадра PiP: база × пресет (S = 1.0, −25% = 0.75, +100% = 2.0).
     static func renderSize(for scale: CGFloat) -> CGSize {
-        let clamped = min(max(scale, GlassyTheme.pipScaleMinimum), GlassyTheme.pipScaleMaximum)
-        return CGSize(
-            width: (baseRenderSize.width * clamped).rounded(.toNearestOrAwayFromZero),
-            height: (baseRenderSize.height * clamped).rounded(.toNearestOrAwayFromZero)
-        )
+        _ = scale
+        return baseRenderSize
     }
 
-    /// Актуальный размер буфера: явный (от системного PiP) или из пресета.
     static var currentRenderSize: CGSize {
-        explicitRenderSize ?? renderSize(for: contentScale)
+        explicitRenderSize ?? baseRenderSize
     }
 
-    /// Задаёт физический размер слоя по пресету (до ответа системного PiP).
+    static var minimumRenderSize: CGSize { baseRenderSize }
+
+    /// Сбрасывает source layer к стартовому размеру (до первого sync с системой).
+    @MainActor
+    static func resetToMinimumSize(displayLayer: AVSampleBufferDisplayLayer? = nil) {
+        contentScale = 1.0
+        explicitRenderSize = nil
+        applyRenderSize(baseRenderSize, displayLayer: displayLayer)
+    }
+
     @MainActor
     static func updateScale(_ scale: CGFloat, displayLayer: AVSampleBufferDisplayLayer? = nil) {
         contentScale = min(max(scale, GlassyTheme.pipScaleMinimum), GlassyTheme.pipScaleMaximum)
-        explicitRenderSize = nil
-        applyRenderSize(renderSize(for: contentScale), displayLayer: displayLayer)
+        // Крупность лица не меняет размер окна.
+        if explicitRenderSize == nil {
+            applyRenderSize(baseRenderSize, displayLayer: displayLayer)
+        } else if let size = explicitRenderSize {
+            applyRenderSize(size, displayLayer: displayLayer)
+        }
     }
 
     /// Синхронизирует source layer с фактическим render size системного PiP.
     @MainActor
     static func updateRenderSize(_ size: CGSize, displayLayer: AVSampleBufferDisplayLayer? = nil) {
-        guard size.width > 1, size.height > 1 else { return }
+        guard size.width >= minimumSide - 1, size.height >= minimumSide - 1 else { return }
         explicitRenderSize = size
         applyRenderSize(size, displayLayer: displayLayer)
     }

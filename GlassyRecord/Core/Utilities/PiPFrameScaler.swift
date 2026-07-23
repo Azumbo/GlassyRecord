@@ -3,12 +3,12 @@ import CoreVideo
 import UIKit
 
 /// Потокобезопасный ресайз кадров камеры в фиксированный PiP-буфер.
-/// `contentZoom` — крупность лица: &lt;1 меньше в кадре, &gt;1 ближе (center crop).
+/// `contentZoom` — крупность лица: всегда aspect-fill (без чёрных полей), >1 ближе.
 enum PiPFrameScaler: @unchecked Sendable {
     private static let lock = NSLock()
     private static let ciContext = CIContext(options: [.useSoftwareRenderer: false])
 
-    /// Всегда пишет в `targetSize`. Зум меняет композицию кадра, не размер окна iOS PiP.
+    /// Всегда пишет в `targetSize` с заполнением кадра. Зум только меняет кроп, не добавляет letterbox.
     static func scale(
         _ pixelBuffer: CVPixelBuffer,
         targetSize: CGSize,
@@ -18,7 +18,8 @@ enum PiPFrameScaler: @unchecked Sendable {
         let height = Int(targetSize.height.rounded(.toNearestOrAwayFromZero))
         guard width > 0, height > 0 else { return pixelBuffer }
 
-        let zoom = min(max(contentZoom, 0.5), 2.5)
+        // Ниже 1.0 = «отдалиться» нельзя без полей: оставляем минимум aspect-fill (1.0).
+        let zoom = min(max(contentZoom, 1.0), 2.5)
         let srcWidth = CGFloat(CVPixelBufferGetWidth(pixelBuffer))
         let srcHeight = CGFloat(CVPixelBufferGetHeight(pixelBuffer))
         guard srcWidth > 1, srcHeight > 1 else { return pixelBuffer }
@@ -26,30 +27,18 @@ enum PiPFrameScaler: @unchecked Sendable {
         let source = CIImage(cvPixelBuffer: pixelBuffer)
         let target = CGRect(x: 0, y: 0, width: CGFloat(width), height: CGFloat(height))
 
-        let rendered: CIImage
-        if zoom >= 1 {
-            // Aspect fill + дополнительный center-zoom.
-            let fill = max(target.width / srcWidth, target.height / srcHeight) * zoom
-            let scaled = source.transformed(by: CGAffineTransform(scaleX: fill, y: fill))
-            let extent = scaled.extent
-            let crop = CGRect(
-                x: extent.midX - target.width / 2,
-                y: extent.midY - target.height / 2,
-                width: target.width,
-                height: target.height
-            )
-            rendered = scaled.cropped(to: crop).transformed(
-                by: CGAffineTransform(translationX: -crop.origin.x, y: -crop.origin.y)
-            )
-        } else {
-            // Меньше крупность: вписываем уменьшенный кадр по центру (поля чёрные).
-            let fit = min(target.width / srcWidth, target.height / srcHeight) * zoom
-            let scaled = source.transformed(by: CGAffineTransform(scaleX: fit, y: fit))
-            let extent = scaled.extent
-            let dx = (target.width - extent.width) / 2 - extent.origin.x
-            let dy = (target.height - extent.height) / 2 - extent.origin.y
-            rendered = scaled.transformed(by: CGAffineTransform(translationX: dx, y: dy))
-        }
+        let fill = max(target.width / srcWidth, target.height / srcHeight) * zoom
+        let scaled = source.transformed(by: CGAffineTransform(scaleX: fill, y: fill))
+        let extent = scaled.extent
+        let crop = CGRect(
+            x: extent.midX - target.width / 2,
+            y: extent.midY - target.height / 2,
+            width: target.width,
+            height: target.height
+        )
+        let rendered = scaled.cropped(to: crop).transformed(
+            by: CGAffineTransform(translationX: -crop.origin.x, y: -crop.origin.y)
+        )
 
         guard let output = createOutputBuffer(width: width, height: height) else {
             return pixelBuffer

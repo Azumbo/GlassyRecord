@@ -50,7 +50,8 @@ final class PiPCameraManager: NSObject, ObservableObject {
     private var backgroundTaskID: UIBackgroundTaskIdentifier = .invalid
     private var pendingPiPActivation = false
     private var pendingPiPRestartForScaleChange = false
-    private var ignoresSystemRenderSizeSync = false
+  /// Кратко блокируем sync после смены пресета «Крупность», чтобы iOS не откатила зум.
+    private var systemRenderSizeSyncSuppressedUntil: Date?
     private var wantsPiPActive = false
     private let audioKeepAlive = PiPAudioKeepAlive()
 
@@ -67,16 +68,19 @@ final class PiPCameraManager: NSObject, ObservableObject {
     }
 
     @MainActor
-    private func applyPresetRenderSizes(restartPiPIfActive: Bool = false) {
-        // Размер буфера/source layer фиксированный — iOS PiP иначе игнорирует «размер окна».
-        // Крупность = цифровой зум в PiPFrameScaler (оба слоя получают один и тот же кадр).
-        ignoresSystemRenderSizeSync = true
-        let pointSize = PiPDisplayLayerHost.baseRenderSize
+    private func applyPresetRenderSizes(restartPiPIfActive: Bool = false, resetWindowToMinimum: Bool = false) {
+        // Крупность = цифровой зум. Стартовый размер окна — только до первого sync с системой.
+        // Не блокируем didTransitionToRenderSize надолго: иначе iOS оставляет широкий shell с чёрными полями.
+        if resetWindowToMinimum, pipController?.isPictureInPictureActive != true {
+            suppressSystemRenderSizeSync(for: 0.15)
+            PiPDisplayLayerHost.resetToMinimumSize(displayLayer: displayLayer)
+        } else {
+            suppressSystemRenderSizeSync(for: 0.2)
+        }
+        let pointSize = PiPDisplayLayerHost.currentRenderSize
         let pixelSize = PiPPixelGeometry.pixelSize(fromPoints: pointSize)
         framePipeline.setTargetRenderSize(pixelSize)
-        PiPDisplayLayerHost.updateScale(1.0, displayLayer: displayLayer)
 
-        // Сброс очереди кадров, чтобы новый зум сразу был виден в системном PiP.
         displayLayer.flush()
         if #available(iOS 14.0, *), displayLayer.requiresFlushToResumeDecoding {
             displayLayer.flush()
@@ -92,6 +96,17 @@ final class PiPCameraManager: NSObject, ObservableObject {
         if restartPiPIfActive {
             pipController?.invalidatePlaybackState()
         }
+    }
+
+    private func suppressSystemRenderSizeSync(for duration: TimeInterval = 0.75) {
+        systemRenderSizeSyncSuppressedUntil = Date().addingTimeInterval(duration)
+    }
+
+    private var shouldSuppressSystemRenderSizeSync: Bool {
+        guard let until = systemRenderSizeSyncSuppressedUntil else { return false }
+        if Date() < until { return true }
+        systemRenderSizeSyncSuppressedUntil = nil
+        return false
     }
 
     func setGlassesEnabled(_ enabled: Bool) {
@@ -110,7 +125,6 @@ final class PiPCameraManager: NSObject, ObservableObject {
 
     func setContentScale(_ scale: CGFloat, invalidatePiP: Bool = true) {
         contentScale = min(max(scale, GlassyTheme.pipScaleMinimum), GlassyTheme.pipScaleMaximum)
-        ignoresSystemRenderSizeSync = true
         applyPresetRenderSizes(restartPiPIfActive: invalidatePiP)
     }
 
@@ -157,7 +171,7 @@ final class PiPCameraManager: NSObject, ObservableObject {
             glassesEnabled: glassesEnabled,
             glassesService: glassesEnabled ? glassesService : nil
         )
-        applyPresetRenderSizes()
+        applyPresetRenderSizes(resetWindowToMinimum: true)
         isPrepared = true
     }
 
@@ -172,6 +186,7 @@ final class PiPCameraManager: NSObject, ObservableObject {
         pendingPiPActivation = startPiP
         beginBackgroundKeepAlive()
         audioKeepAlive.start()
+        applyPresetRenderSizes(resetWindowToMinimum: true)
         installDisplayLayer()
         framePipeline.start()
 
@@ -483,9 +498,27 @@ extension PiPCameraManager: AVPictureInPictureSampleBufferPlaybackDelegate {
     }
 
     private func syncSourceLayerToSystemPiP(_ dimensions: CMVideoDimensions) {
-        // Крупность = цифровой зум в фиксированном буфере. Не подстраиваем target size
-        // под окно iOS — иначе превью и системный PiP снова разъедутся.
-        guard !pendingPiPRestartForScaleChange, !ignoresSystemRenderSizeSync else { return }
+        guard !pendingPiPRestartForScaleChange, !shouldSuppressSystemRenderSizeSync else { return }
+
+        let pointSize = PiPPixelGeometry.pointSizeForLayer(from: dimensions)
+        let minSide = PiPDisplayLayerHost.minimumSide
+        guard pointSize.width >= minSide - 1, pointSize.height >= minSide - 1 else { return }
+
+        let current = PiPDisplayLayerHost.currentRenderSize
+        let deltaW = abs(current.width - pointSize.width)
+        let deltaH = abs(current.height - pointSize.height)
+        guard deltaW > 2 || deltaH > 2 else { return }
+
+        let pixelSize = PiPPixelGeometry.pixelSize(fromPoints: pointSize)
+        PiPDisplayLayerHost.updateRenderSize(pointSize, displayLayer: displayLayer)
+        framePipeline.setTargetRenderSize(pixelSize)
+
+        displayLayer.flush()
+        if #available(iOS 14.0, *), displayLayer.requiresFlushToResumeDecoding {
+            displayLayer.flush()
+        }
+        PiPSampleBufferFactory.reset()
+        pipController?.invalidatePlaybackState()
         PiPDisplayLayerHost.setSourceHidden(true)
     }
 }
@@ -497,8 +530,10 @@ extension PiPCameraManager: AVPictureInPictureControllerDelegate {
         _ pictureInPictureController: AVPictureInPictureController
     ) {
         Task { @MainActor [weak self] in
-            self?.isPiPActive = true
-            // Не сбрасываем ignoresSystemRenderSizeSync сразу — иначе iOS откатит пресет.
+            guard let self else { return }
+            self.isPiPActive = true
+            // Сразу разрешаем sync — иначе стартовый mismatch (широкое окно + узкий кадр) держит полосы.
+            self.systemRenderSizeSyncSuppressedUntil = nil
             PiPDisplayLayerHost.setSourceHidden(true)
             UsageTracker.shared.track(.pipActivated)
         }

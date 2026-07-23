@@ -37,11 +37,11 @@ enum GlassyTheme {
 
     static let cornerRadius: CGFloat = 16
     static let faceCamDefaultSize: CGFloat = 140
-    static let pipPreviewBaseWidth: CGFloat = 88
-    static let pipPreviewBaseHeight: CGFloat = 118
-    /// Стандарт (S) = 1.0; пресеты от ½ (×0.5) до +150%.
-    static let pipScaleStandard: CGFloat = 1.0
-    static let pipScaleMinimum: CGFloat = 0.5
+    static let pipPreviewBaseWidth: CGFloat = 68
+    static let pipPreviewBaseHeight: CGFloat = 120
+    /// Стандарт (S) = 1.5; пресеты от ½ (×1.0, без полей) до +150% (×2.5).
+    static let pipScaleStandard: CGFloat = 1.5
+    static let pipScaleMinimum: CGFloat = 1.0
     static let pipScaleMaximum: CGFloat = 2.5
     static let controlPanelHeight: CGFloat = 72
 }

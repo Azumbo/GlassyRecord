@@ -55,6 +55,9 @@ struct SettingsView: View {
                     Text(preset.menuLabel).tag(preset)
                 }
             }
+            Text(L10n.t("pip.size.hint"))
+                .font(.caption)
+                .foregroundStyle(GlassyTheme.labelSecondary)
         }
     }
 
