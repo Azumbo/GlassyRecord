@@ -10,9 +10,9 @@ final class PiPAudioKeepAlive: @unchecked Sendable {
         guard !isRunning else { return }
         let session = AVAudioSession.sharedInstance()
         try? session.setCategory(
-            .playAndRecord,
-            mode: .videoChat,
-            options: [.defaultToSpeaker, .mixWithOthers, .allowBluetoothHFP]
+            .playback,
+            mode: .moviePlayback,
+            options: [.mixWithOthers]
         )
         try? session.setActive(true)
 
@@ -40,6 +40,8 @@ final class PiPAudioKeepAlive: @unchecked Sendable {
     func stop() {
         guard isRunning else { return }
         engine.stop()
+        engine.reset()
+        try? AVAudioSession.sharedInstance().setActive(false, options: [.notifyOthersOnDeactivation])
         isRunning = false
     }
 }

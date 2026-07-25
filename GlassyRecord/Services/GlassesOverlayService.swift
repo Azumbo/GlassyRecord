@@ -120,6 +120,18 @@ final class GlassesOverlayService: NSObject, ObservableObject {
     }
 
     @MainActor
+    func setLensTransparency(_ value: Float) {
+        lensTransparency = value
+        frameProcessor.setLensTransparency(value)
+    }
+
+    @MainActor
+    func setFrameBrightness(_ value: Float) {
+        frameBrightness = value
+        frameProcessor.setFrameBrightness(value)
+    }
+
+    @MainActor
     func updateLensTransparency() {
         frameProcessor.setLensTransparency(lensTransparency)
     }
@@ -143,7 +155,11 @@ final class GlassesOverlayService: NSObject, ObservableObject {
     // MARK: - Procedural Monokol MK295 Model
 
     /// Создаёт кубическую геометрическую оправу Monokol MK295 из ацетата.
-    nonisolated static func buildMonokolMK295(color: GlassesFrameColor, brightness: Float) -> SCNNode {
+    nonisolated static func buildMonokolMK295(
+        color: GlassesFrameColor,
+        brightness: Float,
+        lensTransparency: Float = 0.85
+    ) -> SCNNode {
         let root = SCNNode()
         root.name = "MonokolMK295"
 
@@ -164,13 +180,22 @@ final class GlassesOverlayService: NSObject, ObservableObject {
         acetateMaterial.roughness.contents = 0.12
         acetateMaterial.lightingModel = .physicallyBased
 
+        let clearness = CGFloat(max(0, min(1, lensTransparency)))
         let lensMaterial = SCNMaterial()
-        lensMaterial.diffuse.contents = UIColor.white.withAlphaComponent(0.08)
-        lensMaterial.transparent.contents = NSNumber(value: 0.85)
-        lensMaterial.metalness.contents = 0.0
-        lensMaterial.roughness.contents = 0.05
-        lensMaterial.lightingModel = .physicallyBased
-        lensMaterial.specular.contents = UIColor.white.withAlphaComponent(0.3)
+        lensMaterial.name = "lens"
+        lensMaterial.lightingModel = .constant
+        lensMaterial.diffuse.contents = UIColor.black.withAlphaComponent(0.05 + (1 - clearness) * 0.55)
+        lensMaterial.transparency = 1 - clearness
+        lensMaterial.writesToDepthBuffer = false
+        lensMaterial.readsFromDepthBuffer = false
+
+        let rightLensMaterial = SCNMaterial()
+        rightLensMaterial.name = "lens"
+        rightLensMaterial.lightingModel = .constant
+        rightLensMaterial.diffuse.contents = UIColor.black.withAlphaComponent(0.05 + (1 - clearness) * 0.55)
+        rightLensMaterial.transparency = 1 - clearness
+        rightLensMaterial.writesToDepthBuffer = false
+        rightLensMaterial.readsFromDepthBuffer = false
 
         let frameThickness: CGFloat = 0.004
         let lensWidth: CGFloat = 0.034
@@ -206,7 +231,7 @@ final class GlassesOverlayService: NSObject, ObservableObject {
 
         let rightLens = SCNNode(geometry: SCNBox(width: lensWidth, height: lensHeight, length: 0.001, chamferRadius: 0))
         rightLens.name = "rightLens"
-        rightLens.geometry?.materials = [lensMaterial]
+        rightLens.geometry?.materials = [rightLensMaterial]
         rightLens.position = SCNVector3(rightFrame.position.x, rightFrame.position.y, rightFrame.position.z + 0.002)
         root.addChildNode(rightLens)
 

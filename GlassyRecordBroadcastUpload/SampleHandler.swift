@@ -10,16 +10,21 @@ final class SampleHandler: RPBroadcastSampleHandler {
     private let setupLock = NSLock()
 
     override func broadcastStarted(withSetupInfo setupInfo: [String: NSObject]?) {
+        // Сразу пишем heartbeat в App Group — иначе main app думает, что пишется «системная» запись.
+        BroadcastConfigStore.markExtensionAlive(event: "broadcast_started_entry")
+
         guard AppGroup.isConfigured else {
-            finishBroadcastWithError(makeError(
-                "App Group не настроен. Включите group.com.azumbo.glassyrecord.shared в Xcode."
-            ))
+            let message = "App Group не настроен. Включите group.com.azumbo.glassyrecord.shared в Xcode."
+            BroadcastConfigStore.markFailed(message)
+            BroadcastConfigStore.markExtensionAlive(event: "app_group_missing")
+            finishBroadcastWithError(makeError(message))
             return
         }
         guard let config = BroadcastConfigStore.loadConfig() else {
-            finishBroadcastWithError(makeError(
-                "Конфигурация не найдена. Откройте Glassy Record и нажмите «Запись»."
-            ))
+            let message = "Конфигурация не найдена. Откройте Glassy Record и нажмите «Готов к записи»."
+            BroadcastConfigStore.markFailed(message)
+            BroadcastConfigStore.markExtensionAlive(event: "config_missing")
+            finishBroadcastWithError(makeError(message))
             return
         }
         self.config = config
@@ -45,11 +50,12 @@ final class SampleHandler: RPBroadcastSampleHandler {
 
     override func broadcastFinished() {
         isFinishingBroadcast = true
-        // Сразу сообщаем app, что extension жив и финализирует — до долгого finishWriting.
         BroadcastConfigStore.markFinalizing()
 
         guard let writer else {
-            BroadcastConfigStore.markCancelled()
+            let message = "Extension завершился без видеокадров. Убедитесь, что выбран именно Glassy Record и запись шла дольше 2 секунд."
+            BroadcastConfigStore.markFailed(message)
+            BroadcastConfigStore.markExtensionAlive(event: "finished_no_writer")
             return
         }
 
@@ -82,7 +88,10 @@ final class SampleHandler: RPBroadcastSampleHandler {
         setupLock.unlock()
         guard needsSetup, let config, let container = AppGroup.containerURLOptional else {
             if needsSetup, AppGroup.containerURLOptional == nil {
-                finishBroadcastWithError(makeError("App Group контейнер недоступен"))
+                let message = "App Group контейнер недоступен"
+                BroadcastConfigStore.markFailed(message)
+                BroadcastConfigStore.markExtensionAlive(event: "container_missing")
+                finishBroadcastWithError(makeError(message))
             }
             return
         }
@@ -102,6 +111,9 @@ final class SampleHandler: RPBroadcastSampleHandler {
             BroadcastConfigStore.markExtensionAlive(event: "writer_ready")
         } catch {
             setupStarted = false
+            let message = (error as NSError).localizedDescription
+            BroadcastConfigStore.markFailed(message)
+            BroadcastConfigStore.markExtensionAlive(event: "writer_init_fail", extra: message)
             finishBroadcastWithError(error as NSError)
         }
     }

@@ -37,8 +37,8 @@ final class GlassesFrameProcessor: @unchecked Sendable {
         scene.rootNode.addChildNode(cameraNode)
         sceneRenderer.pointOfView = cameraNode
 
-        redGlassesNode = GlassesOverlayService.buildMonokolMK295(color: .red, brightness: 1.0)
-        blueGlassesNode = GlassesOverlayService.buildMonokolMK295(color: .blue, brightness: 1.0)
+        redGlassesNode = GlassesOverlayService.buildMonokolMK295(color: .red, brightness: 1.0, lensTransparency: 0.85)
+        blueGlassesNode = GlassesOverlayService.buildMonokolMK295(color: .blue, brightness: 1.0, lensTransparency: 0.85)
         swapGlassesModel(to: .red, locked: true)
     }
 
@@ -65,7 +65,8 @@ final class GlassesFrameProcessor: @unchecked Sendable {
     func setLensTransparency(_ value: Float) {
         lock.withLock {
             lensTransparency = value
-            applyLensTransparency()
+            rebuildGlassesModels()
+            swapGlassesModel(to: frameColor, locked: true)
         }
     }
 
@@ -242,10 +243,22 @@ final class GlassesFrameProcessor: @unchecked Sendable {
         let leftRect = CGRect(x: -halfGap - lensW * 0.5, y: -lensH * 0.5, width: lensW, height: lensH)
         let rightRect = CGRect(x: halfGap - lensW * 0.5, y: -lensH * 0.5, width: lensW, height: lensH)
 
-        // Линзы
-        context.setFillColor(UIColor.white.withAlphaComponent(0.08 + (1 - lensAlpha) * 0.25).cgColor)
+        // Линзы: transparency 1 = почти прозрачные, 0.3 = заметно затемнённые.
+        let clearness = max(0, min(1, lensAlpha))
+        let tintAlpha = 0.04 + (1 - clearness) * 0.72
+        context.setFillColor(UIColor.black.withAlphaComponent(tintAlpha).cgColor)
         context.fill(leftRect)
         context.fill(rightRect)
+        // Блик стекла сильнее у прозрачных линз.
+        context.setFillColor(UIColor.white.withAlphaComponent(0.03 + clearness * 0.12).cgColor)
+        let highlight = CGRect(
+            x: leftRect.minX + leftRect.width * 0.12,
+            y: leftRect.maxY - leftRect.height * 0.28,
+            width: leftRect.width * 0.35,
+            height: leftRect.height * 0.12
+        )
+        context.fill(highlight)
+        context.fill(highlight.offsetBy(dx: rightRect.minX - leftRect.minX, dy: 0))
 
         // Оправа MK295 — кубическая
         context.setStrokeColor(frameUIColor.cgColor)
@@ -330,8 +343,16 @@ final class GlassesFrameProcessor: @unchecked Sendable {
     // MARK: - Scene
 
     private func rebuildGlassesModels() {
-        redGlassesNode = GlassesOverlayService.buildMonokolMK295(color: .red, brightness: frameBrightness)
-        blueGlassesNode = GlassesOverlayService.buildMonokolMK295(color: .blue, brightness: frameBrightness)
+        redGlassesNode = GlassesOverlayService.buildMonokolMK295(
+            color: .red,
+            brightness: frameBrightness,
+            lensTransparency: lensTransparency
+        )
+        blueGlassesNode = GlassesOverlayService.buildMonokolMK295(
+            color: .blue,
+            brightness: frameBrightness,
+            lensTransparency: lensTransparency
+        )
     }
 
     private func swapGlassesModel(to color: GlassesFrameColor, locked: Bool) {
@@ -359,10 +380,22 @@ final class GlassesFrameProcessor: @unchecked Sendable {
     }
 
     private func applyLensTransparency() {
-        glassesNode?.childNode(withName: "leftLens", recursively: true)?
-            .geometry?.firstMaterial?.transparent.contents = NSNumber(value: lensTransparency)
-        glassesNode?.childNode(withName: "rightLens", recursively: true)?
-            .geometry?.firstMaterial?.transparent.contents = NSNumber(value: lensTransparency)
+        let clearness = CGFloat(max(0, min(1, lensTransparency)))
+        // SCNMaterial.transparency: 0 = fully transparent, 1 = fully opaque.
+        let materialOpacity = 1 - clearness
+        let tint = UIColor.black.withAlphaComponent(0.05 + (1 - clearness) * 0.55)
+
+        for name in ["leftLens", "rightLens"] {
+            guard let material = glassesNode?
+                .childNode(withName: name, recursively: true)?
+                .geometry?.firstMaterial else { continue }
+            material.lightingModel = .constant
+            material.diffuse.contents = tint
+            material.transparent.contents = nil
+            material.transparency = materialOpacity
+            material.writesToDepthBuffer = false
+            material.readsFromDepthBuffer = false
+        }
     }
 }
 

@@ -88,31 +88,38 @@ final class BroadcastVideoWriter: @unchecked Sendable {
             ]
         )
 
-        let audioSettings: [String: Any] = [
-            AVFormatIDKey: kAudioFormatMPEG4AAC,
-            AVSampleRateKey: 44_100,
-            AVNumberOfChannelsKey: 2,
-            AVEncoderBitRateKey: 128_000
-        ]
-
+        // Mic первым: ReplayKit отдаёт mono; многие плееры (Фото) играют только первую аудиодорожку.
+        // Раньше stereo system-audio был первым → тишина, а голос во второй дорожке не слышен.
         var sysInput: AVAssetWriterInput?
         var micInput: AVAssetWriterInput?
 
-        if config.systemAudioEnabled {
-            let input = AVAssetWriterInput(mediaType: .audio, outputSettings: audioSettings)
-            input.expectsMediaDataInRealTime = true
-            if writer.canAdd(input) {
-                writer.add(input)
-                sysInput = input
-            }
-        }
-
         if config.microphoneEnabled {
-            let input = AVAssetWriterInput(mediaType: .audio, outputSettings: audioSettings)
+            let micSettings: [String: Any] = [
+                AVFormatIDKey: kAudioFormatMPEG4AAC,
+                AVSampleRateKey: 44_100,
+                AVNumberOfChannelsKey: 1,
+                AVEncoderBitRateKey: 96_000
+            ]
+            let input = AVAssetWriterInput(mediaType: .audio, outputSettings: micSettings)
             input.expectsMediaDataInRealTime = true
             if writer.canAdd(input) {
                 writer.add(input)
                 micInput = input
+            }
+        }
+
+        if config.systemAudioEnabled {
+            let appSettings: [String: Any] = [
+                AVFormatIDKey: kAudioFormatMPEG4AAC,
+                AVSampleRateKey: 44_100,
+                AVNumberOfChannelsKey: 2,
+                AVEncoderBitRateKey: 128_000
+            ]
+            let input = AVAssetWriterInput(mediaType: .audio, outputSettings: appSettings)
+            input.expectsMediaDataInRealTime = true
+            if writer.canAdd(input) {
+                writer.add(input)
+                sysInput = input
             }
         }
 
@@ -191,12 +198,18 @@ final class BroadcastVideoWriter: @unchecked Sendable {
                     guard config.systemAudioEnabled,
                           let systemAudioInput,
                           systemAudioInput.isReadyForMoreMediaData else { return }
-                    _ = systemAudioInput.append(sampleBuffer)
+                    if !systemAudioInput.append(sampleBuffer) {
+                        lastErrorMessage = assetWriter.error?.localizedDescription
+                            ?? "Не удалось записать звук приложения"
+                    }
                 case .audioMic:
                     guard config.microphoneEnabled,
                           let microphoneAudioInput,
                           microphoneAudioInput.isReadyForMoreMediaData else { return }
-                    _ = microphoneAudioInput.append(sampleBuffer)
+                    if !microphoneAudioInput.append(sampleBuffer) {
+                        lastErrorMessage = assetWriter.error?.localizedDescription
+                            ?? "Не удалось записать микрофон"
+                    }
                 default:
                     break
                 }

@@ -54,6 +54,8 @@ final class PiPCameraManager: NSObject, ObservableObject {
     private var systemRenderSizeSyncSuppressedUntil: Date?
     private var wantsPiPActive = false
     private let audioKeepAlive = PiPAudioKeepAlive()
+    /// Пока идёт broadcast, keep-alive не держит AVAudioSession — иначе ReplayKit не получает mic.
+    private var suppressAudioKeepAliveForBroadcast = false
 
     var previewSession: AVCaptureSession? { captureSession }
     var previewDevice: AVCaptureDevice? { captureDevice }
@@ -128,6 +130,11 @@ final class PiPCameraManager: NSObject, ObservableObject {
         applyPresetRenderSizes(restartPiPIfActive: invalidatePiP)
     }
 
+    func setAspectRatio(_ aspect: PiPAspectRatio, invalidatePiP: Bool = true) {
+        PiPDisplayLayerHost.setPreferredAspect(aspect)
+        applyPresetRenderSizes(restartPiPIfActive: invalidatePiP, resetWindowToMinimum: true)
+    }
+
     private func syncDisplayLayerFrame() {
         PiPDisplayLayerHost.updateScale(contentScale, displayLayer: displayLayer)
     }
@@ -185,7 +192,7 @@ final class PiPCameraManager: NSObject, ObservableObject {
         wantsPiPActive = startPiP
         pendingPiPActivation = startPiP
         beginBackgroundKeepAlive()
-        audioKeepAlive.start()
+        startAudioKeepAliveIfAllowed()
         applyPresetRenderSizes(resetWindowToMinimum: true)
         installDisplayLayer()
         framePipeline.start()
@@ -243,13 +250,13 @@ final class PiPCameraManager: NSObject, ObservableObject {
         switch phase {
         case .inactive:
             beginBackgroundKeepAlive()
-            audioKeepAlive.start()
+            startAudioKeepAliveIfAllowed()
             installDisplayLayer()
             activatePiP()
             resumeCaptureIfNeeded()
         case .background:
             beginBackgroundKeepAlive()
-            audioKeepAlive.start()
+            startAudioKeepAliveIfAllowed()
             installDisplayLayer()
             resumeCaptureIfNeeded()
         case .active:
@@ -264,6 +271,23 @@ final class PiPCameraManager: NSObject, ObservableObject {
         }
     }
 
+    /// Освобождает аудиосессию main app, чтобы Control Center / ReplayKit сразу писали микрофон.
+    func releaseAudioSessionForBroadcast() {
+        suppressAudioKeepAliveForBroadcast = true
+        audioKeepAlive.stop()
+    }
+
+    func restoreAudioSessionAfterBroadcast() {
+        suppressAudioKeepAliveForBroadcast = false
+        guard isStreaming else { return }
+        startAudioKeepAliveIfAllowed()
+    }
+
+    private func startAudioKeepAliveIfAllowed() {
+        guard !suppressAudioKeepAliveForBroadcast else { return }
+        audioKeepAlive.start()
+    }
+
     func stopStreaming() {
         isStreaming = false
         isPiPActive = false
@@ -274,6 +298,7 @@ final class PiPCameraManager: NSObject, ObservableObject {
         pipController?.stopPictureInPicture()
         glassesService?.frameConsumer = nil
         glassesService?.stopTracking()
+        suppressAudioKeepAliveForBroadcast = false
         audioKeepAlive.stop()
         endBackgroundKeepAlive()
 
@@ -355,9 +380,9 @@ final class PiPCameraManager: NSObject, ObservableObject {
     private func configureAudioSession() {
         let session = AVAudioSession.sharedInstance()
         try? session.setCategory(
-            .playAndRecord,
-            mode: .videoChat,
-            options: [.defaultToSpeaker, .allowBluetoothHFP, .mixWithOthers]
+            .playback,
+            mode: .moviePlayback,
+            options: [.mixWithOthers]
         )
         try? session.setActive(true)
     }
@@ -379,11 +404,19 @@ final class PiPCameraManager: NSObject, ObservableObject {
         )
         let controller = AVPictureInPictureController(contentSource: source)
         controller.canStartPictureInPictureAutomaticallyFromInline = false
+        controller.delegate = self
+        applyLiveFaceCamChrome(to: controller)
+        pipController = controller
+    }
+
+    /// Face Cam — живой поток, не VOD: без skip ±10с, стопа и scrubber.
+    private func applyLiveFaceCamChrome(to controller: AVPictureInPictureController) {
         if #available(iOS 14.0, *) {
             controller.requiresLinearPlayback = true
         }
-        controller.delegate = self
-        pipController = controller
+        // Убирает progress bar / skip / play-pause у sample-buffer PiP (live камера).
+        // Публичного API нет; значение 1 оставляют close + restore.
+        controller.setValue(1, forKey: "controlsStyle")
     }
 
     private func observeCaptureInterruptions() {
@@ -532,6 +565,10 @@ extension PiPCameraManager: AVPictureInPictureControllerDelegate {
         Task { @MainActor [weak self] in
             guard let self else { return }
             self.isPiPActive = true
+            if let controller = self.pipController {
+                self.applyLiveFaceCamChrome(to: controller)
+                controller.invalidatePlaybackState()
+            }
             // Сразу разрешаем sync — иначе стартовый mismatch (широкое окно + узкий кадр) держит полосы.
             self.systemRenderSizeSyncSuppressedUntil = nil
             PiPDisplayLayerHost.setSourceHidden(true)

@@ -17,6 +17,9 @@ final class AppModelsTests: XCTestCase {
         let settings = AppSettings()
         XCTAssertEqual(settings.quality, .hd1080p)
         XCTAssertTrue(settings.faceCamMirrored)
+        XCTAssertEqual(settings.pipAspectRatio, .portrait9x16)
+        XCTAssertEqual(settings.pipAspectRatio.startSize, CGSize(width: 68, height: 120))
+        XCTAssertEqual(PiPAspectRatio.landscape16x9.startSize, CGSize(width: 120, height: 68))
         XCTAssertEqual(settings.lensTransparency, 0.85, accuracy: 0.001)
     }
 

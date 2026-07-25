@@ -123,6 +123,40 @@ enum PiPFaceSizePreset: String, CaseIterable, Codable, Identifiable {
     }
 }
 
+/// Стартовый aspect PiP Face Cam (ориентир минимума сообщества: 68×120 / 120×68).
+enum PiPAspectRatio: String, CaseIterable, Codable, Identifiable {
+    case portrait9x16 = "9:16"
+    case landscape16x9 = "16:9"
+
+    var id: String { rawValue }
+
+    var shortLabel: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .portrait9x16: L10n.t("pip.aspect.portrait")
+        case .landscape16x9: L10n.t("pip.aspect.landscape")
+        }
+    }
+
+    /// SF Symbol телефона — сразу видно ориентацию.
+    var symbolName: String {
+        switch self {
+        case .portrait9x16: "iphone"
+        case .landscape16x9: "iphone.landscape"
+        }
+    }
+
+    var startSize: CGSize {
+        switch self {
+        case .portrait9x16: CGSize(width: 68, height: 120)
+        case .landscape16x9: CGSize(width: 120, height: 68)
+        }
+    }
+
+    var previewSize: CGSize { startSize }
+}
+
 // MARK: - Glasses
 
 enum GlassesFrameColor: String, Codable, CaseIterable, Identifiable {
@@ -260,9 +294,13 @@ struct RecordingSession: Identifiable, Codable, Hashable {
 struct AppSettings: Codable, Equatable {
     var quality: RecordingQuality = .hd1080p
     var faceCamCorner: FaceCamCorner = .bottomTrailing
+    /// Свободная позиция превью (0…1). Углы из `faceCamCorner` — только стартовый пресет.
+    var faceCamNormalizedX: Double = Double(FaceCamCorner.bottomTrailing.normalizedPosition.x)
+    var faceCamNormalizedY: Double = Double(FaceCamCorner.bottomTrailing.normalizedPosition.y)
     var faceCamShape: FaceCamShape = .roundedRectangle
     var faceCamMirrored: Bool = true
     var faceCamScale: CGFloat = PiPFaceSizePreset.half.scaleFactor
+    var pipAspectRatio: PiPAspectRatio = .portrait9x16
     var microphoneEnabled: Bool = true
     var systemAudioEnabled: Bool = true
     var microphoneVolume: Float = 1.0
@@ -279,6 +317,14 @@ struct AppSettings: Codable, Equatable {
     var timerAutoHideSeconds: Double = 5
     var lowPowerModeAware: Bool = true
 
+    var faceCamNormalizedPosition: CGPoint {
+        get { CGPoint(x: faceCamNormalizedX, y: faceCamNormalizedY) }
+        set {
+            faceCamNormalizedX = Double(newValue.x)
+            faceCamNormalizedY = Double(newValue.y)
+        }
+    }
+
     /// Пресет крупности PiP / Face Cam (нормализует `faceCamScale`).
     var pipFaceSizePreset: PiPFaceSizePreset {
         PiPFaceSizePreset.nearest(to: faceCamScale)
@@ -291,6 +337,13 @@ struct AppSettings: Codable, Equatable {
 
     mutating func applyPipFaceSizePreset(_ preset: PiPFaceSizePreset) {
         faceCamScale = preset.scaleFactor
+    }
+
+    mutating func applyFaceCamCorner(_ corner: FaceCamCorner) {
+        faceCamCorner = corner
+        let point = corner.normalizedPosition
+        faceCamNormalizedX = Double(point.x)
+        faceCamNormalizedY = Double(point.y)
     }
 }
 

@@ -39,17 +39,75 @@ struct SettingsView: View {
 
     private var faceCamSection: some View {
         Section(L10n.t("settings.face_cam")) {
-            Picker(L10n.t("settings.position"), selection: binding(\.faceCamCorner, feature: .faceCamCornerChanged, param: { ["corner": $0.rawValue, "source": "settings"] })) {
+            Picker(L10n.t("settings.position"), selection: faceCamCornerBinding) {
                 ForEach(FaceCamCorner.allCases) { c in
                     Text(c.displayName).tag(c)
                 }
             }
+            Text(L10n.t("settings.position_hint"))
+                .font(.caption)
+                .foregroundStyle(GlassyTheme.labelSecondary)
             Picker(L10n.t("settings.shape"), selection: binding(\.faceCamShape, feature: .faceCamShapeChanged, param: { ["shape": $0.rawValue] })) {
                 ForEach(FaceCamShape.allCases) { s in
                     Text(s.displayName).tag(s)
                 }
             }
             Toggle(L10n.t("settings.mirror"), isOn: binding(\.faceCamMirrored, feature: .faceCamMirrorToggled, param: { ["enabled": String($0)] }))
+
+            VStack(alignment: .leading, spacing: 10) {
+                Text(L10n.t("settings.pip_aspect"))
+                    .font(.subheadline)
+                HStack(spacing: 12) {
+                    ForEach(PiPAspectRatio.allCases) { aspect in
+                        Button {
+                            settingsStore.update { $0.pipAspectRatio = aspect }
+                            UsageTracker.shared.track(
+                                .pipAspectChanged,
+                                params: ["aspect": aspect.rawValue, "source": "settings"]
+                            )
+                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                        } label: {
+                            VStack(spacing: 8) {
+                                Image(systemName: aspect.symbolName)
+                                    .font(.system(size: 28, weight: .medium))
+                                    .symbolRenderingMode(.hierarchical)
+                                    .frame(height: 36)
+                                Text(aspect.shortLabel)
+                                    .font(.caption.weight(.semibold))
+                                Text(aspect.displayName)
+                                    .font(.caption2)
+                                    .foregroundStyle(GlassyTheme.labelSecondary)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.8)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .padding(.horizontal, 8)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .fill(settingsStore.settings.pipAspectRatio == aspect
+                                          ? Color.accentColor.opacity(0.18)
+                                          : GlassyTheme.fillTertiary)
+                            )
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .strokeBorder(
+                                        settingsStore.settings.pipAspectRatio == aspect
+                                            ? Color.accentColor
+                                            : Color.clear,
+                                        lineWidth: 2
+                                    )
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("\(aspect.displayName), \(aspect.shortLabel)")
+                    }
+                }
+                Text(L10n.t("settings.pip_aspect_hint"))
+                    .font(.caption)
+                    .foregroundStyle(GlassyTheme.labelSecondary)
+            }
+
             Picker(L10n.t("settings.pip_size"), selection: faceCamSizePresetBinding) {
                 ForEach(PiPFaceSizePreset.allCases) { preset in
                     Text(preset.menuLabel).tag(preset)
@@ -105,8 +163,22 @@ struct SettingsView: View {
             }
 
             LabeledContent(L10n.t("settings.lens_transparency")) {
-                Slider(value: bindingFloat(\.lensTransparency), in: 0.3...1.0)
+                Slider(value: lensTransparencyBinding, in: 0.3...1.0)
             }
+
+            // Живой превью-эффект ползунка прозрачности.
+            HStack(spacing: 16) {
+                ForEach(GlassesFrameColor.allCases) { color in
+                    GlassesPreviewTile(
+                        color: color,
+                        isSelected: settingsStore.settings.glassesColor == color,
+                        lensTransparency: settingsStore.settings.lensTransparency
+                    ) {
+                        settingsStore.update { $0.glassesColor = color }
+                    }
+                }
+            }
+            .padding(.vertical, 4)
 
             LabeledContent("Яркость оправы") {
                 Slider(value: bindingFloat(\.frameBrightness), in: 0.5...1.5)
@@ -140,6 +212,28 @@ struct SettingsView: View {
     }
 
     // MARK: - Bindings
+
+    private var lensTransparencyBinding: Binding<Float> {
+        Binding(
+            get: { settingsStore.settings.lensTransparency },
+            set: { value in
+                settingsStore.update { $0.lensTransparency = value }
+            }
+        )
+    }
+
+    private var faceCamCornerBinding: Binding<FaceCamCorner> {
+        Binding(
+            get: { settingsStore.settings.faceCamCorner },
+            set: { corner in
+                settingsStore.update { $0.applyFaceCamCorner(corner) }
+                UsageTracker.shared.track(
+                    .faceCamCornerChanged,
+                    params: ["corner": corner.rawValue, "source": "settings"]
+                )
+            }
+        )
+    }
 
     private func binding<T: Equatable>(_ keyPath: WritableKeyPath<AppSettings, T>, feature: UsageFeature? = nil, param: ((T) -> [String: String])? = nil) -> Binding<T> {
         Binding(

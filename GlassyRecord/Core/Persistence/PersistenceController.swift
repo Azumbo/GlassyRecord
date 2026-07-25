@@ -50,7 +50,7 @@ final class SettingsEntity {
     }
 
     func toAppSettings() -> AppSettings {
-        AppSettings(
+        var settings = AppSettings(
             quality: RecordingQuality(rawValue: qualityRaw) ?? .hd1080p,
             faceCamCorner: FaceCamCorner(rawValue: faceCamCornerRaw) ?? .bottomTrailing,
             faceCamShape: FaceCamShape(rawValue: faceCamShapeRaw) ?? .roundedRectangle,
@@ -72,6 +72,8 @@ final class SettingsEntity {
             timerAutoHideSeconds: timerAutoHideSeconds,
             lowPowerModeAware: lowPowerModeAware
         )
+        settings.applyFaceCamCorner(settings.faceCamCorner)
+        return settings
     }
 
     func apply(_ settings: AppSettings) {

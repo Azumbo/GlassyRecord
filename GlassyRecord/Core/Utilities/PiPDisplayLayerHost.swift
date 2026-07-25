@@ -3,11 +3,10 @@ import UIKit
 
 /// Единственное место для `AVSampleBufferDisplayLayer` — не переносить слой в SwiftUI.
 enum PiPDisplayLayerHost {
-    /// Стартовый буфер до ответа системы. Портрет 68×120 (минимум сообщества 120×68, повёрнутый).
-    static let baseRenderSize = CGSize(width: 68, height: 120)
     /// Минимальная сторона, которую принимаем от системы при щипке.
     static let minimumSide: CGFloat = 68
 
+    private static var preferredStartSize = PiPAspectRatio.portrait9x16.startSize
     private static var hostWindow: UIWindow?
     private static weak var boundDisplayLayer: AVSampleBufferDisplayLayer?
     private static var contentScale: CGFloat = 1.0
@@ -21,6 +20,13 @@ enum PiPDisplayLayerHost {
         view.isHidden = true
         return view
     }()
+
+    /// Стартовый буфер до ответа системы (из выбранного aspect ratio).
+    static var baseRenderSize: CGSize { preferredStartSize }
+
+    static func setPreferredAspect(_ aspect: PiPAspectRatio) {
+        preferredStartSize = aspect.startSize
+    }
 
     static func renderSize(for scale: CGFloat) -> CGSize {
         _ = scale

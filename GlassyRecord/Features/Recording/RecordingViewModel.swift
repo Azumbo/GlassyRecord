@@ -34,6 +34,8 @@ final class RecordingViewModel: ObservableObject {
     @Published private(set) var isScreenCaptured = false
     @Published private(set) var isPiPActive = false
     @Published var lastError: GlassyRecordError?
+    /// Capture идёт, но Glassy Record extension молчит — скорее всего выбрана обычная запись экрана.
+    @Published private(set) var extensionHandshakeMissing = false
     @Published private(set) var completedSession: RecordingSession?
 
     let broadcastService = BroadcastRecordingService()
@@ -55,7 +57,7 @@ final class RecordingViewModel: ObservableObject {
         self.settings = settings
         self.glassesEnabled = settings.glassesEnabledByDefault
         self.faceCamScale = settings.pipContentScaleFactor
-        self.faceCamPosition = settings.faceCamCorner.normalizedPosition
+        self.faceCamPosition = settings.faceCamNormalizedPosition
 
         if usesBroadcastMode {
             broadcastService.$duration
@@ -112,11 +114,12 @@ final class RecordingViewModel: ObservableObject {
     }
 
     func onAppear() {
-        glassesService.lensTransparency = settings.lensTransparency
-        glassesService.frameBrightness = settings.frameBrightness
+        glassesService.setLensTransparency(settings.lensTransparency)
+        glassesService.setFrameBrightness(settings.frameBrightness)
         glassesService.setFrameColor(settings.glassesColor)
         glassesService.setEnabled(glassesEnabled, usesPiPCapture: usesBroadcastMode)
         applyFaceCamScaleFromSettings()
+        pipCameraManager.setAspectRatio(settings.pipAspectRatio, invalidatePiP: false)
 
         if usesBroadcastMode {
             setupPhase = .idle
@@ -128,6 +131,7 @@ final class RecordingViewModel: ObservableObject {
             }
             startStateRefreshLoop()
             Task {
+                try? await audioService.ensureMicrophonePermission(enabled: settings.microphoneEnabled)
                 await RecordingNotificationService.requestAuthorization()
                 await preparePiPCamera()
             }
@@ -146,6 +150,8 @@ final class RecordingViewModel: ObservableObject {
                 contentScale: faceCamScale
             )
             try pipCameraManager.startStreaming(startPiP: true)
+            // До старта из Control Center: не держим AVAudioSession, mic должен быть свободен сразу.
+            pipCameraManager.releaseAudioSessionForBroadcast()
         } catch {
             fail(with: error)
         }
@@ -154,7 +160,12 @@ final class RecordingViewModel: ObservableObject {
     func prepareBroadcastConfig() {
         guard AppGroup.isConfigured else { return }
         applyFaceCamScaleFromSettings()
+        Task {
+            try? await audioService.ensureMicrophonePermission(enabled: settings.microphoneEnabled)
+        }
+        pipCameraManager.setAspectRatio(settings.pipAspectRatio, invalidatePiP: true)
         pipCameraManager.setContentScale(faceCamScale, invalidatePiP: true)
+        pipCameraManager.releaseAudioSessionForBroadcast()
         BroadcastConfigStore.saveConfig(makeBroadcastConfig())
         RPScreenRecorder.shared().isMicrophoneEnabled = settings.microphoneEnabled
         pipCameraManager.requestPiPActive()
@@ -210,6 +221,8 @@ final class RecordingViewModel: ObservableObject {
             pipCameraManager.requestPiPActive()
             await pipCameraManager.waitForFirstFrame()
             pipCameraManager.activatePiP()
+            // Сразу отдаём mic ReplayKit: иначе silent keep-alive / AVAudioSession мешают Control Center.
+            pipCameraManager.releaseAudioSessionForBroadcast()
             RecordingNotificationService.showRecordingStarted()
         } catch {
             fail(with: error)
@@ -221,6 +234,13 @@ final class RecordingViewModel: ObservableObject {
 
         isScreenCaptured = UIScreen.main.isCaptured
         broadcastService.refreshState()
+
+        if isRecording || isScreenCaptured {
+            let elapsed = recordingStartedAt.map { Date().timeIntervalSince($0) } ?? 0
+            extensionHandshakeMissing = elapsed > 3 && !BroadcastConfigStore.hasExtensionHeartbeat
+        } else {
+            extensionHandshakeMissing = false
+        }
 
         if BroadcastConfigStore.state == .failed,
            let message = BroadcastConfigStore.errorMessage,
@@ -260,8 +280,8 @@ final class RecordingViewModel: ObservableObject {
 
     private func prepareAndRecordInApp() async {
         do {
-            glassesService.lensTransparency = settings.lensTransparency
-            glassesService.frameBrightness = settings.frameBrightness
+            glassesService.setLensTransparency(settings.lensTransparency)
+            glassesService.setFrameBrightness(settings.frameBrightness)
             glassesService.setFrameColor(settings.glassesColor)
             glassesService.setEnabled(glassesEnabled)
 
@@ -349,6 +369,14 @@ final class RecordingViewModel: ObservableObject {
     func selectFaceCamSize(_ preset: PiPFaceSizePreset) {
         applyFaceCamScale(preset.scaleFactor, forceRestart: true)
         UsageTracker.shared.track(.pipSizePreset, params: ["preset": preset.rawValue, "source": "recording"])
+    }
+
+    func updateFaceCamPosition(_ point: CGPoint) {
+        let clamped = CGPoint(
+            x: min(max(point.x, 0.08), 0.92),
+            y: min(max(point.y, 0.08), 0.92)
+        )
+        faceCamPosition = clamped
     }
 
     func updateFaceCamScale(_ scale: CGFloat) {

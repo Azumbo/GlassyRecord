@@ -105,6 +105,7 @@ final class UsageTracker: ObservableObject {
         lines.append("face_cam_mirrored=\(settings.faceCamMirrored)")
         lines.append("pip_scale=\(String(format: "%.2f", settings.faceCamScale))")
         lines.append("pip_preset=\(PiPFaceSizePreset.nearest(to: settings.faceCamScale).rawValue)")
+        lines.append("pip_aspect=\(settings.pipAspectRatio.rawValue)")
         lines.append("touch_indicators=\(settings.touchIndicatorEnabled)")
         lines.append("low_power_aware=\(settings.lowPowerModeAware)")
         lines.append("control_auto_hide_s=\(Int(settings.controlPanelAutoHideSeconds))")
@@ -182,6 +183,7 @@ enum UsageFeature: String, CaseIterable, Identifiable {
 
     case pipActivated = "pip_activated"
     case pipSizePreset = "pip_size_preset"
+    case pipAspectChanged = "pip_aspect_changed"
     case glassesToggled = "glasses_toggled"
     case glassesColorChanged = "glasses_color_changed"
     case touchIndicatorShown = "touch_indicator_shown"
@@ -225,6 +227,7 @@ enum UsageFeature: String, CaseIterable, Identifiable {
         case .exitRecording: "Выход с экрана записи"
         case .pipActivated: "PiP Face Cam"
         case .pipSizePreset: "Крупность PiP"
+        case .pipAspectChanged: "Формат PiP"
         case .glassesToggled: "Очки вкл/выкл"
         case .glassesColorChanged: "Цвет очков"
         case .touchIndicatorShown: "Индикатор касания"

@@ -17,9 +17,10 @@ struct RecordingOverlayContent: View {
     @StateObject private var viewModel: RecordingViewModel
     @GestureState private var pinchScale: CGFloat = 1.0
     @State private var showDemoBrowser = false
+    @State private var pipDragStart: CGPoint?
 
     private var pipPreviewSize: CGSize {
-        CGSize(width: GlassyTheme.pipPreviewBaseWidth, height: GlassyTheme.pipPreviewBaseHeight)
+        settingsStore.settings.pipAspectRatio.previewSize
     }
 
     init(settings: AppSettings) {
@@ -156,41 +157,70 @@ struct RecordingOverlayContent: View {
     }
 
     private var pipInlineOverlay: some View {
-        VStack {
-            HStack {
-                Spacer()
-                VStack(alignment: .trailing, spacing: 8) {
+        GeometryReader { geo in
+            let stackWidth: CGFloat = 200
+            let previewHeight = pipPreviewSize.height
+            let controlsHeight: CGFloat = 110
+            let stackHeight = previewHeight + 8 + controlsHeight
+            let center = CGPoint(
+                x: viewModel.faceCamPosition.x * geo.size.width,
+                y: viewModel.faceCamPosition.y * geo.size.height
+            )
+
+            VStack(alignment: .center, spacing: 8) {
+                Group {
                     if let previewLayer = viewModel.pipProcessedPreviewLayer {
                         PiPProcessedPreviewView(displayLayer: previewLayer)
-                            .frame(
-                                width: pipPreviewSize.width,
-                                height: pipPreviewSize.height
-                            )
+                            .frame(width: pipPreviewSize.width, height: pipPreviewSize.height)
                             .clipped()
                             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                             .overlay {
                                 RoundedRectangle(cornerRadius: 14, style: .continuous)
                                     .strokeBorder(.white.opacity(0.25), lineWidth: 1)
                             }
-                    } else if viewModel.isAwaitingBroadcast || viewModel.isRecording {
+                    } else {
                         RoundedRectangle(cornerRadius: 14, style: .continuous)
                             .fill(GlassyTheme.fillTertiary)
                             .frame(width: pipPreviewSize.width, height: pipPreviewSize.height)
                             .overlay { ProgressView() }
                     }
-
-                    if viewModel.isAwaitingBroadcast || viewModel.isRecording {
-                        pipSizePresetControl
-                            .frame(width: 200)
-                    }
                 }
-                .padding(.top, 12)
-                .padding(.trailing, 12)
+                .contentShape(Rectangle())
+
+                pipSizePresetControl
+                    .frame(width: stackWidth)
             }
-            Spacer()
-                .allowsHitTesting(false)
+            .frame(width: stackWidth, height: stackHeight, alignment: .top)
+            .position(center)
+            .highPriorityGesture(pipPreviewDragGesture(in: geo.size))
+            .accessibilityHint(L10n.t("pip.drag_hint"))
         }
         .allowsHitTesting(true)
+    }
+
+    private func pipPreviewDragGesture(in container: CGSize) -> some Gesture {
+        DragGesture(minimumDistance: 2)
+            .onChanged { value in
+                if pipDragStart == nil {
+                    pipDragStart = viewModel.faceCamPosition
+                }
+                guard let start = pipDragStart else { return }
+                viewModel.userInteraction()
+                viewModel.updateFaceCamPosition(
+                    CGPoint(
+                        x: start.x + value.translation.width / max(container.width, 1),
+                        y: start.y + value.translation.height / max(container.height, 1)
+                    )
+                )
+            }
+            .onEnded { _ in
+                pipDragStart = nil
+                let point = viewModel.faceCamPosition
+                settingsStore.update {
+                    $0.faceCamNormalizedX = Double(point.x)
+                    $0.faceCamNormalizedY = Double(point.y)
+                }
+            }
     }
 
     private var pipSizePresetControl: some View {
@@ -269,7 +299,7 @@ struct RecordingOverlayContent: View {
 
                 VStack(spacing: 6) {
                     Text("Дальше начните запись из Пункта управления iOS:")
-                    Text("Зажмите кнопку записи экрана → выберите GlassyRecord → Start Broadcast.")
+                    Text("Зажмите кнопку записи экрана → выберите «Glassy Record» (не обычную запись) → включите Микрофон → Start Broadcast.")
                 }
                 .font(.caption)
                 .foregroundStyle(GlassyTheme.labelSecondary)
@@ -310,9 +340,14 @@ struct RecordingOverlayContent: View {
                     .padding(.horizontal, 20)
                     .padding(.top, 8)
             } else if viewModel.usesBroadcastMode, viewModel.isRecording {
-                Text(L10n.t("recording.banner.recording"))
+                Text(
+                    viewModel.extensionHandshakeMissing
+                        ? "Нет сигнала от Glassy Record. Зажмите запись экрана и выберите «Glassy Record», не обычную запись."
+                        : L10n.t("recording.banner.recording")
+                )
                     .font(.caption.weight(.medium))
                     .multilineTextAlignment(.center)
+                    .foregroundStyle(viewModel.extensionHandshakeMissing ? GlassyTheme.warning : .primary)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 10)
                     .liquidGlass(cornerRadius: 12)
@@ -403,7 +438,6 @@ struct RecordingOverlayContent: View {
             .position(faceCamCenter(in: geo.size))
             .gesture(faceCamDragGesture(in: geo.size))
             .gesture(faceCamPinchGesture)
-            .animation(GlassyTheme.spring, value: viewModel.faceCamPosition)
         }
     }
 
@@ -431,12 +465,27 @@ struct RecordingOverlayContent: View {
     }
 
     private func faceCamDragGesture(in container: CGSize) -> some Gesture {
-        DragGesture()
+        DragGesture(minimumDistance: 2)
             .onChanged { value in
+                if pipDragStart == nil {
+                    pipDragStart = viewModel.faceCamPosition
+                }
+                guard let start = pipDragStart else { return }
                 viewModel.userInteraction()
-                let x = min(max(value.location.x / container.width, 0.1), 0.9)
-                let y = min(max(value.location.y / container.height, 0.1), 0.9)
-                viewModel.faceCamPosition = CGPoint(x: x, y: y)
+                viewModel.updateFaceCamPosition(
+                    CGPoint(
+                        x: start.x + value.translation.width / max(container.width, 1),
+                        y: start.y + value.translation.height / max(container.height, 1)
+                    )
+                )
+            }
+            .onEnded { _ in
+                pipDragStart = nil
+                let point = viewModel.faceCamPosition
+                settingsStore.update {
+                    $0.faceCamNormalizedX = Double(point.x)
+                    $0.faceCamNormalizedY = Double(point.y)
+                }
             }
     }
 

@@ -12,8 +12,8 @@ final class AudioService: ObservableObject {
     private var audioEngine: AVAudioEngine?
     private var levelTimer: Timer?
 
-    func configure(microphoneEnabled: Bool) async throws {
-        guard microphoneEnabled else { return }
+    func ensureMicrophonePermission(enabled: Bool) async throws {
+        guard enabled else { return }
 
         let granted: Bool
         switch AVCaptureDevice.authorizationStatus(for: .audio) {
@@ -28,6 +28,10 @@ final class AudioService: ObservableObject {
         guard granted else {
             throw GlassyRecordError.permissionDenied("микрофону")
         }
+    }
+
+    func configure(microphoneEnabled: Bool) async throws {
+        try await ensureMicrophonePermission(enabled: microphoneEnabled)
 
         try AVAudioSession.sharedInstance().setCategory(
             .playAndRecord,

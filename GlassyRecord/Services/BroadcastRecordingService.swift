@@ -140,10 +140,19 @@ final class BroadcastRecordingService: ObservableObject {
         let deadline = Date().addingTimeInterval(timeout)
         var sawFinishedWithoutFile = false
         var sawFinalizing = false
+        var sawExtensionAlive = BroadcastConfigStore.hasExtensionHeartbeat
+        var sawRecording = BroadcastConfigStore.state == .recording
 
         while Date() < deadline {
-            // Подтягиваем свежие значения App Group.
+            // Подтягиваем свежие значения App Group (файл + defaults).
             _ = BroadcastConfigStore.state
+
+            if BroadcastConfigStore.hasExtensionHeartbeat {
+                sawExtensionAlive = true
+            }
+            if BroadcastConfigStore.state == .recording {
+                sawRecording = true
+            }
 
             if BroadcastConfigStore.state == .failed,
                let message = BroadcastConfigStore.errorMessage {
@@ -187,9 +196,19 @@ final class BroadcastRecordingService: ObservableObject {
                 "Extension завис на финализации MP4. \(snapshot)"
             )
         }
-        if BroadcastConfigStore.state == .recording {
+        if BroadcastConfigStore.state == .recording || sawRecording {
             throw GlassyRecordError.screenRecordingFailed(
                 "Запись не завершилась вовремя. Остановите трансляцию в Пункте управления. \(snapshot)"
+            )
+        }
+        if !sawExtensionAlive {
+            throw GlassyRecordError.screenRecordingFailed(
+                """
+                Glassy Record extension не запустился (нет heartbeat).
+
+                Зажмите кнопку записи экрана в Пункте управления → выберите «Glassy Record» (не обычную запись) → включите Микрофон → Start Broadcast.
+                \(snapshot)
+                """
             )
         }
         throw GlassyRecordError.screenRecordingFailed("Файл записи не найден. \(snapshot)")

@@ -147,7 +147,7 @@ struct HomeView: View {
                 Picker(L10n.t("home.face_cam"), selection: Binding(
                     get: { settingsStore.settings.faceCamCorner },
                     set: { corner in
-                        settingsStore.update { $0.faceCamCorner = corner }
+                        settingsStore.update { $0.applyFaceCamCorner(corner) }
                         UsageTracker.shared.track(.faceCamCornerChanged, params: ["corner": corner.rawValue])
                     }
                 )) {

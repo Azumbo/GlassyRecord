@@ -53,13 +53,14 @@ struct GlassesPreviewTile: View {
                         .fill(GlassyTheme.fillSecondary)
                         .frame(height: 64)
 
+                    // Линзы: чем меньше transparency, тем темнее.
+                    GlassesIconShape()
+                        .fill(Color.black.opacity(0.05 + Double(1 - lensTransparency) * 0.55))
+                        .frame(width: 48, height: 20)
+
                     GlassesIconShape()
                         .stroke(frameColor, lineWidth: 4)
                         .frame(width: 56, height: 28)
-
-                    GlassesIconShape()
-                        .fill(GlassyTheme.fillPrimary.opacity(0.6))
-                        .frame(width: 48, height: 20)
                 }
                 .overlay {
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
