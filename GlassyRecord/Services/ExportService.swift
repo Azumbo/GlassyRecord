@@ -17,14 +17,14 @@ actor ExportService {
         let composition = AVMutableComposition()
         let videoTracks = try await asset.loadTracks(withMediaType: .video)
         guard let sourceVideo = videoTracks.first else {
-            throw GlassyRecordError.exportFailed("Видеодорожка не найдена")
+            throw GlassyRecordError.exportFailed(L10n.t("error.video_track_missing"))
         }
 
         guard let compVideo = composition.addMutableTrack(
             withMediaType: .video,
             preferredTrackID: kCMPersistentTrackID_Invalid
         ) else {
-            throw GlassyRecordError.exportFailed("Не удалось создать композицию")
+            throw GlassyRecordError.exportFailed(L10n.t("error.composition_failed"))
         }
 
         let duration = try await asset.load(.duration)
@@ -50,7 +50,7 @@ actor ExportService {
                 ? AVAssetExportPresetHEVCHighestQuality
                 : AVAssetExportPresetHighestQuality
         ) else {
-            throw GlassyRecordError.exportFailed("Не удалось создать сессию экспорта")
+            throw GlassyRecordError.exportFailed(L10n.t("error.export_session_failed"))
         }
 
         exportSession.outputURL = outputURL
@@ -68,7 +68,7 @@ actor ExportService {
     func saveToPhotoLibrary(url: URL) async throws {
         let status = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
         guard status == .authorized || status == .limited else {
-            throw GlassyRecordError.permissionDenied("фотогалерее")
+            throw GlassyRecordError.permissionDenied(L10n.t("permission.photos"))
         }
 
         try await PHPhotoLibrary.shared().performChanges {

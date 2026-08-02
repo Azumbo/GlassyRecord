@@ -37,6 +37,10 @@ struct RootView: View {
         }
         .environmentObject(coordinator)
         .environmentObject(settingsStore)
+        .environment(
+            \.locale,
+            settingsStore.settings.appLanguage.locale ?? Locale.autoupdatingCurrent
+        )
         .alert(L10n.t("common.error"), isPresented: .init(
             get: { coordinator.alertMessage != nil },
             set: { if !$0 { coordinator.dismissAlert() } }

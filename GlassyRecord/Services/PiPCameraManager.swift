@@ -133,6 +133,22 @@ final class PiPCameraManager: NSObject, ObservableObject {
         framePipeline.setBackgroundBlurLevel(level)
     }
 
+    func setAppearanceSettings(_ settings: FaceCamAppearanceProcessor.Settings) {
+        framePipeline.setAppearanceSettings(settings)
+    }
+
+    func applyFaceCamEffects(from appSettings: AppSettings) {
+        setBackgroundBlurLevel(appSettings.backgroundBlurLevel)
+        setAppearanceSettings(
+            FaceCamAppearanceProcessor.Settings(
+                touchUpEnabled: appSettings.faceCamTouchUpEnabled,
+                touchUpStrength: appSettings.faceCamTouchUpStrength,
+                lowLightEnabled: appSettings.faceCamLowLightEnabled,
+                portraitLightingEnabled: appSettings.faceCamPortraitLightingEnabled
+            )
+        )
+    }
+
     func setContentScale(_ scale: CGFloat, invalidatePiP: Bool = true) {
         contentScale = min(max(scale, GlassyTheme.pipScaleMinimum), GlassyTheme.pipScaleMaximum)
         applyPresetRenderSizes(restartPiPIfActive: invalidatePiP)
@@ -172,7 +188,7 @@ final class PiPCameraManager: NSObject, ObservableObject {
         self.contentScale = min(max(contentScale, GlassyTheme.pipScaleMinimum), GlassyTheme.pipScaleMaximum)
 
         guard await requestCameraPermission() else {
-            throw GlassyRecordError.permissionDenied("камере")
+            throw GlassyRecordError.permissionDenied(L10n.t("permission.camera"))
         }
 
         glassesService.stopTracking()
@@ -194,7 +210,7 @@ final class PiPCameraManager: NSObject, ObservableObject {
     func startStreaming(startPiP: Bool = true) throws {
         guard isPrepared, !isStreaming else { return }
         guard isPictureInPictureSupported else {
-            throw GlassyRecordError.screenRecordingFailed("Picture in Picture недоступен на этом устройстве")
+            throw GlassyRecordError.screenRecordingFailed(L10n.t("error.pip_unavailable"))
         }
 
         isStreaming = true

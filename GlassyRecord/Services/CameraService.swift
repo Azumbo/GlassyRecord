@@ -97,7 +97,7 @@ final class CameraService: NSObject, ObservableObject {
         }
 
         guard await requestCameraPermission() else {
-            throw GlassyRecordError.permissionDenied("камере")
+            throw GlassyRecordError.permissionDenied(L10n.t("permission.camera"))
         }
 
         self.mirrored = mirrored

@@ -83,6 +83,21 @@ struct RecordingOverlayContent: View {
             // Здесь только подтягиваем внешние изменения настроек без лишнего restart.
             viewModel.applyFaceCamScale(scale, forceRestart: false)
         }
+        .onChange(of: settingsStore.settings.backgroundBlurLevel) { _ in
+            viewModel.refreshFaceCamEffectsFromSettings()
+        }
+        .onChange(of: settingsStore.settings.faceCamTouchUpEnabled) { _ in
+            viewModel.refreshFaceCamEffectsFromSettings()
+        }
+        .onChange(of: settingsStore.settings.faceCamTouchUpStrength) { _ in
+            viewModel.refreshFaceCamEffectsFromSettings()
+        }
+        .onChange(of: settingsStore.settings.faceCamLowLightEnabled) { _ in
+            viewModel.refreshFaceCamEffectsFromSettings()
+        }
+        .onChange(of: settingsStore.settings.faceCamPortraitLightingEnabled) { _ in
+            viewModel.refreshFaceCamEffectsFromSettings()
+        }
         .onChange(of: viewModel.completedSession?.id) { _ in
             guard let session = viewModel.completedSession else { return }
             coordinator.showEditor(for: session)
@@ -371,7 +386,7 @@ struct RecordingOverlayContent: View {
             } else if viewModel.usesBroadcastMode, viewModel.isRecording {
                 Text(
                     viewModel.extensionHandshakeMissing
-                        ? "Нет сигнала от Glassy Record. Зажмите запись экрана и выберите «Glassy Record», не обычную запись."
+                        ? L10n.t("recording.no_extension_signal")
                         : L10n.t("recording.banner.recording")
                 )
                     .font(.caption.weight(.medium))

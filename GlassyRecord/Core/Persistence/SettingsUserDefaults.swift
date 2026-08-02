@@ -25,6 +25,21 @@ enum SettingsUserDefaults {
             if object["backgroundBlurLevel"] == nil {
                 object["backgroundBlurLevel"] = BackgroundBlurLevel.off.rawValue
             }
+            if object["faceCamTouchUpEnabled"] == nil {
+                object["faceCamTouchUpEnabled"] = false
+            }
+            if object["faceCamTouchUpStrength"] == nil {
+                object["faceCamTouchUpStrength"] = 0.35
+            }
+            if object["faceCamLowLightEnabled"] == nil {
+                object["faceCamLowLightEnabled"] = false
+            }
+            if object["faceCamPortraitLightingEnabled"] == nil {
+                object["faceCamPortraitLightingEnabled"] = false
+            }
+            if object["appLanguage"] == nil {
+                object["appLanguage"] = AppLanguage.system.rawValue
+            }
             if let migrated = try? JSONSerialization.data(withJSONObject: object),
                var settings = try? JSONDecoder().decode(AppSettings.self, from: migrated) {
                 settings.applyPipFaceSizePreset(settings.pipFaceSizePreset)

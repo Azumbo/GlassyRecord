@@ -2,11 +2,13 @@ import SwiftUI
 
 struct SettingsView: View {
     @EnvironmentObject private var settingsStore: SettingsStore
-
     @EnvironmentObject private var coordinator: AppCoordinator
+    @StateObject private var audioService = AudioService()
 
     var body: some View {
         Form {
+            languageSection
+
             Section {
                 Button {
                     coordinator.showUsageStats()
@@ -17,6 +19,8 @@ struct SettingsView: View {
 
             qualitySection
             faceCamSection
+            virtualBackgroundSection
+            appearanceSection
             audioSection
             glassesSection
             touchSection
@@ -24,6 +28,29 @@ struct SettingsView: View {
         }
         .navigationTitle(L10n.t("nav.settings"))
         .navigationBarTitleDisplayMode(.inline)
+        .onDisappear {
+            audioService.stopAllTests()
+        }
+    }
+
+    private var languageSection: some View {
+        Section {
+            Picker(L10n.t("settings.language"), selection: Binding(
+                get: { settingsStore.settings.appLanguage },
+                set: { newValue in
+                    settingsStore.update { $0.appLanguage = newValue }
+                }
+            )) {
+                ForEach(AppLanguage.allCases) { language in
+                    Text(language.displayName).tag(language)
+                }
+            }
+            Text(L10n.t("settings.language.hint"))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        } header: {
+            Text(L10n.t("settings.language"))
+        }
     }
 
     private var qualitySection: some View {
@@ -33,7 +60,7 @@ struct SettingsView: View {
                     Text(q.displayName).tag(q)
                 }
             }
-            Toggle("Экономия энергии", isOn: binding(\.lowPowerModeAware, feature: .lowPowerAwareToggled, param: { ["enabled": String($0)] }))
+            Toggle(L10n.t("settings.low_power"), isOn: binding(\.lowPowerModeAware, feature: .lowPowerAwareToggled, param: { ["enabled": String($0)] }))
         }
     }
 
@@ -108,36 +135,204 @@ struct SettingsView: View {
                     .foregroundStyle(GlassyTheme.labelSecondary)
             }
 
-            Picker(L10n.t("settings.pip_size"), selection: faceCamSizePresetBinding) {
-                ForEach(PiPFaceSizePreset.allCases) { preset in
-                    Text(preset.menuLabel).tag(preset)
-                }
-            }
-            Text(L10n.t("pip.size.hint"))
-                .font(.caption)
-                .foregroundStyle(GlassyTheme.labelSecondary)
-
-            Picker(L10n.t("settings.background_blur"), selection: backgroundBlurBinding) {
-                ForEach(BackgroundBlurLevel.allCases) { level in
-                    Text(level.displayName).tag(level)
-                }
-            }
-            Text(L10n.t("settings.background_blur_hint"))
-                .font(.caption)
-                .foregroundStyle(GlassyTheme.labelSecondary)
+            faceCamSizeAndBlurControls
         }
     }
 
-    private var backgroundBlurBinding: Binding<BackgroundBlurLevel> {
-        Binding(
-            get: { settingsStore.settings.backgroundBlurLevel },
-            set: { level in
-                settingsStore.update { $0.backgroundBlurLevel = level }
-                UsageTracker.shared.track(
-                    .backgroundBlurChanged,
-                    params: ["level": level.rawValue, "source": "settings"]
-                )
+    /// Те же пресеты Size + Background blur, что на экране записи.
+    private var faceCamSizeAndBlurControls: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label(L10n.t("pip.size"), systemImage: "person.crop.rectangle")
+                .font(.subheadline.weight(.semibold))
+
+            Text(L10n.t("pip.size.hint"))
+                .font(.caption)
+                .foregroundStyle(GlassyTheme.labelSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 52), spacing: 8)], spacing: 8) {
+                ForEach(PiPFaceSizePreset.allCases) { preset in
+                    Button {
+                        faceCamSizePresetBinding.wrappedValue = preset
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    } label: {
+                        Text(preset.shortLabel)
+                            .font(.subheadline.weight(.medium))
+                            .frame(maxWidth: .infinity)
+                            .frame(minHeight: 44)
+                    }
+                    .buttonStyle(PipPresetButtonStyle(
+                        isSelected: PiPFaceSizePreset.nearest(to: settingsStore.settings.faceCamScale) == preset
+                    ))
+                    .accessibilityLabel(preset.menuLabel)
+                }
             }
+
+            Text(L10n.t("settings.background_blur"))
+                .font(.subheadline.weight(.semibold))
+                .padding(.top, 6)
+
+            Text(L10n.t("settings.background_blur_hint"))
+                .font(.caption)
+                .foregroundStyle(GlassyTheme.labelSecondary)
+
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 52), spacing: 8)], spacing: 8) {
+                ForEach(BackgroundBlurLevel.allCases) { level in
+                    Button {
+                        setBlurLevel(level)
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    } label: {
+                        Text(level.shortLabel)
+                            .font(.subheadline.weight(.medium))
+                            .frame(maxWidth: .infinity)
+                            .frame(minHeight: 44)
+                    }
+                    .buttonStyle(PipPresetButtonStyle(
+                        isSelected: settingsStore.settings.backgroundBlurLevel == level
+                    ))
+                    .accessibilityLabel(level.displayName)
+                }
+            }
+        }
+        .padding(.vertical, 4)
+    }
+
+    private var virtualBackgroundSection: some View {
+        Section {
+            HStack(spacing: 12) {
+                virtualBackgroundCard(
+                    title: L10n.t("settings.vb.none"),
+                    systemImage: "person.crop.rectangle",
+                    isBlurPreview: false,
+                    selected: settingsStore.settings.backgroundBlurLevel == .off
+                ) {
+                    setBlurLevel(.off)
+                }
+                virtualBackgroundCard(
+                    title: L10n.t("settings.vb.blur"),
+                    systemImage: "person.fill.viewfinder",
+                    isBlurPreview: true,
+                    selected: settingsStore.settings.backgroundBlurLevel != .off
+                ) {
+                    if settingsStore.settings.backgroundBlurLevel == .off {
+                        setBlurLevel(.medium)
+                    }
+                }
+            }
+            .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
+
+            if settingsStore.settings.backgroundBlurLevel != .off {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 52), spacing: 8)], spacing: 8) {
+                    ForEach(BackgroundBlurLevel.allCases.filter { $0 != .off }) { level in
+                        Button {
+                            setBlurLevel(level)
+                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                        } label: {
+                            Text(level.shortLabel)
+                                .font(.subheadline.weight(.medium))
+                                .frame(maxWidth: .infinity)
+                                .frame(minHeight: 40)
+                        }
+                        .buttonStyle(PipPresetButtonStyle(
+                            isSelected: settingsStore.settings.backgroundBlurLevel == level
+                        ))
+                        .accessibilityLabel(level.displayName)
+                    }
+                }
+            }
+
+            Text(L10n.t("settings.background_blur_hint"))
+                .font(.caption)
+                .foregroundStyle(GlassyTheme.labelSecondary)
+        } header: {
+            Text(L10n.t("settings.vb.title"))
+        }
+    }
+
+    private var appearanceSection: some View {
+        Section {
+            Toggle(isOn: binding(\.faceCamTouchUpEnabled)) {
+                Label(L10n.t("settings.appearance.touch_up"), systemImage: "sparkles")
+            }
+            if settingsStore.settings.faceCamTouchUpEnabled {
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        Text(L10n.t("settings.vb.low"))
+                            .font(.caption2)
+                            .foregroundStyle(GlassyTheme.labelSecondary)
+                        Slider(value: bindingFloat(\.faceCamTouchUpStrength), in: 0.1...1.0)
+                        Text(L10n.t("settings.vb.high"))
+                            .font(.caption2)
+                            .foregroundStyle(GlassyTheme.labelSecondary)
+                    }
+                }
+            }
+
+            Toggle(isOn: binding(\.faceCamLowLightEnabled)) {
+                Label(L10n.t("settings.appearance.low_light"), systemImage: "sun.min.fill")
+            }
+
+            Toggle(isOn: binding(\.faceCamPortraitLightingEnabled)) {
+                Label(L10n.t("settings.appearance.portrait_light"), systemImage: "lightbulb.fill")
+            }
+
+            Text(L10n.t("settings.appearance.hint"))
+                .font(.caption)
+                .foregroundStyle(GlassyTheme.labelSecondary)
+        } header: {
+            Text(L10n.t("settings.appearance.title"))
+        }
+    }
+
+    private func virtualBackgroundCard(
+        title: String,
+        systemImage: String,
+        isBlurPreview: Bool,
+        selected: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: isBlurPreview
+                                ? [Color.blue.opacity(0.35), Color.purple.opacity(0.25)]
+                                : [Color.secondary.opacity(0.25), Color.secondary.opacity(0.12)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(height: 88)
+                    .overlay {
+                        if isBlurPreview {
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .fill(.ultraThinMaterial)
+                        }
+                    }
+                VStack(spacing: 6) {
+                    Image(systemName: systemImage)
+                        .font(.title2)
+                    Text(title)
+                        .font(.caption.weight(.semibold))
+                }
+                .foregroundStyle(.primary)
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .strokeBorder(selected ? Color.accentColor : Color.clear, lineWidth: 3)
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(selected ? .isSelected : [])
+        .accessibilityLabel(title)
+    }
+
+    private func setBlurLevel(_ level: BackgroundBlurLevel) {
+        settingsStore.update { $0.backgroundBlurLevel = level }
+        UsageTracker.shared.track(
+            .backgroundBlurChanged,
+            params: ["level": level.rawValue, "source": "settings"]
         )
     }
 
@@ -152,19 +347,134 @@ struct SettingsView: View {
     }
 
     private var audioSection: some View {
-        Section(L10n.t("settings.audio")) {
-            Toggle(L10n.t("settings.mic"), isOn: binding(\.microphoneEnabled, feature: .micToggled, param: { ["enabled": String($0), "source": "settings"] }))
-            Toggle(L10n.t("settings.system_audio"), isOn: binding(\.systemAudioEnabled, feature: .systemAudioToggled, param: { ["enabled": String($0)] }))
+        Section {
+            Toggle(L10n.t("settings.mic"), isOn: Binding(
+                get: { settingsStore.settings.microphoneEnabled },
+                set: { enabled in
+                    settingsStore.update { $0.microphoneEnabled = enabled }
+                    UsageTracker.shared.track(.micToggled, params: ["enabled": String(enabled), "source": "settings"])
+                    if enabled {
+                        Task { await audioService.startMicrophoneTest() }
+                    } else {
+                        audioService.stopMicrophoneTest()
+                    }
+                }
+            ))
+
             if settingsStore.settings.microphoneEnabled {
-                LabeledContent(L10n.t("settings.mic_volume")) {
-                    Slider(value: bindingFloat(\.microphoneVolume), in: 0...2)
+                VStack(alignment: .leading, spacing: 10) {
+                    Text(L10n.t("settings.mic_volume"))
+                        .font(.subheadline)
+                    HStack(spacing: 10) {
+                        Image(systemName: "mic.fill")
+                            .foregroundStyle(GlassyTheme.labelSecondary)
+                        Slider(
+                            value: Binding(
+                                get: { settingsStore.settings.microphoneVolume },
+                                set: { value in
+                                    settingsStore.update { $0.microphoneVolume = value }
+                                    audioService.microphoneVolume = value
+                                }
+                            ),
+                            in: 0...2
+                        )
+                        Image(systemName: "mic.circle.fill")
+                            .foregroundStyle(GlassyTheme.labelSecondary)
+                    }
+
+                    HStack(spacing: 10) {
+                        Image(systemName: "waveform")
+                            .foregroundStyle(GlassyTheme.labelSecondary)
+                        AudioLevelMeterView(
+                            level: audioService.microphoneLevel,
+                            isActive: audioService.isTestingMicrophone
+                        )
+                    }
+
+                    Button {
+                        Task {
+                            if audioService.isTestingMicrophone {
+                                audioService.stopMicrophoneTest()
+                            } else {
+                                await audioService.startMicrophoneTest()
+                            }
+                        }
+                    } label: {
+                        Label(
+                            audioService.isTestingMicrophone
+                                ? L10n.t("settings.audio.stop_mic_test")
+                                : L10n.t("settings.audio.test_mic"),
+                            systemImage: audioService.isTestingMicrophone ? "stop.circle" : "mic.badge.plus"
+                        )
+                    }
+                }
+                .onAppear {
+                    audioService.microphoneVolume = settingsStore.settings.microphoneVolume
+                    if !audioService.isTestingSpeaker {
+                        Task { await audioService.startMicrophoneTest() }
+                    }
                 }
             }
+
+            Toggle(L10n.t("settings.system_audio"), isOn: binding(\.systemAudioEnabled, feature: .systemAudioToggled, param: { ["enabled": String($0)] }))
+
             if settingsStore.settings.systemAudioEnabled {
-                LabeledContent(L10n.t("settings.system_volume")) {
-                    Slider(value: bindingFloat(\.systemAudioVolume), in: 0...2)
+                VStack(alignment: .leading, spacing: 10) {
+                    Text(L10n.t("settings.system_volume"))
+                        .font(.subheadline)
+                    HStack(spacing: 10) {
+                        Image(systemName: "speaker.fill")
+                            .foregroundStyle(GlassyTheme.labelSecondary)
+                        Slider(
+                            value: Binding(
+                                get: { settingsStore.settings.systemAudioVolume },
+                                set: { value in
+                                    settingsStore.update { $0.systemAudioVolume = value }
+                                    audioService.systemAudioVolume = value
+                                }
+                            ),
+                            in: 0...2
+                        )
+                        Image(systemName: "speaker.wave.3.fill")
+                            .foregroundStyle(GlassyTheme.labelSecondary)
+                    }
+
+                    HStack(spacing: 10) {
+                        Image(systemName: "speaker.wave.2.fill")
+                            .foregroundStyle(GlassyTheme.labelSecondary)
+                        AudioLevelMeterView(
+                            level: audioService.speakerLevel,
+                            isActive: audioService.isTestingSpeaker || audioService.speakerLevel > 0.01
+                        )
+                    }
+
+                    Button {
+                        audioService.systemAudioVolume = settingsStore.settings.systemAudioVolume
+                        audioService.playSpeakerTest()
+                    } label: {
+                        Label(
+                            audioService.isTestingSpeaker
+                                ? L10n.t("settings.audio.testing_speaker")
+                                : L10n.t("settings.audio.test_speaker"),
+                            systemImage: "speaker.wave.3.fill"
+                        )
+                    }
+                    .disabled(audioService.isTestingSpeaker)
+                }
+                .onAppear {
+                    audioService.systemAudioVolume = settingsStore.settings.systemAudioVolume
                 }
             }
+
+            Text(L10n.t("settings.audio.test_hint"))
+                .font(.caption)
+                .foregroundStyle(GlassyTheme.labelSecondary)
+
+            Text(L10n.t("settings.audio.hint"))
+                .font(.caption)
+                .foregroundStyle(GlassyTheme.labelSecondary)
+        } header: {
+            Text(L10n.t("settings.audio"))
         }
     }
 
@@ -172,7 +482,7 @@ struct SettingsView: View {
         Section {
             Toggle(L10n.t("settings.glasses_default"), isOn: binding(\.glassesEnabledByDefault, feature: .glassesDefaultToggled, param: { ["enabled": String($0), "source": "settings"] }))
 
-            Picker("Цвет оправы", selection: binding(\.glassesColor, feature: .glassesColorChanged, param: { ["color": $0.rawValue, "source": "settings"] })) {
+            Picker(L10n.t("settings.glasses_color"), selection: binding(\.glassesColor, feature: .glassesColorChanged, param: { ["color": $0.rawValue, "source": "settings"] })) {
                 ForEach(GlassesFrameColor.allCases) { color in
                     HStack {
                         Circle()
@@ -202,7 +512,7 @@ struct SettingsView: View {
             }
             .padding(.vertical, 4)
 
-            LabeledContent("Яркость оправы") {
+            LabeledContent(L10n.t("settings.frame_brightness")) {
                 Slider(value: bindingFloat(\.frameBrightness), in: 0.5...1.5)
             }
         } header: {
@@ -224,10 +534,10 @@ struct SettingsView: View {
 
     private var gesturesSection: some View {
         Section(L10n.t("settings.gestures")) {
-            LabeledContent("Скрытие панели (сек)") {
+            LabeledContent(L10n.t("settings.hide_panel")) {
                 Slider(value: bindingDouble(\.controlPanelAutoHideSeconds), in: 1...10, step: 1)
             }
-            LabeledContent("Скрытие таймера (сек)") {
+            LabeledContent(L10n.t("settings.hide_timer")) {
                 Slider(value: bindingDouble(\.timerAutoHideSeconds), in: 2...15, step: 1)
             }
         }

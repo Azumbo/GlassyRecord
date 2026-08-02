@@ -11,7 +11,7 @@ struct UsageStatsView: View {
     var body: some View {
         List {
             Section {
-                Text("Пользуйтесь приложением как обычно несколько дней. Потом нажмите «Скопировать отчёт» и вставьте текст в чат Cursor — по нему будет видно, что оставить, а что удалить.")
+                Text(L10n.t("usage.intro"))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
@@ -21,7 +21,7 @@ struct UsageStatsView: View {
                     copyReport()
                 } label: {
                     Label(
-                        copied ? "Скопировано" : "Скопировать отчёт",
+                        copied ? L10n.t("usage.copied") : L10n.t("usage.copy_report"),
                         systemImage: copied ? "checkmark.circle.fill" : "doc.on.doc"
                     )
                 }
@@ -29,24 +29,24 @@ struct UsageStatsView: View {
 
                 ShareLink(
                     item: tracker.makeHandoffReport(settings: settingsStore.settings),
-                    subject: Text("Glassy Record usage"),
-                    message: Text("Usage report for Cursor")
+                    subject: Text(L10n.t("usage.share_subject")),
+                    message: Text(L10n.t("usage.share_message"))
                 ) {
-                    Label("Поделиться отчётом", systemImage: "square.and.arrow.up")
+                    Label(L10n.t("usage.share_report"), systemImage: "square.and.arrow.up")
                 }
             }
 
-            Section("Использовали") {
+            Section(L10n.t("usage.used")) {
                 let used = UsageFeature.allCases
                     .filter { $0 != .usageReset && tracker.counts[$0.rawValue, default: 0] > 0 }
                     .sorted { tracker.counts[$0.rawValue, default: 0] > tracker.counts[$1.rawValue, default: 0] }
                 if used.isEmpty {
-                    Text("Пока пусто — откройте запись, настройки и т.д.")
+                    Text(L10n.t("usage.used_empty"))
                         .foregroundStyle(.secondary)
                 } else {
                     ForEach(used) { feature in
                         HStack {
-                            Text(feature.titleRU)
+                            Text(feature.displayTitle)
                             Spacer()
                             Text("\(tracker.counts[feature.rawValue, default: 0])")
                                 .foregroundStyle(.secondary)
@@ -56,37 +56,37 @@ struct UsageStatsView: View {
                 }
             }
 
-            Section("Ни разу не использовали") {
+            Section(L10n.t("usage.never")) {
                 let unused = UsageFeature.allCases.filter {
                     $0 != .usageReset && tracker.counts[$0.rawValue, default: 0] == 0
                 }
                 if unused.isEmpty {
-                    Text("Все фичи из каталога уже трогали.")
+                    Text(L10n.t("usage.never_empty"))
                         .foregroundStyle(.secondary)
                 } else {
                     ForEach(unused) { feature in
-                        Text(feature.titleRU)
+                        Text(feature.displayTitle)
                             .foregroundStyle(.secondary)
                     }
                 }
             }
 
             Section {
-                Button("Сбросить статистику", role: .destructive) {
+                Button(L10n.t("usage.reset"), role: .destructive) {
                     confirmReset = true
                 }
             }
         }
-        .navigationTitle("Статистика")
+        .navigationTitle(L10n.t("nav.stats"))
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             tracker.track(.usageStatsOpened)
         }
-        .confirmationDialog("Сбросить счётчики?", isPresented: $confirmReset, titleVisibility: .visible) {
-            Button("Сбросить", role: .destructive) {
+        .confirmationDialog(L10n.t("usage.reset_confirm"), isPresented: $confirmReset, titleVisibility: .visible) {
+            Button(L10n.t("usage.reset_action"), role: .destructive) {
                 tracker.reset()
             }
-            Button("Отмена", role: .cancel) {}
+            Button(L10n.t("common.cancel"), role: .cancel) {}
         }
     }
 

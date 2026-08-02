@@ -23,6 +23,10 @@ final class AppModelsTests: XCTestCase {
         XCTAssertEqual(settings.lensTransparency, 0.85, accuracy: 0.001)
         XCTAssertEqual(settings.backgroundBlurLevel, .off)
         XCTAssertEqual(BackgroundBlurLevel.strong.blurRadius, 22)
+        XCTAssertFalse(settings.faceCamTouchUpEnabled)
+        XCTAssertFalse(settings.faceCamLowLightEnabled)
+        XCTAssertFalse(settings.faceCamPortraitLightingEnabled)
+        XCTAssertEqual(settings.appLanguage, .system)
     }
 
     func testRecordingSessionCodable() throws {

@@ -40,7 +40,7 @@ struct SystemBroadcastPickerRepresentable: UIViewRepresentable {
             guard let button = picker.subviews.compactMap({ $0 as? UIButton }).first else { return }
 
             var config = button.configuration ?? UIButton.Configuration.filled()
-            config.title = "Начать запись экрана"
+            config.title = L10n.t("recording.start_screen")
             config.baseBackgroundColor = .systemRed
             config.baseForegroundColor = .white
             config.cornerStyle = .medium

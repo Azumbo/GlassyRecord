@@ -122,7 +122,7 @@ final class RecordingViewModel: ObservableObject {
         applyFaceCamScaleFromSettings()
         let live = SettingsUserDefaults.load()
         pipCameraManager.setAspectRatio(live.pipAspectRatio, invalidatePiP: false)
-        pipCameraManager.setBackgroundBlurLevel(live.backgroundBlurLevel)
+        pipCameraManager.applyFaceCamEffects(from: live)
         backgroundBlurLevel = live.backgroundBlurLevel
 
         if usesBroadcastMode {
@@ -170,7 +170,7 @@ final class RecordingViewModel: ObservableObject {
         }
         pipCameraManager.setAspectRatio(live.pipAspectRatio, invalidatePiP: true)
         pipCameraManager.setContentScale(faceCamScale, invalidatePiP: true)
-        pipCameraManager.setBackgroundBlurLevel(live.backgroundBlurLevel)
+        pipCameraManager.applyFaceCamEffects(from: live)
         pipCameraManager.releaseAudioSessionForBroadcast()
         BroadcastConfigStore.saveConfig(makeBroadcastConfig())
         RPScreenRecorder.shared().isMicrophoneEnabled = live.microphoneEnabled
@@ -181,9 +181,17 @@ final class RecordingViewModel: ObservableObject {
                 "mic": String(live.microphoneEnabled),
                 "system_audio": String(live.systemAudioEnabled),
                 "pip_preset": faceCamSizePreset.rawValue,
-                "blur": live.backgroundBlurLevel.rawValue
+                "blur": live.backgroundBlurLevel.rawValue,
+                "touch_up": String(live.faceCamTouchUpEnabled),
+                "low_light": String(live.faceCamLowLightEnabled)
             ]
         )
+    }
+
+    func refreshFaceCamEffectsFromSettings() {
+        let live = SettingsUserDefaults.load()
+        backgroundBlurLevel = live.backgroundBlurLevel
+        pipCameraManager.applyFaceCamEffects(from: live)
     }
 
     func handleScenePhase(_ phase: ScenePhase) {
@@ -499,7 +507,7 @@ final class RecordingViewModel: ObservableObject {
         }
         let thumb = await ExportService().generateThumbnail(for: url)
         return RecordingSession(
-            title: "Запись \(Date.now.formatted(date: .abbreviated, time: .shortened))",
+            title: L10n.format("recording.session_title", Date.now.formatted(date: .abbreviated, time: .shortened)),
             duration: duration,
             fileURL: url,
             thumbnailData: thumb,

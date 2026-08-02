@@ -18,14 +18,14 @@ final class SampleHandler: RPBroadcastSampleHandler {
         BroadcastConfigStore.markExtensionAlive(event: "broadcast_started_entry")
 
         guard AppGroup.isConfigured else {
-            let message = "App Group не настроен. Включите group.com.azumbo.glassyrecord.shared в Xcode."
+            let message = "ext.app_group_missing"
             BroadcastConfigStore.markFailed(message)
             BroadcastConfigStore.markExtensionAlive(event: "app_group_missing")
             finishBroadcastWithError(makeError(message))
             return
         }
         guard let config = BroadcastConfigStore.loadConfig() else {
-            let message = "Конфигурация не найдена. Откройте Glassy Record и нажмите «Готов к записи»."
+            let message = "ext.config_missing"
             BroadcastConfigStore.markFailed(message)
             BroadcastConfigStore.markExtensionAlive(event: "config_missing")
             finishBroadcastWithError(makeError(message))
@@ -70,7 +70,7 @@ final class SampleHandler: RPBroadcastSampleHandler {
         flushPendingAudioIfPossible()
 
         guard let writer else {
-            let message = "Extension завершился без видеокадров. Убедитесь, что выбран именно Glassy Record и запись шла дольше 2 секунд."
+            let message = "ext.no_frames"
             BroadcastConfigStore.markFailed(message)
             BroadcastConfigStore.markExtensionAlive(event: "finished_no_writer")
             return
@@ -85,7 +85,7 @@ final class SampleHandler: RPBroadcastSampleHandler {
             )
         } else {
             BroadcastConfigStore.markFailed(
-                result.errorMessage ?? "Не удалось сохранить запись экрана"
+                result.errorMessage ?? "ext.save_failed"
             )
             BroadcastConfigStore.markExtensionAlive(
                 event: "finished_fail",
@@ -119,7 +119,7 @@ final class SampleHandler: RPBroadcastSampleHandler {
         setupLock.unlock()
         guard needsSetup, let config, let container = AppGroup.containerURLOptional else {
             if needsSetup, AppGroup.containerURLOptional == nil {
-                let message = "App Group контейнер недоступен"
+                let message = "ext.container_missing"
                 BroadcastConfigStore.markFailed(message)
                 BroadcastConfigStore.markExtensionAlive(event: "container_missing")
                 finishBroadcastWithError(makeError(message))

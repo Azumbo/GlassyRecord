@@ -10,16 +10,14 @@ enum AudioTrackMixer {
         let asset = AVURLAsset(url: sourceURL)
         let audioTracks = try await asset.loadTracks(withMediaType: .audio)
         guard !audioTracks.isEmpty else {
-            throw GlassyRecordError.screenRecordingFailed(
-                "В записи нет аудиодорожек. Включите Микрофон в Пункте управления и «Системный звук» в настройках, затем запишите снова через Glassy Record."
-            )
+            throw GlassyRecordError.screenRecordingFailed(L10n.t("error.audio_no_tracks"))
         }
 
         // Одна дорожка уже ок — только проверим, что она не пустая по длительности.
         if audioTracks.count == 1 {
             let duration = try await asset.load(.duration)
             guard duration.seconds > 0.05 else {
-                throw GlassyRecordError.screenRecordingFailed("Аудиодорожка пуста.")
+                throw GlassyRecordError.screenRecordingFailed(L10n.t("error.audio_empty"))
             }
             return sourceURL
         }
@@ -62,7 +60,7 @@ enum AudioTrackMixer {
             asset: composition,
             presetName: AVAssetExportPresetHighestQuality
         ) else {
-            throw GlassyRecordError.exportFailed("Не удалось создать сессию сведения звука")
+            throw GlassyRecordError.exportFailed(L10n.t("error.audio_mix_session"))
         }
         export.outputURL = outputURL
         export.outputFileType = .mp4

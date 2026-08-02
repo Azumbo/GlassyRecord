@@ -11,6 +11,7 @@
 		078490335D8CFF74D54B88B5 /* UsageStatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A69D193818D2A8E88B3D459F /* UsageStatsView.swift */; };
 		0ADA546AFE8EEF5F23C6CA5E /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 92CF581198F963727B0356F0 /* AVKit.framework */; };
 		0D67B172E78543DC9FEA1D24 /* CameraService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53BA6576A22907866A43A0A3 /* CameraService.swift */; };
+		152C26CC4844C0BDB88382FC /* AudioLevelMeterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 898AE47937B8997C3CA3302F /* AudioLevelMeterView.swift */; };
 		1AD7A76FAAC98D9929D2A212 /* PiPProcessedPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E661A33377481E987A31764E /* PiPProcessedPreviewView.swift */; };
 		1E43E0C047FC26B43EB04DB2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 10F7422C59BECD1F5285CC02 /* Assets.xcassets */; };
 		1E58D8C9A6443E11EA39CCB9 /* MockCameraFeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57D952722AB5215A74401AF /* MockCameraFeed.swift */; };
@@ -78,6 +79,7 @@
 		DACCDDBC2DC25F076B409422 /* ARKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 94452E549370531E1C6B73B5 /* ARKit.framework */; };
 		DE17AFB9801217F3C3FB2A3E /* GlassyRecordUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0812929F4F54F04B77ED2309 /* GlassyRecordUITests.swift */; };
 		E0C47269F504444BF5056BB2 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1BB6B82A0832DAF8928AD637 /* Metal.framework */; };
+		E32F7724411F779EC14373FB /* FaceCamAppearanceProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1216518C7D9FBC98AE1CB293 /* FaceCamAppearanceProcessor.swift */; };
 		E61413F38B7F7A2935BA3120 /* AppLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6CFAB9ECC4C84242E481469 /* AppLauncher.swift */; };
 		E6708663D401F600EDA20DFE /* DemoBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D15FDCF74C0F0AF2CB183C8 /* DemoBrowserView.swift */; };
 		E9A045E2F5510509EF8565FE /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2C4C45C7A2DBE80E48490FF /* AVFoundation.framework */; };
@@ -131,6 +133,7 @@
 		04A0A9EEC7EA9AF32E27636E /* GlassesOverlayServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassesOverlayServiceTests.swift; sourceTree = "<group>"; };
 		0812929F4F54F04B77ED2309 /* GlassyRecordUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassyRecordUITests.swift; sourceTree = "<group>"; };
 		10F7422C59BECD1F5285CC02 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		1216518C7D9FBC98AE1CB293 /* FaceCamAppearanceProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaceCamAppearanceProcessor.swift; sourceTree = "<group>"; };
 		136DED63C26E570333DAAAD7 /* ExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportService.swift; sourceTree = "<group>"; };
 		18360C9BD9B7F23F2B96E2DB /* BackgroundBlurProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundBlurProcessor.swift; sourceTree = "<group>"; };
 		1B97C2A6D6C6A1A00A1B06E3 /* TouchIndicatorOverlayHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchIndicatorOverlayHost.swift; sourceTree = "<group>"; };
@@ -139,7 +142,7 @@
 		23695972DE2E5EDCE9B21DDB /* RecordingControlPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingControlPanel.swift; sourceTree = "<group>"; };
 		2E5F5CE54715F372DBEA388D /* RecordingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingViewModel.swift; sourceTree = "<group>"; };
 		303819C5AD289B1209DB7571 /* ReplayKitCameraPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplayKitCameraPreviewView.swift; sourceTree = "<group>"; };
-		323B0B4914C6084357520A8D /* GlassyRecordTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = GlassyRecordTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		323B0B4914C6084357520A8D /* GlassyRecordTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GlassyRecordTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3317C6BCDF460865E2C5F868 /* BroadcastErrorMessages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BroadcastErrorMessages.swift; sourceTree = "<group>"; };
 		37D572355E9D38A5C362B3E9 /* AudioTrackMixer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioTrackMixer.swift; sourceTree = "<group>"; };
 		3A2FB0B7A7B583A351A3816C /* BroadcastVideoWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BroadcastVideoWriter.swift; sourceTree = "<group>"; };
@@ -161,6 +164,7 @@
 		82973469374DF229D32297A3 /* PiPFrameScaler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiPFrameScaler.swift; sourceTree = "<group>"; };
 		83BBC7E1A8E90F732E110E82 /* PiPCameraManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiPCameraManager.swift; sourceTree = "<group>"; };
 		89251BDCED63D7E24AE0937E /* PlaceholderStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceholderStateView.swift; sourceTree = "<group>"; };
+		898AE47937B8997C3CA3302F /* AudioLevelMeterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioLevelMeterView.swift; sourceTree = "<group>"; };
 		8B93FD21ADFA63673A34FA11 /* BroadcastExtensionLocator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BroadcastExtensionLocator.swift; sourceTree = "<group>"; };
 		8E6742E1AF10D86EEF0813B5 /* ReplayKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ReplayKit.framework; path = System/Library/Frameworks/ReplayKit.framework; sourceTree = SDKROOT; };
 		92CF581198F963727B0356F0 /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
@@ -171,7 +175,7 @@
 		9D6511CFDFE92E63F5CD0935 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		A0CA0295AE5AF1B40063E59F /* AppModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModels.swift; sourceTree = "<group>"; };
 		A57DCEC51703F28E367AB5AD /* GlassesFrameProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassesFrameProcessor.swift; sourceTree = "<group>"; };
-		A650576ED14DDB7FFA55F0A1 /* GlassyRecord.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GlassyRecord.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A650576ED14DDB7FFA55F0A1 /* GlassyRecord.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GlassyRecord.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A65D1DC8C2C77683BD61F0AE /* SimulatorFaceCamPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimulatorFaceCamPreview.swift; sourceTree = "<group>"; };
 		A69D193818D2A8E88B3D459F /* UsageStatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageStatsView.swift; sourceTree = "<group>"; };
 		A6DA46E1E8402AB34783518A /* ActiveBroadcastController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveBroadcastController.swift; sourceTree = "<group>"; };
@@ -185,12 +189,12 @@
 		AF18DD590789D4F04902E55D /* PiPFramePipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiPFramePipeline.swift; sourceTree = "<group>"; };
 		B350EA4E988F1F8736FCF212 /* AppGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroup.swift; sourceTree = "<group>"; };
 		B57D952722AB5215A74401AF /* MockCameraFeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockCameraFeed.swift; sourceTree = "<group>"; };
-		B72ADBBE3EC29702D46B59C7 /* GlassyRecordBroadcastUpload.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = GlassyRecordBroadcastUpload.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		B72ADBBE3EC29702D46B59C7 /* GlassyRecordBroadcastUpload.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = GlassyRecordBroadcastUpload.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		B8259450C32901A4FAF470D1 /* GlassyTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassyTheme.swift; sourceTree = "<group>"; };
 		C2B563952FF986F44428A582 /* EditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorView.swift; sourceTree = "<group>"; };
 		C2C4C45C7A2DBE80E48490FF /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		C9A325A96A1D480657BC0E9A /* L10n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = L10n.swift; sourceTree = "<group>"; };
-		CBED1809A878013EB9CCD62D /* GlassyRecordUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = GlassyRecordUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		CBED1809A878013EB9CCD62D /* GlassyRecordUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GlassyRecordUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		CCA6AF08BFFBBCEFFE923B63 /* CaptureConnectionSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureConnectionSupport.swift; sourceTree = "<group>"; };
 		D2587041F22AEB1C4C7978BD /* GlassesOverlayService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassesOverlayService.swift; sourceTree = "<group>"; };
 		DD931DB28865D6F738F8926D /* GlassesSelectionCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassesSelectionCard.swift; sourceTree = "<group>"; };
@@ -332,6 +336,7 @@
 				645A5C64CFBFFB1BC767243F /* BroadcastRecordingService.swift */,
 				53BA6576A22907866A43A0A3 /* CameraService.swift */,
 				136DED63C26E570333DAAAD7 /* ExportService.swift */,
+				1216518C7D9FBC98AE1CB293 /* FaceCamAppearanceProcessor.swift */,
 				A57DCEC51703F28E367AB5AD /* GlassesFrameProcessor.swift */,
 				D2587041F22AEB1C4C7978BD /* GlassesOverlayService.swift */,
 				B57D952722AB5215A74401AF /* MockCameraFeed.swift */,
@@ -478,6 +483,7 @@
 			isa = PBXGroup;
 			children = (
 				AD9D76AC1B2F5CBFB80E0EC2 /* ARFaceCamPreviewView.swift */,
+				898AE47937B8997C3CA3302F /* AudioLevelMeterView.swift */,
 				DD931DB28865D6F738F8926D /* GlassesSelectionCard.swift */,
 				E661A33377481E987A31764E /* PiPProcessedPreviewView.swift */,
 				89251BDCED63D7E24AE0937E /* PlaceholderStateView.swift */,
@@ -592,7 +598,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 2600;
+				LastUpgradeCheck = 2660;
 				TargetAttributes = {
 					37A8FC07AE371F20BFEF09B3 = {
 						DevelopmentTeam = PRPL734V4V;
@@ -693,6 +699,7 @@
 				C16F343A31538853020AE170 /* AppGroup.swift in Sources */,
 				E61413F38B7F7A2935BA3120 /* AppLauncher.swift in Sources */,
 				D597494C98459C585D81FC8E /* AppModels.swift in Sources */,
+				152C26CC4844C0BDB88382FC /* AudioLevelMeterView.swift in Sources */,
 				C469B0AD12D289D82E530B3B /* AudioService.swift in Sources */,
 				620806C0A52E4789FD1C92A8 /* AudioTrackMixer.swift in Sources */,
 				A5C48408D4D8D4722B9796C4 /* BackgroundBlurProcessor.swift in Sources */,
@@ -706,6 +713,7 @@
 				E6708663D401F600EDA20DFE /* DemoBrowserView.swift in Sources */,
 				F4F046E04238E26FA358BFC4 /* EditorView.swift in Sources */,
 				8DBD22E6F8B1F5ED333A2709 /* ExportService.swift in Sources */,
+				E32F7724411F779EC14373FB /* FaceCamAppearanceProcessor.swift in Sources */,
 				3F1B646996230CBA772472F9 /* GlassesFrameProcessor.swift in Sources */,
 				D77E825C895918C408BD8A7B /* GlassesOverlayService.swift in Sources */,
 				738CDE5196C1D6783E626010 /* GlassesSelectionCard.swift in Sources */,
@@ -872,6 +880,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -970,6 +979,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";

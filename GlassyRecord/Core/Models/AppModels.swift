@@ -309,7 +309,7 @@ struct RecordingSession: Identifiable, Codable, Hashable {
 
     init(
         id: UUID = UUID(),
-        title: String = "Запись",
+        title: String = "Recording",
         createdAt: Date = .now,
         duration: TimeInterval = 0,
         fileURL: URL,
@@ -330,9 +330,37 @@ struct RecordingSession: Identifiable, Codable, Hashable {
     }
 }
 
+// MARK: - App Language
+
+enum AppLanguage: String, Codable, CaseIterable, Identifiable {
+    case system
+    case english
+    case russian
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .system: L10n.t("settings.language.system")
+        case .english: L10n.t("settings.language.english")
+        case .russian: L10n.t("settings.language.russian")
+        }
+    }
+
+    /// `nil` — следовать языку iPhone.
+    var locale: Locale? {
+        switch self {
+        case .system: nil
+        case .english: Locale(identifier: "en")
+        case .russian: Locale(identifier: "ru")
+        }
+    }
+}
+
 // MARK: - App Settings
 
 struct AppSettings: Codable, Equatable {
+    var appLanguage: AppLanguage = .system
     var quality: RecordingQuality = .hd1080p
     var faceCamCorner: FaceCamCorner = .bottomTrailing
     /// Свободная позиция превью (0…1). Углы из `faceCamCorner` — только стартовый пресет.
@@ -347,6 +375,13 @@ struct AppSettings: Codable, Equatable {
     var microphoneVolume: Float = 1.0
     var systemAudioVolume: Float = 1.0
     var backgroundBlurLevel: BackgroundBlurLevel = .off
+    /// Сглаживание кожи / «Touch up my appearance».
+    var faceCamTouchUpEnabled: Bool = false
+    var faceCamTouchUpStrength: Float = 0.35
+    /// Подсветка в темноте.
+    var faceCamLowLightEnabled: Bool = false
+    /// Мягкий портретный свет на лице.
+    var faceCamPortraitLightingEnabled: Bool = false
     var touchIndicatorEnabled: Bool = true
     var touchIndicatorColorHex: String = "#FF3B30"
     var touchIndicatorSize: CGFloat = 24
@@ -411,7 +446,8 @@ enum GlassyRecordError: LocalizedError {
         case .screenRecordingDenied:
             L10n.t("error.screen_denied")
         case .screenRecordingFailed(let reason):
-            L10n.format("error.screen_failed", reason)
+            // Коды extension / legacy RU → уже готовая локализованная фраза.
+            BroadcastErrorMessages.message(forOptionalReason: reason)
         case .exportFailed(let reason):
             L10n.format("error.export_failed", reason)
         case .faceTrackingUnavailable:

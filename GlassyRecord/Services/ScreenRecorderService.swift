@@ -20,9 +20,7 @@ final class ScreenRecorderService: ObservableObject {
         microphoneEnabled: Bool
     ) async throws -> URL {
         guard SimulatorSupport.isRunning else {
-            throw GlassyRecordError.screenRecordingFailed(
-                "На устройстве используйте системную запись экрана через Broadcast Extension."
-            )
+            throw GlassyRecordError.screenRecordingFailed(L10n.t("error.device_use_broadcast"))
         }
         _ = captureSystemAudio
         _ = microphoneEnabled
@@ -31,12 +29,10 @@ final class ScreenRecorderService: ObservableObject {
 
     func stopRecording() async throws -> URL {
         guard isRecording else {
-            throw GlassyRecordError.screenRecordingFailed("Запись не активна")
+            throw GlassyRecordError.screenRecordingFailed(L10n.t("error.recording_inactive"))
         }
         guard SimulatorSupport.isRunning else {
-            throw GlassyRecordError.screenRecordingFailed(
-                "На устройстве используйте системную запись экрана через Broadcast Extension."
-            )
+            throw GlassyRecordError.screenRecordingFailed(L10n.t("error.device_use_broadcast"))
         }
         return try await stopSimulatorRecording()
     }

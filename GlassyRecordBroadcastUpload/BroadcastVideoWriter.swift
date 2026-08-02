@@ -41,7 +41,7 @@ final class BroadcastVideoWriter: @unchecked Sendable {
         self.config = config
 
         guard let pixelBuffer = CMSampleBufferGetImageBuffer(firstSample) else {
-            throw NSError(domain: "Writer", code: 1, userInfo: [NSLocalizedDescriptionKey: "Нет pixel buffer от ReplayKit"])
+            throw NSError(domain: "Writer", code: 1, userInfo: [NSLocalizedDescriptionKey: "ext.no_pixel_buffer"])
         }
 
         // H.264 требует чётные width/height. У iPhone часто нечётная ширина (напр. 1179).
@@ -80,7 +80,7 @@ final class BroadcastVideoWriter: @unchecked Sendable {
             vInput.transform = Self.transform(forOrientationAttachment: orientation)
         }
         guard writer.canAdd(vInput) else {
-            throw NSError(domain: "Writer", code: 2, userInfo: [NSLocalizedDescriptionKey: "Не удалось добавить video input"])
+            throw NSError(domain: "Writer", code: 2, userInfo: [NSLocalizedDescriptionKey: "ext.video_input_failed"])
         }
         writer.add(vInput)
 
@@ -184,7 +184,7 @@ final class BroadcastVideoWriter: @unchecked Sendable {
                 } else if let error = assetWriter.error {
                     lastErrorMessage = error.localizedDescription
                 } else {
-                    lastErrorMessage = "Не удалось записать видеокадр"
+                    lastErrorMessage = "ext.write_video_failed"
                 }
             }
         }
@@ -208,7 +208,7 @@ final class BroadcastVideoWriter: @unchecked Sendable {
                         appBuffersWritten += 1
                     } else {
                         lastErrorMessage = assetWriter.error?.localizedDescription
-                            ?? "Не удалось записать звук приложения"
+                            ?? "ext.write_app_audio_failed"
                     }
                 case .audioMic:
                     guard config.microphoneEnabled,
@@ -218,7 +218,7 @@ final class BroadcastVideoWriter: @unchecked Sendable {
                         micBuffersWritten += 1
                     } else {
                         lastErrorMessage = assetWriter.error?.localizedDescription
-                            ?? "Не удалось записать микрофон"
+                            ?? "ext.write_mic_failed"
                     }
                 default:
                     break
@@ -248,7 +248,7 @@ final class BroadcastVideoWriter: @unchecked Sendable {
         ) = writeQueue.sync {
             isFinishing = true
             guard let assetWriter else {
-                return (nil, false, false, lastErrorMessage ?? "Writer не создан")
+                return (nil, false, false, lastErrorMessage ?? "ext.writer_missing")
             }
 
             guard sessionStarted, didWriteFrames else {
@@ -258,7 +258,7 @@ final class BroadcastVideoWriter: @unchecked Sendable {
                     microphoneAudioInput?.markAsFinished()
                     return (assetWriter, true, false, lastErrorMessage)
                 }
-                return (assetWriter, false, false, lastErrorMessage ?? "Не получены кадры экрана. Держите запись хотя бы 2–3 секунды.")
+                return (assetWriter, false, false, lastErrorMessage ?? "ext.no_screen_frames")
             }
 
             videoInput?.markAsFinished()
@@ -305,7 +305,7 @@ final class BroadcastVideoWriter: @unchecked Sendable {
 
         let message = writerError
             ?? prepare.errorMessage
-            ?? "Файл записи повреждён или пуст (status=\(status?.rawValue ?? -1), size=\(size))"
+            ?? "ext.file_corrupt status=\(status?.rawValue ?? -1) size=\(size)"
         return FinishResult(
             success: false,
             relativeFileName: relativeFileName,

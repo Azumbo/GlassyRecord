@@ -12,7 +12,7 @@ enum RecordingNotificationService {
     static func showRecordingStarted() {
         let content = UNMutableNotificationContent()
         content.title = "Glassy Record"
-        content.body = "Запись экрана и Face Cam. Вернитесь в приложение, чтобы остановить."
+        content.body = L10n.t("notification.recording_body")
         content.sound = .default
 
         let request = UNNotificationRequest(

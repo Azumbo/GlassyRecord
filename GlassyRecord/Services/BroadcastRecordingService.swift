@@ -128,7 +128,7 @@ final class BroadcastRecordingService: ObservableObject {
             group.addTask {
                 try await Task.sleep(for: .seconds(seconds))
                 throw GlassyRecordError.screenRecordingFailed(
-                    "Таймаут остановки broadcast (\(Int(seconds)) с). Проверьте Пункт управления."
+                    String(format: L10n.t("error.broadcast_timeout"), Int(seconds))
                 )
             }
             _ = try await group.next()
@@ -188,29 +188,26 @@ final class BroadcastRecordingService: ObservableObject {
 
         if sawFinishedWithoutFile {
             throw GlassyRecordError.screenRecordingFailed(
-                "Extension сообщил о завершении, но MP4 в App Group пуст или недоступен. \(snapshot)"
+                L10n.format("error.extension_empty_mp4", snapshot)
             )
         }
         if sawFinalizing {
             throw GlassyRecordError.screenRecordingFailed(
-                "Extension завис на финализации MP4. \(snapshot)"
+                L10n.format("error.extension_finalizing_stuck", snapshot)
             )
         }
         if BroadcastConfigStore.state == .recording || sawRecording {
             throw GlassyRecordError.screenRecordingFailed(
-                "Запись не завершилась вовремя. Остановите трансляцию в Пункте управления. \(snapshot)"
+                L10n.format("error.broadcast_not_finished", snapshot)
             )
         }
         if !sawExtensionAlive {
             throw GlassyRecordError.screenRecordingFailed(
-                """
-                Glassy Record extension не запустился (нет heartbeat).
-
-                Зажмите кнопку записи экрана в Пункте управления → выберите «Glassy Record» (не обычную запись) → включите Микрофон → Start Broadcast.
-                \(snapshot)
-                """
+                L10n.format("error.extension_no_heartbeat", snapshot)
             )
         }
-        throw GlassyRecordError.screenRecordingFailed("Файл записи не найден. \(snapshot)")
+        throw GlassyRecordError.screenRecordingFailed(
+            L10n.format("error.file_not_found_diag", snapshot)
+        )
     }
 }

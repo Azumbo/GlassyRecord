@@ -10,11 +10,12 @@ struct GlassesSelectionCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Label("Очки Monokol MK295", systemImage: "eyeglasses")
+                Label(L10n.t("glasses.title"), systemImage: "eyeglasses")
                     .font(.headline)
                 Spacer()
                 Toggle("", isOn: $isEnabled)
                     .labelsHidden()
+                    .accessibilityLabel(L10n.t("glasses.title"))
             }
 
             HStack(spacing: 16) {
@@ -29,7 +30,7 @@ struct GlassesSelectionCard: View {
                 }
             }
 
-            Text("Кубическая оправа из глянцевого ацетата c40")
+            Text(L10n.t("glasses.card_body"))
                 .font(.caption)
                 .foregroundStyle(GlassyTheme.labelSecondary)
         }
@@ -67,12 +68,14 @@ struct GlassesPreviewTile: View {
                         .stroke(isSelected ? GlassyTheme.tint : .clear, lineWidth: 2)
                 }
 
-                Text(color == .red ? "Красный" : "Синий")
+                Text(color == .red ? L10n.t("glasses.color.red_short") : L10n.t("glasses.color.blue_short"))
                     .font(.caption.weight(.medium))
             }
             .frame(maxWidth: .infinity)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(color.displayName)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
     private var frameColor: Color {

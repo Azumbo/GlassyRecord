@@ -84,20 +84,20 @@ struct EditorView: View {
             trimControls
             exportBar
         }
-        .navigationTitle("Редактор")
+        .navigationTitle(L10n.t("nav.editor"))
         .navigationBarTitleDisplayMode(.inline)
-        .alert("Ошибка", isPresented: .init(
+        .alert(L10n.t("common.error"), isPresented: .init(
             get: { viewModel.errorMessage != nil },
             set: { if !$0 { viewModel.errorMessage = nil } }
         )) {
-            Button("OK", role: .cancel) {}
+            Button(L10n.t("common.ok"), role: .cancel) {}
         } message: {
             Text(viewModel.errorMessage ?? "")
         }
-        .alert("Готово", isPresented: $viewModel.exportSucceeded) {
-            Button("OK") { coordinator.popToRoot() }
+        .alert(L10n.t("common.done"), isPresented: $viewModel.exportSucceeded) {
+            Button(L10n.t("common.ok")) { coordinator.popToRoot() }
         } message: {
-            Text("Видео сохранено в «Фото»")
+            Text(L10n.t("editor.saved"))
         }
     }
 
@@ -107,7 +107,7 @@ struct EditorView: View {
             if let player = viewModel.player {
                 VideoPlayer(player: player)
             } else {
-                PlaceholderStateView(title: "Нет видео", systemImage: "film")
+                PlaceholderStateView(title: L10n.t("editor.no_video"), systemImage: "film")
             }
         }
         .frame(maxHeight: .infinity)
@@ -117,7 +117,7 @@ struct EditorView: View {
 
     private var trimControls: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Обрезка")
+            Text(L10n.t("editor.trim"))
                 .font(.headline)
             HStack {
                 Text(viewModel.trimStart.formattedDuration)
@@ -141,7 +141,7 @@ struct EditorView: View {
 
     private var exportBar: some View {
         HStack {
-            Text("ReplayKit MP4")
+            Text(L10n.t("editor.replaykit_mp4"))
                 .font(.caption)
                 .foregroundStyle(GlassyTheme.labelSecondary)
 
@@ -153,7 +153,7 @@ struct EditorView: View {
                 if viewModel.isExporting {
                     ProgressView()
                 } else {
-                    Label("Сохранить в «Фото»", systemImage: "square.and.arrow.down")
+                    Label(L10n.t("editor.save_photos"), systemImage: "square.and.arrow.down")
                 }
             }
             .buttonStyle(.borderedProminent)

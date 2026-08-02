@@ -34,7 +34,7 @@ enum MockRecordingWriter {
         )
 
         guard writer.canAdd(input) else {
-            throw GlassyRecordError.exportFailed("Не удалось создать тестовое видео")
+            throw GlassyRecordError.exportFailed(L10n.t("error.mock_video_failed"))
         }
         writer.add(input)
         writer.startWriting()
@@ -54,7 +54,7 @@ enum MockRecordingWriter {
         await writer.finishWriting()
 
         if writer.status != .completed {
-            throw GlassyRecordError.exportFailed(writer.error?.localizedDescription ?? "Ошибка записи")
+            throw GlassyRecordError.exportFailed(writer.error?.localizedDescription ?? L10n.t("error.writer_failed"))
         }
         return url
     }

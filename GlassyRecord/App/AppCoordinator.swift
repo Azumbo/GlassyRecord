@@ -70,7 +70,9 @@ final class SettingsStore: ObservableObject {
     @Published var settings: AppSettings
 
     init() {
-        self.settings = SettingsUserDefaults.load()
+        let loaded = SettingsUserDefaults.load()
+        self.settings = loaded
+        L10n.localeOverride = loaded.appLanguage.locale
     }
 
     func update(_ transform: (inout AppSettings) -> Void) {
@@ -78,5 +80,6 @@ final class SettingsStore: ObservableObject {
         transform(&copy)
         settings = copy
         SettingsUserDefaults.save(copy)
+        L10n.localeOverride = copy.appLanguage.locale
     }
 }

@@ -15,7 +15,9 @@ final class PiPFramePipeline: @unchecked Sendable {
     private var glassesEnabled = false
     private weak var glassesService: GlassesOverlayService?
     private let blurProcessor = BackgroundBlurProcessor()
+    private let appearanceProcessor = FaceCamAppearanceProcessor()
     private var backgroundBlurLevel: BackgroundBlurLevel = .off
+    private var appearanceSettings = FaceCamAppearanceProcessor.Settings()
     private var frameIndex: Int64 = 0
     private(set) var hasDeliveredFrame = false
     var onFirstFrame: (() -> Void)?
@@ -55,6 +57,13 @@ final class PiPFramePipeline: @unchecked Sendable {
         }
     }
 
+    func setAppearanceSettings(_ settings: FaceCamAppearanceProcessor.Settings) {
+        lock.withLock {
+            appearanceSettings = settings
+            appearanceProcessor.update(settings)
+        }
+    }
+
     func setTargetRenderSize(_ pixelSize: CGSize) {
         lock.withLock {
             let changed = abs(targetRenderSize.width - pixelSize.width) > 1
@@ -86,6 +95,7 @@ final class PiPFramePipeline: @unchecked Sendable {
                 glassesEnabled: glassesEnabled,
                 glassesService: glassesService,
                 blurLevel: backgroundBlurLevel,
+                appearance: appearanceSettings,
                 displayLayer: displayLayer,
                 previewDisplayLayer: previewDisplayLayer
             )
@@ -100,11 +110,13 @@ final class PiPFramePipeline: @unchecked Sendable {
 
             var finalBuffer = pixelBuffer
 
-            // blur → glasses → scale: очки остаются чёткими на лице.
+            // blur → appearance → glasses → scale
             if snapshot.blurLevel != .off {
                 finalBuffer = self.blurProcessor.processFrame(finalBuffer)
             }
-
+            if snapshot.appearance.isActive {
+                finalBuffer = self.appearanceProcessor.processFrame(finalBuffer)
+            }
             if snapshot.glassesEnabled, let service = snapshot.glassesService {
                 finalBuffer = service.processFrame(finalBuffer)
             }
