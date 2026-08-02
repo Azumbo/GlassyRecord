@@ -1,0 +1,693 @@
+import Combine
+import SwiftUI
+import ReplayKit
+import UIKit
+
+enum RecordingSetupPhase: Equatable {
+    case idle
+    case preparing
+    case recording
+    case saving
+    case failed(String)
+
+    var isFailed: Bool {
+        if case .failed = self { return true }
+        return false
+    }
+}
+
+/// ViewModel: broadcast (экран + звук) + Face Cam через системный PiP с AR-очками.
+@MainActor
+final class RecordingViewModel: ObservableObject {
+    @Published var isRecording = false
+    @Published var duration: TimeInterval = 0
+    @Published var setupPhase: RecordingSetupPhase = .idle
+    @Published var showControls = true
+    @Published var showTimer = true
+    @Published var faceCamPosition: CGPoint
+    @Published var faceCamScale: CGFloat = PiPFaceSizePreset.half.scaleFactor
+    @Published var touchIndicators: [TouchIndicator] = []
+    private var lastTouchIndicatorPoint: CGPoint?
+    @Published var glassesEnabled = false
+    @Published var backgroundBlurLevel: BackgroundBlurLevel = .off
+    @Published private(set) var usesBroadcastMode = !SimulatorSupport.isRunning
+    @Published private(set) var isPiPPreviewReady = false
+    @Published private(set) var isScreenCaptured = false
+    @Published private(set) var isPiPActive = false
+    @Published var lastError: GlassyRecordError?
+    /// Capture идёт, но Glassy Record extension молчит — скорее всего выбрана обычная запись экрана.
+    @Published private(set) var extensionHandshakeMissing = false
+    @Published private(set) var completedSession: RecordingSession?
+
+    let broadcastService = BroadcastRecordingService()
+    let pipCameraManager = PiPCameraManager()
+    let cameraService = CameraService()
+    let screenRecorder = ScreenRecorderService()
+    let audioService = AudioService()
+    let glassesService = GlassesOverlayService()
+
+    private var sessionTask: Task<Void, Never>?
+    private var isFinalizingRecording = false
+    private var controlsHideTask: Task<Void, Never>?
+    private var timerHideTask: Task<Void, Never>?
+    private var stateRefreshTask: Task<Void, Never>?
+    private var cancellables = Set<AnyCancellable>()
+    private let settings: AppSettings
+
+    init(settings: AppSettings) {
+        self.settings = settings
+        self.glassesEnabled = settings.glassesEnabledByDefault
+        self.faceCamScale = settings.pipContentScaleFactor
+        self.faceCamPosition = settings.faceCamNormalizedPosition
+
+        if usesBroadcastMode {
+            broadcastService.$duration
+                .receive(on: DispatchQueue.main)
+                .assign(to: &$duration)
+        } else {
+            screenRecorder.$duration
+                .receive(on: DispatchQueue.main)
+                .assign(to: &$duration)
+            screenRecorder.$isRecording
+                .receive(on: DispatchQueue.main)
+                .assign(to: &$isRecording)
+        }
+
+        bindLowPowerMode()
+        bindScreenCaptureObserver()
+
+        pipCameraManager.$isPrepared
+            .combineLatest(pipCameraManager.$isStreaming)
+            .map { $0 && $1 }
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$isPiPPreviewReady)
+
+        pipCameraManager.$isPiPActive
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$isPiPActive)
+    }
+
+    private var recordingStartedAt: Date?
+
+    private func bindScreenCaptureObserver() {
+        guard usesBroadcastMode else { return }
+        NotificationCenter.default.publisher(for: UIScreen.capturedDidChangeNotification)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let self else { return }
+                if UIScreen.main.isCaptured {
+                    if self.setupPhase.isFailed {
+                        self.setupPhase = .idle
+                    }
+                    if !self.isRecording {
+                        if let controller = ActiveBroadcastController.current() {
+                            self.broadcastService.setActiveController(controller)
+                        }
+                        Task { await self.beginActiveBroadcastSession() }
+                    }
+                } else if self.isRecording {
+                    let elapsed = self.recordingStartedAt.map { Date().timeIntervalSince($0) } ?? 0
+                    guard elapsed > 2 else { return }
+                    Task { await self.handleBroadcastEndedExternally() }
+                }
+            }
+            .store(in: &cancellables)
+    }
+
+    func onAppear() {
+        glassesService.setLensTransparency(settings.lensTransparency)
+        glassesService.setFrameBrightness(settings.frameBrightness)
+        glassesService.setFrameColor(settings.glassesColor)
+        glassesService.setEnabled(glassesEnabled, usesPiPCapture: usesBroadcastMode)
+        applyFaceCamScaleFromSettings()
+        let live = SettingsUserDefaults.load()
+        pipCameraManager.setAspectRatio(live.pipAspectRatio, invalidatePiP: false)
+        pipCameraManager.setBackgroundBlurLevel(live.backgroundBlurLevel)
+        backgroundBlurLevel = live.backgroundBlurLevel
+
+        if usesBroadcastMode {
+            setupPhase = .idle
+            prepareBroadcastConfig()
+            refreshBroadcastState()
+            if isRecording {
+                setupPhase = .recording
+                broadcastService.startDurationTimer()
+            }
+            startStateRefreshLoop()
+            Task {
+                try? await audioService.ensureMicrophonePermission(enabled: live.microphoneEnabled)
+                await RecordingNotificationService.requestAuthorization()
+                await preparePiPCamera()
+            }
+        } else {
+            beginInAppSession()
+        }
+    }
+
+    private func preparePiPCamera() async {
+        applyFaceCamScaleFromSettings()
+        do {
+            try await pipCameraManager.prepare(
+                glassesService: glassesService,
+                mirrored: settings.faceCamMirrored,
+                glassesEnabled: glassesEnabled,
+                contentScale: faceCamScale
+            )
+            try pipCameraManager.startStreaming(startPiP: true)
+            // До старта из Control Center: не держим AVAudioSession, mic должен быть свободен сразу.
+            pipCameraManager.releaseAudioSessionForBroadcast()
+        } catch {
+            fail(with: error)
+        }
+    }
+
+    func prepareBroadcastConfig() {
+        guard AppGroup.isConfigured else { return }
+        let live = SettingsUserDefaults.load()
+        applyFaceCamScaleFromSettings()
+        Task {
+            try? await audioService.ensureMicrophonePermission(enabled: live.microphoneEnabled)
+        }
+        pipCameraManager.setAspectRatio(live.pipAspectRatio, invalidatePiP: true)
+        pipCameraManager.setContentScale(faceCamScale, invalidatePiP: true)
+        pipCameraManager.setBackgroundBlurLevel(live.backgroundBlurLevel)
+        pipCameraManager.releaseAudioSessionForBroadcast()
+        BroadcastConfigStore.saveConfig(makeBroadcastConfig())
+        RPScreenRecorder.shared().isMicrophoneEnabled = live.microphoneEnabled
+        pipCameraManager.requestPiPActive()
+        UsageTracker.shared.track(
+            .broadcastPrepare,
+            params: [
+                "mic": String(live.microphoneEnabled),
+                "system_audio": String(live.systemAudioEnabled),
+                "pip_preset": faceCamSizePreset.rawValue,
+                "blur": live.backgroundBlurLevel.rawValue
+            ]
+        )
+    }
+
+    func handleScenePhase(_ phase: ScenePhase) {
+        guard usesBroadcastMode else { return }
+        pipCameraManager.handleScenePhase(phase)
+        if phase == .active || phase == .inactive {
+            TouchIndicatorOverlayHost.refreshWindowScene()
+        }
+    }
+
+    private func beginActiveBroadcastSession() async {
+        guard !isRecording || setupPhase != .recording else {
+            broadcastService.startDurationTimer()
+            return
+        }
+        applyFaceCamScaleFromSettings()
+        broadcastService.resolveActiveControllerIfNeeded()
+        broadcastService.startDurationTimer()
+        isRecording = true
+        setupPhase = .recording
+        recordingStartedAt = Date()
+        resetControlAutoHide()
+        resetTimerAutoHide()
+        updateTouchIndicatorOverlay(active: true)
+        UsageTracker.shared.track(
+            .broadcastStarted,
+            params: [
+                "glasses": String(glassesEnabled),
+                "pip_preset": faceCamSizePreset.rawValue,
+                "quality": settings.quality.rawValue
+            ]
+        )
+
+        if !pipCameraManager.isPrepared {
+            await preparePiPCamera()
+        }
+
+        do {
+            if !pipCameraManager.isStreaming {
+                try pipCameraManager.startStreaming(startPiP: true)
+            }
+            pipCameraManager.requestPiPActive()
+            await pipCameraManager.waitForFirstFrame()
+            pipCameraManager.activatePiP()
+            // Сразу отдаём mic ReplayKit: иначе silent keep-alive / AVAudioSession мешают Control Center.
+            pipCameraManager.releaseAudioSessionForBroadcast()
+            RecordingNotificationService.showRecordingStarted()
+        } catch {
+            fail(with: error)
+        }
+    }
+
+    func refreshBroadcastState() {
+        guard usesBroadcastMode else { return }
+
+        isScreenCaptured = UIScreen.main.isCaptured
+        broadcastService.refreshState()
+
+        if isRecording || isScreenCaptured {
+            let elapsed = recordingStartedAt.map { Date().timeIntervalSince($0) } ?? 0
+            extensionHandshakeMissing = elapsed > 3 && !BroadcastConfigStore.hasExtensionHeartbeat
+        } else {
+            extensionHandshakeMissing = false
+        }
+
+        if BroadcastConfigStore.state == .failed,
+           let message = BroadcastConfigStore.errorMessage,
+           setupPhase != .saving,
+           isRecording || isScreenCaptured {
+            fail(with: message)
+            return
+        }
+
+        if BroadcastConfigStore.state == .failed, !isRecording, !isScreenCaptured {
+            BroadcastConfigStore.clearFailure()
+        }
+
+        if BroadcastConfigStore.state == .finished, isRecording || setupPhase == .saving {
+            Task { await handleBroadcastEndedExternally() }
+            return
+        }
+
+        let active = broadcastService.isBroadcasting
+            || BroadcastConfigStore.state == .recording
+            || BroadcastConfigStore.state == .finalizing
+        if active {
+            if !isRecording {
+                Task { await beginActiveBroadcastSession() }
+            } else if setupPhase != .saving {
+                setupPhase = .recording
+            }
+        }
+    }
+
+    private func beginInAppSession() {
+        guard setupPhase == .idle || setupPhase.isFailed else { return }
+        setupPhase = .preparing
+        sessionTask?.cancel()
+        sessionTask = Task { await prepareAndRecordInApp() }
+    }
+
+    private func prepareAndRecordInApp() async {
+        do {
+            glassesService.setLensTransparency(settings.lensTransparency)
+            glassesService.setFrameBrightness(settings.frameBrightness)
+            glassesService.setFrameColor(settings.glassesColor)
+            glassesService.setEnabled(glassesEnabled)
+
+            try await cameraService.configure(
+                quality: settings.quality,
+                mirrored: settings.faceCamMirrored
+            )
+            cameraService.start()
+
+            guard !Task.isCancelled else { return }
+
+            _ = try await screenRecorder.startRecording(
+                quality: settings.quality,
+                captureSystemAudio: settings.systemAudioEnabled,
+                microphoneEnabled: settings.microphoneEnabled
+            )
+            setupPhase = .recording
+            resetControlAutoHide()
+            resetTimerAutoHide()
+        } catch let error as GlassyRecordError {
+            lastError = error
+            fail(with: error)
+        } catch {
+            fail(with: error)
+        }
+    }
+
+    private func fail(with error: Error) {
+        let message = BroadcastErrorMessages.message(for: error)
+        setupPhase = .failed(message)
+        UsageTracker.shared.track(.recordingFailed, params: ["reason": String(message.prefix(120))])
+    }
+
+    private func fail(with message: String) {
+        let text = BroadcastErrorMessages.message(forOptionalReason: message)
+        setupPhase = .failed(text)
+        UsageTracker.shared.track(.recordingFailed, params: ["reason": String(text.prefix(120))])
+    }
+
+    func makeBroadcastConfig() -> BroadcastRecordingConfig {
+        // Всегда свежие toggles mic/system — не снимок с init экрана записи.
+        var live = SettingsUserDefaults.load()
+        live.faceCamNormalizedX = Double(faceCamPosition.x)
+        live.faceCamNormalizedY = Double(faceCamPosition.y)
+        return BroadcastRecordingConfig.from(
+            settings: live,
+            faceCamPosition: faceCamPosition,
+            faceCamScale: faceCamScale,
+            glassesEnabled: glassesEnabled
+        )
+    }
+
+    var isPreparing: Bool { setupPhase == .preparing }
+    var isFailed: Bool { setupPhase.isFailed }
+    var isSaving: Bool { setupPhase == .saving }
+    var isAwaitingBroadcast: Bool {
+        usesBroadcastMode && setupPhase == .idle && !isRecording && !isScreenCaptured
+    }
+
+    var showBroadcastSetupCard: Bool { isAwaitingBroadcast }
+
+    var pipPreviewSession: AVCaptureSession? {
+        guard usesBroadcastMode else { return nil }
+        return pipCameraManager.previewSession
+    }
+
+    var pipProcessedPreviewLayer: AVSampleBufferDisplayLayer? {
+        guard usesBroadcastMode, pipCameraManager.isPrepared else { return nil }
+        return pipCameraManager.previewDisplayLayer
+    }
+
+    var faceCamSizePreset: PiPFaceSizePreset {
+        PiPFaceSizePreset.nearest(to: faceCamScale)
+    }
+
+    /// Синхронизирует крупность из сохранённых настроек и передаёт в PiP-пайплайн (`PiPFrameScaler`).
+    func applyFaceCamScaleFromSettings() {
+        applyFaceCamScale(settings.pipContentScaleFactor, forceRestart: false)
+    }
+
+    func applyFaceCamScale(_ scale: CGFloat, forceRestart: Bool = true) {
+        let preset = PiPFaceSizePreset.nearest(to: scale)
+        let changed = abs(faceCamScale - preset.scaleFactor) > 0.02
+        faceCamScale = preset.scaleFactor
+        guard changed || forceRestart else { return }
+        pipCameraManager.setContentScale(faceCamScale, invalidatePiP: true)
+    }
+
+    func selectFaceCamSize(_ preset: PiPFaceSizePreset) {
+        applyFaceCamScale(preset.scaleFactor, forceRestart: true)
+        UsageTracker.shared.track(.pipSizePreset, params: ["preset": preset.rawValue, "source": "recording"])
+    }
+
+    func updateFaceCamPosition(_ point: CGPoint) {
+        let clamped = CGPoint(
+            x: min(max(point.x, 0.08), 0.92),
+            y: min(max(point.y, 0.08), 0.92)
+        )
+        faceCamPosition = clamped
+    }
+
+    func updateFaceCamScale(_ scale: CGFloat) {
+        applyFaceCamScale(scale)
+    }
+
+    func stopRecording() async {
+        _ = await finalizeRecording(stopActiveBroadcast: true)
+    }
+
+    func handleBroadcastEndedExternally() async {
+        guard usesBroadcastMode, isRecording else { return }
+        guard setupPhase == .recording || setupPhase == .saving else { return }
+        _ = await finalizeRecording(stopActiveBroadcast: false)
+    }
+
+    func clearCompletedSession() {
+        completedSession = nil
+    }
+
+    private func finalizeRecording(stopActiveBroadcast: Bool) async -> RecordingSession? {
+        guard !isFinalizingRecording else { return nil }
+        isFinalizingRecording = true
+        defer { isFinalizingRecording = false }
+
+        setupPhase = .saving
+        let recordedDuration = duration
+
+        if usesBroadcastMode {
+            broadcastService.stopDurationTimer()
+            RecordingNotificationService.clearRecordingNotification()
+            pipCameraManager.stopStreaming()
+
+            do {
+                let url: URL
+                if stopActiveBroadcast {
+                    url = try await broadcastService.stopBroadcast()
+                } else {
+                    url = try await broadcastService.waitForFinishedRecording()
+                }
+                let live = SettingsUserDefaults.load()
+                let mixedURL = try await AudioTrackMixer.mixToSingleTrackIfNeeded(
+                    sourceURL: url,
+                    micVolume: live.microphoneVolume,
+                    systemVolume: live.systemAudioVolume
+                )
+                BroadcastConfigStore.reset()
+                pipCameraManager.stop()
+                isRecording = false
+                updateTouchIndicatorOverlay(active: false)
+                setupPhase = .idle
+
+                let session = try await makeRecordingSession(from: mixedURL, duration: recordedDuration)
+                completedSession = session
+                let fileSize = (try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? NSNumber)?.intValue ?? 0
+                UsageTracker.shared.track(
+                    .broadcastFinished,
+                    params: [
+                        "duration_s": String(format: "%.1f", recordedDuration),
+                        "glasses": String(glassesEnabled),
+                        "size": String(fileSize)
+                    ]
+                )
+                return session
+            } catch let error as GlassyRecordError {
+                lastError = error
+                fail(with: error)
+                return nil
+            } catch {
+                lastError = .exportFailed(error.localizedDescription)
+                fail(with: error)
+                return nil
+            }
+        }
+
+        cameraService.stop()
+        audioService.stopLevelMonitoring()
+        glassesService.stopTracking()
+
+        do {
+            let url = try await screenRecorder.stopRecording()
+            isRecording = false
+            setupPhase = .idle
+
+            let session = try await makeRecordingSession(from: url, duration: recordedDuration)
+            completedSession = session
+            UsageTracker.shared.track(
+                .broadcastFinished,
+                params: [
+                    "duration_s": String(format: "%.1f", recordedDuration),
+                    "mode": "simulator"
+                ]
+            )
+            return session
+        } catch let error as GlassyRecordError {
+            lastError = error
+            fail(with: error)
+            return nil
+        } catch {
+            lastError = .exportFailed(error.localizedDescription)
+            fail(with: error)
+            return nil
+        }
+    }
+
+    private func makeRecordingSession(from url: URL, duration: TimeInterval) async throws -> RecordingSession {
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            throw GlassyRecordError.fileNotFound
+        }
+        let thumb = await ExportService().generateThumbnail(for: url)
+        return RecordingSession(
+            title: "Запись \(Date.now.formatted(date: .abbreviated, time: .shortened))",
+            duration: duration,
+            fileURL: url,
+            thumbnailData: thumb,
+            quality: settings.quality,
+            glassesEnabled: glassesEnabled,
+            glassesColor: glassesService.frameColor
+        )
+    }
+
+    func toggleGlasses() {
+        glassesEnabled.toggle()
+        glassesService.setEnabled(glassesEnabled, usesPiPCapture: usesBroadcastMode)
+        if usesBroadcastMode {
+            pipCameraManager.setGlassesEnabled(glassesEnabled)
+        }
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        UsageTracker.shared.track(.glassesToggled, params: ["enabled": String(glassesEnabled)])
+    }
+
+    func selectBackgroundBlur(_ level: BackgroundBlurLevel) {
+        backgroundBlurLevel = level
+        pipCameraManager.setBackgroundBlurLevel(level)
+        UsageTracker.shared.track(.backgroundBlurChanged, params: ["level": level.rawValue, "source": "recording"])
+    }
+
+    func setGlassesColor(_ color: GlassesFrameColor) {
+        glassesService.setFrameColor(color)
+        UsageTracker.shared.track(.glassesColorChanged, params: ["color": color.rawValue, "source": "recording"])
+    }
+
+    func userInteraction() {
+        showControls = true
+        resetControlAutoHide()
+    }
+
+    func resetControlAutoHide() {
+        controlsHideTask?.cancel()
+        controlsHideTask = Task {
+            try? await Task.sleep(for: .seconds(settings.controlPanelAutoHideSeconds))
+            guard !Task.isCancelled else { return }
+            showControls = false
+        }
+    }
+
+    func resetTimerAutoHide() {
+        showTimer = true
+        timerHideTask?.cancel()
+        timerHideTask = Task {
+            try? await Task.sleep(for: .seconds(settings.timerAutoHideSeconds))
+            guard !Task.isCancelled else { return }
+            showTimer = false
+        }
+    }
+
+    func addTouchIndicator(at point: CGPoint) {
+        guard settings.touchIndicatorEnabled else { return }
+
+        if let last = lastTouchIndicatorPoint {
+            let dx = point.x - last.x
+            let dy = point.y - last.y
+            guard (dx * dx + dy * dy) >= 400 else { return } // ≥20pt между точками
+        }
+        lastTouchIndicatorPoint = point
+
+        let indicator = TouchIndicator(
+            position: point,
+            color: Color(hex: settings.touchIndicatorColorHex) ?? .red,
+            size: settings.touchIndicatorSize,
+            opacity: settings.touchIndicatorOpacity
+        )
+        touchIndicators.append(indicator)
+        UsageTracker.shared.track(.touchIndicatorShown)
+        Task {
+            try? await Task.sleep(for: .seconds(0.6))
+            touchIndicators.removeAll { $0.id == indicator.id }
+        }
+    }
+
+    private func bindLowPowerMode() {
+        guard settings.lowPowerModeAware else { return }
+        NotificationCenter.default.publisher(for: .NSProcessInfoPowerStateDidChange)
+            .sink { [weak self] _ in
+                if ProcessInfo.processInfo.isLowPowerModeEnabled {
+                    self?.selectFaceCamSize(.minus25)
+                }
+            }
+            .store(in: &cancellables)
+    }
+
+    private func startStateRefreshLoop() {
+        stateRefreshTask?.cancel()
+        stateRefreshTask = Task {
+            while !Task.isCancelled {
+                refreshBroadcastState()
+                try? await Task.sleep(for: .seconds(1))
+            }
+        }
+    }
+
+    func dismissFailure() {
+        lastError = nil
+        setupPhase = .idle
+        isRecording = false
+        recordingStartedAt = nil
+        updateTouchIndicatorOverlay(active: false)
+        BroadcastConfigStore.clearFailure()
+        broadcastService.stopDurationTimer()
+    }
+
+    func exitToHome(_ completion: @escaping () -> Void) {
+        UsageTracker.shared.track(
+            .exitRecording,
+            params: [
+                "was_recording": String(isRecording),
+                "phase": String(describing: setupPhase)
+            ]
+        )
+
+        if usesBroadcastMode, isRecording || setupPhase == .recording || setupPhase == .saving {
+            Task {
+                _ = await finalizeRecording(stopActiveBroadcast: true)
+                pipCameraManager.stopStreaming()
+                pipCameraManager.stop()
+                cleanup()
+                completion()
+            }
+            return
+        }
+
+        dismissFailure()
+        pipCameraManager.stopStreaming()
+        pipCameraManager.stop()
+        cleanup()
+        completion()
+    }
+
+    func cleanup() {
+        sessionTask?.cancel()
+        stateRefreshTask?.cancel()
+        broadcastService.stopDurationTimer()
+        RecordingNotificationService.clearRecordingNotification()
+        updateTouchIndicatorOverlay(active: false)
+        if !isRecording {
+            cameraService.stop()
+            pipCameraManager.stop()
+        }
+        audioService.stopLevelMonitoring()
+        glassesService.stopTracking()
+        controlsHideTask?.cancel()
+        timerHideTask?.cancel()
+    }
+
+    private func updateTouchIndicatorOverlay(active: Bool) {
+        guard usesBroadcastMode else { return }
+        TouchIndicatorOverlayHost.updateStyle(touchOverlayStyle)
+        if active, settings.touchIndicatorEnabled {
+            TouchIndicatorOverlayHost.activate()
+        } else {
+            TouchIndicatorOverlayHost.deactivate()
+        }
+    }
+
+    private var touchOverlayStyle: TouchIndicatorOverlayHost.Style {
+        TouchIndicatorOverlayHost.Style(
+            enabled: settings.touchIndicatorEnabled,
+            color: UIColor(Color(hex: settings.touchIndicatorColorHex) ?? .red),
+            size: settings.touchIndicatorSize,
+            opacity: CGFloat(settings.touchIndicatorOpacity)
+        )
+    }
+}
+
+struct TouchIndicator: Identifiable {
+    let id = UUID()
+    let position: CGPoint
+    let color: Color
+    let size: CGFloat
+    let opacity: Double
+}
+
+extension Color {
+    init?(hex: String) {
+        var hexSanitized = hex.trimmingCharacters(in: .whitespacesAndNewlines)
+        hexSanitized = hexSanitized.replacingOccurrences(of: "#", with: "")
+        guard hexSanitized.count == 6, let int = UInt64(hexSanitized, radix: 16) else { return nil }
+        let r = Double((int >> 16) & 0xFF) / 255
+        let g = Double((int >> 8) & 0xFF) / 255
+        let b = Double(int & 0xFF) / 255
+        self.init(red: r, green: g, blue: b)
+    }
+}

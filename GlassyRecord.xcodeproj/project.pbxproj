@@ -1,0 +1,1091 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		038A320F00A71F49427D2D66 /* ActiveBroadcastController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6DA46E1E8402AB34783518A /* ActiveBroadcastController.swift */; };
+		078490335D8CFF74D54B88B5 /* UsageStatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A69D193818D2A8E88B3D459F /* UsageStatsView.swift */; };
+		0ADA546AFE8EEF5F23C6CA5E /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 92CF581198F963727B0356F0 /* AVKit.framework */; };
+		0D67B172E78543DC9FEA1D24 /* CameraService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53BA6576A22907866A43A0A3 /* CameraService.swift */; };
+		1AD7A76FAAC98D9929D2A212 /* PiPProcessedPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E661A33377481E987A31764E /* PiPProcessedPreviewView.swift */; };
+		1E43E0C047FC26B43EB04DB2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 10F7422C59BECD1F5285CC02 /* Assets.xcassets */; };
+		1E58D8C9A6443E11EA39CCB9 /* MockCameraFeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57D952722AB5215A74401AF /* MockCameraFeed.swift */; };
+		22603A544E0021BC509516B0 /* ARFaceCamPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD9D76AC1B2F5CBFB80E0EC2 /* ARFaceCamPreviewView.swift */; };
+		255E767BF14C133F98A2AB03 /* SimulatorSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D4C5E04716960CA2770082E /* SimulatorSupport.swift */; };
+		30E649262D2DA20FF2FD891B /* PlaceholderStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89251BDCED63D7E24AE0937E /* PlaceholderStateView.swift */; };
+		30FD6BF9769A32EE252DF9DC /* RecordingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E5F5CE54715F372DBEA388D /* RecordingViewModel.swift */; };
+		34805ED2BE1E5C9B848F369D /* SampleHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01AB36E976CA117446430AE9 /* SampleHandler.swift */; };
+		35AF0CD47BDC5F0663E7D6A0 /* BroadcastRecordingConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF74A7FDF64760581864A65A /* BroadcastRecordingConfig.swift */; };
+		3670D17B0D8184EC3021DAA0 /* PiPAudioKeepAlive.swift in Sources */ = {isa = PBXBuildFile; fileRef = 640F4434AEAB0CB5CCFFDE9E /* PiPAudioKeepAlive.swift */; };
+		3A66F31496882176DB98681C /* ReplayKitCameraPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 303819C5AD289B1209DB7571 /* ReplayKitCameraPreviewView.swift */; };
+		3BE479E5E2B812B0C0A78614 /* BroadcastRecordingConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF74A7FDF64760581864A65A /* BroadcastRecordingConfig.swift */; };
+		3DB3F13B72EC285406F59D1D /* ScreenRecorderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03D3B81FA1DBFB5C823D601D /* ScreenRecorderService.swift */; };
+		3F1B646996230CBA772472F9 /* GlassesFrameProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A57DCEC51703F28E367AB5AD /* GlassesFrameProcessor.swift */; };
+		4357C3A7F91ED4D68142579A /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = B350EA4E988F1F8736FCF212 /* AppGroup.swift */; };
+		44B23E238EEA8A5AD27A177B /* BroadcastRecordingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 645A5C64CFBFFB1BC767243F /* BroadcastRecordingService.swift */; };
+		4510E82F3F9D84DF8645E5B8 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 3DB646A1B96F159EB2B344BD /* Localizable.xcstrings */; };
+		4779610215494055C0587174 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = A800CB3AEC55BAFD8639AC14 /* InfoPlist.xcstrings */; };
+		4AD5B780B30CDCE92A97986F /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2C4C45C7A2DBE80E48490FF /* AVFoundation.framework */; };
+		4DFBB790FDBE2356C7378BC0 /* PiPPixelGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAE4F0D9F48375B2EC6BFDD4 /* PiPPixelGeometry.swift */; };
+		5359F5B389A1332D0DECB1EA /* MockRecordingWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA5555C9D5798F58015CCF0F /* MockRecordingWriter.swift */; };
+		558AD8517D30483E3E042691 /* Vision.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = ACBEC9967909386252E6D88A /* Vision.framework */; };
+		55D9D63E3B20AC13F23ED05D /* SceneKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AF168E2AB4E05873579A0657 /* SceneKit.framework */; };
+		57B3AF601EB62B67596BBE29 /* CaptureConnectionSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA6AF08BFFBBCEFFE923B63 /* CaptureConnectionSupport.swift */; };
+		595C1A23A8CD51C685479E10 /* BroadcastExtensionLocator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B93FD21ADFA63673A34FA11 /* BroadcastExtensionLocator.swift */; };
+		5D0C9B79647879C065790A04 /* AppModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5347329ADA3E098E824D87F /* AppModelsTests.swift */; };
+		5E003757DCFF8E861E128D84 /* BroadcastErrorMessages.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3317C6BCDF460865E2C5F868 /* BroadcastErrorMessages.swift */; };
+		620806C0A52E4789FD1C92A8 /* AudioTrackMixer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37D572355E9D38A5C362B3E9 /* AudioTrackMixer.swift */; };
+		62E6500C3F2CA06E3D5DC4F8 /* BroadcastExtensionLocator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B93FD21ADFA63673A34FA11 /* BroadcastExtensionLocator.swift */; };
+		636E2390D54C27E8C3355362 /* RecordingControlPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23695972DE2E5EDCE9B21DDB /* RecordingControlPanel.swift */; };
+		707D0450D111A829287557FD /* PiPDisplayLayerHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57544E4236AD282F93B89845 /* PiPDisplayLayerHost.swift */; };
+		714EC08C4443FC6D59DA72A0 /* GlassyRecordBroadcastUpload.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B72ADBBE3EC29702D46B59C7 /* GlassyRecordBroadcastUpload.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		738CDE5196C1D6783E626010 /* GlassesSelectionCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD931DB28865D6F738F8926D /* GlassesSelectionCard.swift */; };
+		74288262944F6557BCDEBADC /* AppCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 681BD2B173991E4C9D3ACC5E /* AppCoordinator.swift */; };
+		76C1A5C13D904DE5590E6CEE /* BroadcastConfig+App.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EA17FC413A53F98D9130E62 /* BroadcastConfig+App.swift */; };
+		7BCA2127116F15E129EF08CA /* L10n.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9A325A96A1D480657BC0E9A /* L10n.swift */; };
+		7FECA9844022DF40E346A28C /* SettingsUserDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788F5BC4419037711452B4BA /* SettingsUserDefaults.swift */; };
+		86B610C04FA5897DC545A47C /* RecordingOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7315BE8BDACA80507B69D09B /* RecordingOverlayView.swift */; };
+		88BFEB187477336330E851E2 /* TouchIndicatorOverlayHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B97C2A6D6C6A1A00A1B06E3 /* TouchIndicatorOverlayHost.swift */; };
+		8A0E8D05AF3DB0857006F11C /* GlassesOverlayServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04A0A9EEC7EA9AF32E27636E /* GlassesOverlayServiceTests.swift */; };
+		8B89EB906FDCC932B8CB1F19 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 202C25F2E8C1B48EFA723877 /* WebKit.framework */; };
+		8DBD22E6F8B1F5ED333A2709 /* ExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 136DED63C26E570333DAAAD7 /* ExportService.swift */; };
+		92BC7AAFE03BAFC2C74D5613 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D6511CFDFE92E63F5CD0935 /* SettingsView.swift */; };
+		98124590B18FC77166BA7E80 /* PiPSampleBufferFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95CAEE938A4089FA85E73B90 /* PiPSampleBufferFactory.swift */; };
+		A5C48408D4D8D4722B9796C4 /* BackgroundBlurProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18360C9BD9B7F23F2B96E2DB /* BackgroundBlurProcessor.swift */; };
+		A9376D3D2E820D7F95101C5E /* GlassyRecordApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C7DC9080B2FA08697B47D6B /* GlassyRecordApp.swift */; };
+		AB295386626C7B0FA48F85C2 /* PiPCameraManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83BBC7E1A8E90F732E110E82 /* PiPCameraManager.swift */; };
+		ADCE2364A17E0DC899B85737 /* PiPFramePipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF18DD590789D4F04902E55D /* PiPFramePipeline.swift */; };
+		B9AAF379A426D24BE56FF0A4 /* BroadcastVideoWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A2FB0B7A7B583A351A3816C /* BroadcastVideoWriter.swift */; };
+		BAAADC2C260F72452087C7DA /* ReplayKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8E6742E1AF10D86EEF0813B5 /* ReplayKit.framework */; };
+		BCC8B874B37FEFB62E75FA3D /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 046FA003957AEF0948F9CBF2 /* HomeView.swift */; };
+		C16F343A31538853020AE170 /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = B350EA4E988F1F8736FCF212 /* AppGroup.swift */; };
+		C29718E0A5D9BC39255F2B18 /* RecordingNotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03BBF58B5781554DB64879B3 /* RecordingNotificationService.swift */; };
+		C469B0AD12D289D82E530B3B /* AudioService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAA585C2382ABFC53C259C81 /* AudioService.swift */; };
+		C56B3C4AEE230A30F2C0CBAE /* PiPFrameScaler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82973469374DF229D32297A3 /* PiPFrameScaler.swift */; };
+		CB18F6C058AE928410DB0273 /* GlassyTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8259450C32901A4FAF470D1 /* GlassyTheme.swift */; };
+		CCDA3C23047D566A3C800811 /* Photos.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F7A5B1C41A3A5188B70042F2 /* Photos.framework */; };
+		CEE9DB30A61A3016CC94BE42 /* SettingsStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97B72739C579B73E8636AB57 /* SettingsStoreTests.swift */; };
+		D4190D5DDF8D3DAA2A9714E7 /* ReplayKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8E6742E1AF10D86EEF0813B5 /* ReplayKit.framework */; };
+		D4BD1B6D6B1BCD7BAAEE75AD /* SystemBroadcastPickerRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5564FCF8E23075E0146BA56D /* SystemBroadcastPickerRepresentable.swift */; };
+		D597494C98459C585D81FC8E /* AppModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0CA0295AE5AF1B40063E59F /* AppModels.swift */; };
+		D5AE82CA977DC096865A82E9 /* UsageTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CBFEAB47FB443E1A3A55562 /* UsageTracker.swift */; };
+		D676826707FB3F146A310DA3 /* ActiveBroadcastController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6DA46E1E8402AB34783518A /* ActiveBroadcastController.swift */; };
+		D77E825C895918C408BD8A7B /* GlassesOverlayService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2587041F22AEB1C4C7978BD /* GlassesOverlayService.swift */; };
+		DACCDDBC2DC25F076B409422 /* ARKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 94452E549370531E1C6B73B5 /* ARKit.framework */; };
+		DE17AFB9801217F3C3FB2A3E /* GlassyRecordUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0812929F4F54F04B77ED2309 /* GlassyRecordUITests.swift */; };
+		E0C47269F504444BF5056BB2 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1BB6B82A0832DAF8928AD637 /* Metal.framework */; };
+		E61413F38B7F7A2935BA3120 /* AppLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6CFAB9ECC4C84242E481469 /* AppLauncher.swift */; };
+		E6708663D401F600EDA20DFE /* DemoBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D15FDCF74C0F0AF2CB183C8 /* DemoBrowserView.swift */; };
+		E9A045E2F5510509EF8565FE /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2C4C45C7A2DBE80E48490FF /* AVFoundation.framework */; };
+		F4F046E04238E26FA358BFC4 /* EditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B563952FF986F44428A582 /* EditorView.swift */; };
+		FAD3456328266F3426C3CF38 /* SimulatorFaceCamPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = A65D1DC8C2C77683BD61F0AE /* SimulatorFaceCamPreview.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		1436572B0F0ACB565F325702 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 18ECFB6550180C90D03B3E2D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3985885A057BF20FC5736A43;
+			remoteInfo = GlassyRecordBroadcastUpload;
+		};
+		26865D8C842124B0ADAE7111 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 18ECFB6550180C90D03B3E2D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 37A8FC07AE371F20BFEF09B3;
+			remoteInfo = GlassyRecord;
+		};
+		93E66790CAF7E6B274B8F104 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 18ECFB6550180C90D03B3E2D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 37A8FC07AE371F20BFEF09B3;
+			remoteInfo = GlassyRecord;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		3051D85105AF0BC097D8F806 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				714EC08C4443FC6D59DA72A0 /* GlassyRecordBroadcastUpload.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		01AB36E976CA117446430AE9 /* SampleHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleHandler.swift; sourceTree = "<group>"; };
+		03BBF58B5781554DB64879B3 /* RecordingNotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingNotificationService.swift; sourceTree = "<group>"; };
+		03D3B81FA1DBFB5C823D601D /* ScreenRecorderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenRecorderService.swift; sourceTree = "<group>"; };
+		046FA003957AEF0948F9CBF2 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		04A0A9EEC7EA9AF32E27636E /* GlassesOverlayServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassesOverlayServiceTests.swift; sourceTree = "<group>"; };
+		0812929F4F54F04B77ED2309 /* GlassyRecordUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassyRecordUITests.swift; sourceTree = "<group>"; };
+		10F7422C59BECD1F5285CC02 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		136DED63C26E570333DAAAD7 /* ExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportService.swift; sourceTree = "<group>"; };
+		18360C9BD9B7F23F2B96E2DB /* BackgroundBlurProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundBlurProcessor.swift; sourceTree = "<group>"; };
+		1B97C2A6D6C6A1A00A1B06E3 /* TouchIndicatorOverlayHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchIndicatorOverlayHost.swift; sourceTree = "<group>"; };
+		1BB6B82A0832DAF8928AD637 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
+		202C25F2E8C1B48EFA723877 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
+		23695972DE2E5EDCE9B21DDB /* RecordingControlPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingControlPanel.swift; sourceTree = "<group>"; };
+		2E5F5CE54715F372DBEA388D /* RecordingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingViewModel.swift; sourceTree = "<group>"; };
+		303819C5AD289B1209DB7571 /* ReplayKitCameraPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplayKitCameraPreviewView.swift; sourceTree = "<group>"; };
+		323B0B4914C6084357520A8D /* GlassyRecordTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = GlassyRecordTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		3317C6BCDF460865E2C5F868 /* BroadcastErrorMessages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BroadcastErrorMessages.swift; sourceTree = "<group>"; };
+		37D572355E9D38A5C362B3E9 /* AudioTrackMixer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioTrackMixer.swift; sourceTree = "<group>"; };
+		3A2FB0B7A7B583A351A3816C /* BroadcastVideoWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BroadcastVideoWriter.swift; sourceTree = "<group>"; };
+		3DB646A1B96F159EB2B344BD /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		4D15FDCF74C0F0AF2CB183C8 /* DemoBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoBrowserView.swift; sourceTree = "<group>"; };
+		53BA6576A22907866A43A0A3 /* CameraService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraService.swift; sourceTree = "<group>"; };
+		5564FCF8E23075E0146BA56D /* SystemBroadcastPickerRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemBroadcastPickerRepresentable.swift; sourceTree = "<group>"; };
+		57544E4236AD282F93B89845 /* PiPDisplayLayerHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiPDisplayLayerHost.swift; sourceTree = "<group>"; };
+		5C7DC9080B2FA08697B47D6B /* GlassyRecordApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassyRecordApp.swift; sourceTree = "<group>"; };
+		5DC4691AB15AD501C496BDC8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		640F4434AEAB0CB5CCFFDE9E /* PiPAudioKeepAlive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiPAudioKeepAlive.swift; sourceTree = "<group>"; };
+		645A5C64CFBFFB1BC767243F /* BroadcastRecordingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BroadcastRecordingService.swift; sourceTree = "<group>"; };
+		681BD2B173991E4C9D3ACC5E /* AppCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCoordinator.swift; sourceTree = "<group>"; };
+		69D40CD04597AF2379C79D97 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		6D4C5E04716960CA2770082E /* SimulatorSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimulatorSupport.swift; sourceTree = "<group>"; };
+		7315BE8BDACA80507B69D09B /* RecordingOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingOverlayView.swift; sourceTree = "<group>"; };
+		788F5BC4419037711452B4BA /* SettingsUserDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsUserDefaults.swift; sourceTree = "<group>"; };
+		7EA17FC413A53F98D9130E62 /* BroadcastConfig+App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BroadcastConfig+App.swift"; sourceTree = "<group>"; };
+		82973469374DF229D32297A3 /* PiPFrameScaler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiPFrameScaler.swift; sourceTree = "<group>"; };
+		83BBC7E1A8E90F732E110E82 /* PiPCameraManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiPCameraManager.swift; sourceTree = "<group>"; };
+		89251BDCED63D7E24AE0937E /* PlaceholderStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceholderStateView.swift; sourceTree = "<group>"; };
+		8B93FD21ADFA63673A34FA11 /* BroadcastExtensionLocator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BroadcastExtensionLocator.swift; sourceTree = "<group>"; };
+		8E6742E1AF10D86EEF0813B5 /* ReplayKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ReplayKit.framework; path = System/Library/Frameworks/ReplayKit.framework; sourceTree = SDKROOT; };
+		92CF581198F963727B0356F0 /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
+		94452E549370531E1C6B73B5 /* ARKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ARKit.framework; path = System/Library/Frameworks/ARKit.framework; sourceTree = SDKROOT; };
+		95CAEE938A4089FA85E73B90 /* PiPSampleBufferFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiPSampleBufferFactory.swift; sourceTree = "<group>"; };
+		97B72739C579B73E8636AB57 /* SettingsStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStoreTests.swift; sourceTree = "<group>"; };
+		9CBFEAB47FB443E1A3A55562 /* UsageTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageTracker.swift; sourceTree = "<group>"; };
+		9D6511CFDFE92E63F5CD0935 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		A0CA0295AE5AF1B40063E59F /* AppModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModels.swift; sourceTree = "<group>"; };
+		A57DCEC51703F28E367AB5AD /* GlassesFrameProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassesFrameProcessor.swift; sourceTree = "<group>"; };
+		A650576ED14DDB7FFA55F0A1 /* GlassyRecord.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GlassyRecord.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A65D1DC8C2C77683BD61F0AE /* SimulatorFaceCamPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimulatorFaceCamPreview.swift; sourceTree = "<group>"; };
+		A69D193818D2A8E88B3D459F /* UsageStatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageStatsView.swift; sourceTree = "<group>"; };
+		A6DA46E1E8402AB34783518A /* ActiveBroadcastController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveBroadcastController.swift; sourceTree = "<group>"; };
+		A800CB3AEC55BAFD8639AC14 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
+		AA5555C9D5798F58015CCF0F /* MockRecordingWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockRecordingWriter.swift; sourceTree = "<group>"; };
+		AAA585C2382ABFC53C259C81 /* AudioService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioService.swift; sourceTree = "<group>"; };
+		AAE4F0D9F48375B2EC6BFDD4 /* PiPPixelGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiPPixelGeometry.swift; sourceTree = "<group>"; };
+		ACBEC9967909386252E6D88A /* Vision.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Vision.framework; path = System/Library/Frameworks/Vision.framework; sourceTree = SDKROOT; };
+		AD9D76AC1B2F5CBFB80E0EC2 /* ARFaceCamPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ARFaceCamPreviewView.swift; sourceTree = "<group>"; };
+		AF168E2AB4E05873579A0657 /* SceneKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SceneKit.framework; path = System/Library/Frameworks/SceneKit.framework; sourceTree = SDKROOT; };
+		AF18DD590789D4F04902E55D /* PiPFramePipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiPFramePipeline.swift; sourceTree = "<group>"; };
+		B350EA4E988F1F8736FCF212 /* AppGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroup.swift; sourceTree = "<group>"; };
+		B57D952722AB5215A74401AF /* MockCameraFeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockCameraFeed.swift; sourceTree = "<group>"; };
+		B72ADBBE3EC29702D46B59C7 /* GlassyRecordBroadcastUpload.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = GlassyRecordBroadcastUpload.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		B8259450C32901A4FAF470D1 /* GlassyTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassyTheme.swift; sourceTree = "<group>"; };
+		C2B563952FF986F44428A582 /* EditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorView.swift; sourceTree = "<group>"; };
+		C2C4C45C7A2DBE80E48490FF /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		C9A325A96A1D480657BC0E9A /* L10n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = L10n.swift; sourceTree = "<group>"; };
+		CBED1809A878013EB9CCD62D /* GlassyRecordUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = GlassyRecordUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		CCA6AF08BFFBBCEFFE923B63 /* CaptureConnectionSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureConnectionSupport.swift; sourceTree = "<group>"; };
+		D2587041F22AEB1C4C7978BD /* GlassesOverlayService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassesOverlayService.swift; sourceTree = "<group>"; };
+		DD931DB28865D6F738F8926D /* GlassesSelectionCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassesSelectionCard.swift; sourceTree = "<group>"; };
+		E14261FC021668744BC15F85 /* GlassyRecord.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GlassyRecord.entitlements; sourceTree = "<group>"; };
+		E5347329ADA3E098E824D87F /* AppModelsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModelsTests.swift; sourceTree = "<group>"; };
+		E661A33377481E987A31764E /* PiPProcessedPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiPProcessedPreviewView.swift; sourceTree = "<group>"; };
+		EA57AF857F3C40BB1C26A3FE /* GlassyRecordBroadcastUpload.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GlassyRecordBroadcastUpload.entitlements; sourceTree = "<group>"; };
+		EF74A7FDF64760581864A65A /* BroadcastRecordingConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BroadcastRecordingConfig.swift; sourceTree = "<group>"; };
+		F6CFAB9ECC4C84242E481469 /* AppLauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLauncher.swift; sourceTree = "<group>"; };
+		F7A5B1C41A3A5188B70042F2 /* Photos.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Photos.framework; path = System/Library/Frameworks/Photos.framework; sourceTree = SDKROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		0B337FA5EFA22890872BD265 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D4190D5DDF8D3DAA2A9714E7 /* ReplayKit.framework in Frameworks */,
+				4AD5B780B30CDCE92A97986F /* AVFoundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BA1D0870CD7B1A4BECD50DE3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DACCDDBC2DC25F076B409422 /* ARKit.framework in Frameworks */,
+				E9A045E2F5510509EF8565FE /* AVFoundation.framework in Frameworks */,
+				BAAADC2C260F72452087C7DA /* ReplayKit.framework in Frameworks */,
+				E0C47269F504444BF5056BB2 /* Metal.framework in Frameworks */,
+				558AD8517D30483E3E042691 /* Vision.framework in Frameworks */,
+				55D9D63E3B20AC13F23ED05D /* SceneKit.framework in Frameworks */,
+				CCDA3C23047D566A3C800811 /* Photos.framework in Frameworks */,
+				0ADA546AFE8EEF5F23C6CA5E /* AVKit.framework in Frameworks */,
+				8B89EB906FDCC932B8CB1F19 /* WebKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		07BE5BEF8635CE48EFE8093A /* GlassyRecordUITests */ = {
+			isa = PBXGroup;
+			children = (
+				0812929F4F54F04B77ED2309 /* GlassyRecordUITests.swift */,
+			);
+			path = GlassyRecordUITests;
+			sourceTree = "<group>";
+		};
+		0A0913C3D4C72AC33F99DDF5 /* GlassyRecordTests */ = {
+			isa = PBXGroup;
+			children = (
+				E5347329ADA3E098E824D87F /* AppModelsTests.swift */,
+				04A0A9EEC7EA9AF32E27636E /* GlassesOverlayServiceTests.swift */,
+				97B72739C579B73E8636AB57 /* SettingsStoreTests.swift */,
+			);
+			path = GlassyRecordTests;
+			sourceTree = "<group>";
+		};
+		0DF75FEB5922A58CEF5FBBA7 /* GlassyRecordBroadcastUpload */ = {
+			isa = PBXGroup;
+			children = (
+				3A2FB0B7A7B583A351A3816C /* BroadcastVideoWriter.swift */,
+				EA57AF857F3C40BB1C26A3FE /* GlassyRecordBroadcastUpload.entitlements */,
+				5DC4691AB15AD501C496BDC8 /* Info.plist */,
+				01AB36E976CA117446430AE9 /* SampleHandler.swift */,
+			);
+			path = GlassyRecordBroadcastUpload;
+			sourceTree = "<group>";
+		};
+		1A63F189C6CAF4B2CC1EB2CF = {
+			isa = PBXGroup;
+			children = (
+				B690C6DFBB639B3FD558E6E7 /* GlassyRecord */,
+				0DF75FEB5922A58CEF5FBBA7 /* GlassyRecordBroadcastUpload */,
+				0A0913C3D4C72AC33F99DDF5 /* GlassyRecordTests */,
+				07BE5BEF8635CE48EFE8093A /* GlassyRecordUITests */,
+				BB8F78130F75F8E9E63C8C45 /* Shared */,
+				7EB487A563480BC254916437 /* Frameworks */,
+				AC40E15E1DD7646458C9E31C /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		4033E63D294D7404FC49FE88 /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				046FA003957AEF0948F9CBF2 /* HomeView.swift */,
+			);
+			path = Home;
+			sourceTree = "<group>";
+		};
+		44DDE749964E0FB368BF1E5E /* Theme */ = {
+			isa = PBXGroup;
+			children = (
+				B8259450C32901A4FAF470D1 /* GlassyTheme.swift */,
+			);
+			path = Theme;
+			sourceTree = "<group>";
+		};
+		4B7D22121B802D6DE53D1393 /* Editor */ = {
+			isa = PBXGroup;
+			children = (
+				C2B563952FF986F44428A582 /* EditorView.swift */,
+			);
+			path = Editor;
+			sourceTree = "<group>";
+		};
+		565B06C31482A564861052B0 /* Persistence */ = {
+			isa = PBXGroup;
+			children = (
+				788F5BC4419037711452B4BA /* SettingsUserDefaults.swift */,
+			);
+			path = Persistence;
+			sourceTree = "<group>";
+		};
+		5FE17E5A56BB1B39044F2772 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				681BD2B173991E4C9D3ACC5E /* AppCoordinator.swift */,
+				5C7DC9080B2FA08697B47D6B /* GlassyRecordApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		60D383DA815942C498BD8C26 /* Demo */ = {
+			isa = PBXGroup;
+			children = (
+				4D15FDCF74C0F0AF2CB183C8 /* DemoBrowserView.swift */,
+			);
+			path = Demo;
+			sourceTree = "<group>";
+		};
+		62F38D413AC24C4619531EC0 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				AAA585C2382ABFC53C259C81 /* AudioService.swift */,
+				37D572355E9D38A5C362B3E9 /* AudioTrackMixer.swift */,
+				18360C9BD9B7F23F2B96E2DB /* BackgroundBlurProcessor.swift */,
+				645A5C64CFBFFB1BC767243F /* BroadcastRecordingService.swift */,
+				53BA6576A22907866A43A0A3 /* CameraService.swift */,
+				136DED63C26E570333DAAAD7 /* ExportService.swift */,
+				A57DCEC51703F28E367AB5AD /* GlassesFrameProcessor.swift */,
+				D2587041F22AEB1C4C7978BD /* GlassesOverlayService.swift */,
+				B57D952722AB5215A74401AF /* MockCameraFeed.swift */,
+				AA5555C9D5798F58015CCF0F /* MockRecordingWriter.swift */,
+				83BBC7E1A8E90F732E110E82 /* PiPCameraManager.swift */,
+				03BBF58B5781554DB64879B3 /* RecordingNotificationService.swift */,
+				03D3B81FA1DBFB5C823D601D /* ScreenRecorderService.swift */,
+				9CBFEAB47FB443E1A3A55562 /* UsageTracker.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		7EB487A563480BC254916437 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				94452E549370531E1C6B73B5 /* ARKit.framework */,
+				C2C4C45C7A2DBE80E48490FF /* AVFoundation.framework */,
+				92CF581198F963727B0356F0 /* AVKit.framework */,
+				1BB6B82A0832DAF8928AD637 /* Metal.framework */,
+				F7A5B1C41A3A5188B70042F2 /* Photos.framework */,
+				8E6742E1AF10D86EEF0813B5 /* ReplayKit.framework */,
+				AF168E2AB4E05873579A0657 /* SceneKit.framework */,
+				ACBEC9967909386252E6D88A /* Vision.framework */,
+				202C25F2E8C1B48EFA723877 /* WebKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		848902E18709D2EA9080BD21 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				10F7422C59BECD1F5285CC02 /* Assets.xcassets */,
+				E14261FC021668744BC15F85 /* GlassyRecord.entitlements */,
+				69D40CD04597AF2379C79D97 /* Info.plist */,
+				A800CB3AEC55BAFD8639AC14 /* InfoPlist.xcstrings */,
+				3DB646A1B96F159EB2B344BD /* Localizable.xcstrings */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		875977307CE6DCA9E2D15A15 /* Recording */ = {
+			isa = PBXGroup;
+			children = (
+				7315BE8BDACA80507B69D09B /* RecordingOverlayView.swift */,
+				2E5F5CE54715F372DBEA388D /* RecordingViewModel.swift */,
+			);
+			path = Recording;
+			sourceTree = "<group>";
+		};
+		8A4FB77752545C805A173F8E /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				F6CFAB9ECC4C84242E481469 /* AppLauncher.swift */,
+				7EA17FC413A53F98D9130E62 /* BroadcastConfig+App.swift */,
+				3317C6BCDF460865E2C5F868 /* BroadcastErrorMessages.swift */,
+				CCA6AF08BFFBBCEFFE923B63 /* CaptureConnectionSupport.swift */,
+				C9A325A96A1D480657BC0E9A /* L10n.swift */,
+				640F4434AEAB0CB5CCFFDE9E /* PiPAudioKeepAlive.swift */,
+				57544E4236AD282F93B89845 /* PiPDisplayLayerHost.swift */,
+				AF18DD590789D4F04902E55D /* PiPFramePipeline.swift */,
+				82973469374DF229D32297A3 /* PiPFrameScaler.swift */,
+				AAE4F0D9F48375B2EC6BFDD4 /* PiPPixelGeometry.swift */,
+				95CAEE938A4089FA85E73B90 /* PiPSampleBufferFactory.swift */,
+				6D4C5E04716960CA2770082E /* SimulatorSupport.swift */,
+				1B97C2A6D6C6A1A00A1B06E3 /* TouchIndicatorOverlayHost.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		A22CC1BBD0E7095105107158 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				60D383DA815942C498BD8C26 /* Demo */,
+				4B7D22121B802D6DE53D1393 /* Editor */,
+				4033E63D294D7404FC49FE88 /* Home */,
+				875977307CE6DCA9E2D15A15 /* Recording */,
+				E2A52FD04AAB4775020D7D57 /* Settings */,
+				D1D22814F0F39004E4436E42 /* Usage */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		A64FE8C26C7C259A59BACCB4 /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				D27E84005E8A47742E4CBF5B /* Components */,
+				44DDE749964E0FB368BF1E5E /* Theme */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		A8D590F77B1D4340550F212A /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				A0CA0295AE5AF1B40063E59F /* AppModels.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		AC40E15E1DD7646458C9E31C /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A650576ED14DDB7FFA55F0A1 /* GlassyRecord.app */,
+				B72ADBBE3EC29702D46B59C7 /* GlassyRecordBroadcastUpload.appex */,
+				323B0B4914C6084357520A8D /* GlassyRecordTests.xctest */,
+				CBED1809A878013EB9CCD62D /* GlassyRecordUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		B690C6DFBB639B3FD558E6E7 /* GlassyRecord */ = {
+			isa = PBXGroup;
+			children = (
+				5FE17E5A56BB1B39044F2772 /* App */,
+				F86542D88CBFBCB9E8700030 /* Core */,
+				A22CC1BBD0E7095105107158 /* Features */,
+				848902E18709D2EA9080BD21 /* Resources */,
+				62F38D413AC24C4619531EC0 /* Services */,
+				A64FE8C26C7C259A59BACCB4 /* UI */,
+			);
+			path = GlassyRecord;
+			sourceTree = "<group>";
+		};
+		BB8F78130F75F8E9E63C8C45 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				A6DA46E1E8402AB34783518A /* ActiveBroadcastController.swift */,
+				B350EA4E988F1F8736FCF212 /* AppGroup.swift */,
+				8B93FD21ADFA63673A34FA11 /* BroadcastExtensionLocator.swift */,
+				EF74A7FDF64760581864A65A /* BroadcastRecordingConfig.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		D1D22814F0F39004E4436E42 /* Usage */ = {
+			isa = PBXGroup;
+			children = (
+				A69D193818D2A8E88B3D459F /* UsageStatsView.swift */,
+			);
+			path = Usage;
+			sourceTree = "<group>";
+		};
+		D27E84005E8A47742E4CBF5B /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				AD9D76AC1B2F5CBFB80E0EC2 /* ARFaceCamPreviewView.swift */,
+				DD931DB28865D6F738F8926D /* GlassesSelectionCard.swift */,
+				E661A33377481E987A31764E /* PiPProcessedPreviewView.swift */,
+				89251BDCED63D7E24AE0937E /* PlaceholderStateView.swift */,
+				23695972DE2E5EDCE9B21DDB /* RecordingControlPanel.swift */,
+				303819C5AD289B1209DB7571 /* ReplayKitCameraPreviewView.swift */,
+				A65D1DC8C2C77683BD61F0AE /* SimulatorFaceCamPreview.swift */,
+				5564FCF8E23075E0146BA56D /* SystemBroadcastPickerRepresentable.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		E2A52FD04AAB4775020D7D57 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				9D6511CFDFE92E63F5CD0935 /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		F86542D88CBFBCB9E8700030 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				A8D590F77B1D4340550F212A /* Models */,
+				565B06C31482A564861052B0 /* Persistence */,
+				8A4FB77752545C805A173F8E /* Utilities */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		37A8FC07AE371F20BFEF09B3 /* GlassyRecord */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 402FFC880F3EAA0C42FE7387 /* Build configuration list for PBXNativeTarget "GlassyRecord" */;
+			buildPhases = (
+				C70DDCA4F3DE4D6837CBA7EF /* Sources */,
+				A182FACA3AD0A4AD8F41BC18 /* Resources */,
+				BA1D0870CD7B1A4BECD50DE3 /* Frameworks */,
+				3051D85105AF0BC097D8F806 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				43C168E6AAE7DF27998C99F9 /* PBXTargetDependency */,
+			);
+			name = GlassyRecord;
+			packageProductDependencies = (
+			);
+			productName = GlassyRecord;
+			productReference = A650576ED14DDB7FFA55F0A1 /* GlassyRecord.app */;
+			productType = "com.apple.product-type.application";
+		};
+		3985885A057BF20FC5736A43 /* GlassyRecordBroadcastUpload */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2478CF23B9B7CC3755A9C1AD /* Build configuration list for PBXNativeTarget "GlassyRecordBroadcastUpload" */;
+			buildPhases = (
+				B325CD52BB65BE0AC35FE1FE /* Sources */,
+				0B337FA5EFA22890872BD265 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = GlassyRecordBroadcastUpload;
+			packageProductDependencies = (
+			);
+			productName = GlassyRecordBroadcastUpload;
+			productReference = B72ADBBE3EC29702D46B59C7 /* GlassyRecordBroadcastUpload.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		9C12B5F96814C441AB0A409A /* GlassyRecordUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8E49C3000D707FF18DF7E31C /* Build configuration list for PBXNativeTarget "GlassyRecordUITests" */;
+			buildPhases = (
+				C51ACC58A3931E67AF1D90D9 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				6B8E1BB712919FA8674F026F /* PBXTargetDependency */,
+			);
+			name = GlassyRecordUITests;
+			packageProductDependencies = (
+			);
+			productName = GlassyRecordUITests;
+			productReference = CBED1809A878013EB9CCD62D /* GlassyRecordUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		F723586E2B761B9A92BE0012 /* GlassyRecordTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 29D5B12779085D22000A20C4 /* Build configuration list for PBXNativeTarget "GlassyRecordTests" */;
+			buildPhases = (
+				2B1C416F75E50517DD8BD37F /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				02DDE1CDA1963130951B522E /* PBXTargetDependency */,
+			);
+			name = GlassyRecordTests;
+			packageProductDependencies = (
+			);
+			productName = GlassyRecordTests;
+			productReference = 323B0B4914C6084357520A8D /* GlassyRecordTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		18ECFB6550180C90D03B3E2D /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 2600;
+				TargetAttributes = {
+					37A8FC07AE371F20BFEF09B3 = {
+						DevelopmentTeam = PRPL734V4V;
+						ProvisioningStyle = Automatic;
+						SystemCapabilities = "[\"com.apple.ApplicationGroups.iOS\": [\"enabled\": 1]]";
+					};
+					3985885A057BF20FC5736A43 = {
+						DevelopmentTeam = PRPL734V4V;
+						ProvisioningStyle = Automatic;
+						SystemCapabilities = "[\"com.apple.ApplicationGroups.iOS\": [\"enabled\": 1]]";
+					};
+					9C12B5F96814C441AB0A409A = {
+						DevelopmentTeam = PRPL734V4V;
+						ProvisioningStyle = Automatic;
+						TestTargetID = 37A8FC07AE371F20BFEF09B3;
+					};
+					F723586E2B761B9A92BE0012 = {
+						DevelopmentTeam = PRPL734V4V;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = FE551AAC788ED85266749BAB /* Build configuration list for PBXProject "GlassyRecord" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+				ru,
+			);
+			mainGroup = 1A63F189C6CAF4B2CC1EB2CF;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = AC40E15E1DD7646458C9E31C /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				37A8FC07AE371F20BFEF09B3 /* GlassyRecord */,
+				3985885A057BF20FC5736A43 /* GlassyRecordBroadcastUpload */,
+				F723586E2B761B9A92BE0012 /* GlassyRecordTests */,
+				9C12B5F96814C441AB0A409A /* GlassyRecordUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A182FACA3AD0A4AD8F41BC18 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1E43E0C047FC26B43EB04DB2 /* Assets.xcassets in Resources */,
+				4779610215494055C0587174 /* InfoPlist.xcstrings in Resources */,
+				4510E82F3F9D84DF8645E5B8 /* Localizable.xcstrings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		2B1C416F75E50517DD8BD37F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5D0C9B79647879C065790A04 /* AppModelsTests.swift in Sources */,
+				8A0E8D05AF3DB0857006F11C /* GlassesOverlayServiceTests.swift in Sources */,
+				CEE9DB30A61A3016CC94BE42 /* SettingsStoreTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B325CD52BB65BE0AC35FE1FE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				038A320F00A71F49427D2D66 /* ActiveBroadcastController.swift in Sources */,
+				4357C3A7F91ED4D68142579A /* AppGroup.swift in Sources */,
+				595C1A23A8CD51C685479E10 /* BroadcastExtensionLocator.swift in Sources */,
+				35AF0CD47BDC5F0663E7D6A0 /* BroadcastRecordingConfig.swift in Sources */,
+				B9AAF379A426D24BE56FF0A4 /* BroadcastVideoWriter.swift in Sources */,
+				34805ED2BE1E5C9B848F369D /* SampleHandler.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C51ACC58A3931E67AF1D90D9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DE17AFB9801217F3C3FB2A3E /* GlassyRecordUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C70DDCA4F3DE4D6837CBA7EF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				22603A544E0021BC509516B0 /* ARFaceCamPreviewView.swift in Sources */,
+				D676826707FB3F146A310DA3 /* ActiveBroadcastController.swift in Sources */,
+				74288262944F6557BCDEBADC /* AppCoordinator.swift in Sources */,
+				C16F343A31538853020AE170 /* AppGroup.swift in Sources */,
+				E61413F38B7F7A2935BA3120 /* AppLauncher.swift in Sources */,
+				D597494C98459C585D81FC8E /* AppModels.swift in Sources */,
+				C469B0AD12D289D82E530B3B /* AudioService.swift in Sources */,
+				620806C0A52E4789FD1C92A8 /* AudioTrackMixer.swift in Sources */,
+				A5C48408D4D8D4722B9796C4 /* BackgroundBlurProcessor.swift in Sources */,
+				76C1A5C13D904DE5590E6CEE /* BroadcastConfig+App.swift in Sources */,
+				5E003757DCFF8E861E128D84 /* BroadcastErrorMessages.swift in Sources */,
+				62E6500C3F2CA06E3D5DC4F8 /* BroadcastExtensionLocator.swift in Sources */,
+				3BE479E5E2B812B0C0A78614 /* BroadcastRecordingConfig.swift in Sources */,
+				44B23E238EEA8A5AD27A177B /* BroadcastRecordingService.swift in Sources */,
+				0D67B172E78543DC9FEA1D24 /* CameraService.swift in Sources */,
+				57B3AF601EB62B67596BBE29 /* CaptureConnectionSupport.swift in Sources */,
+				E6708663D401F600EDA20DFE /* DemoBrowserView.swift in Sources */,
+				F4F046E04238E26FA358BFC4 /* EditorView.swift in Sources */,
+				8DBD22E6F8B1F5ED333A2709 /* ExportService.swift in Sources */,
+				3F1B646996230CBA772472F9 /* GlassesFrameProcessor.swift in Sources */,
+				D77E825C895918C408BD8A7B /* GlassesOverlayService.swift in Sources */,
+				738CDE5196C1D6783E626010 /* GlassesSelectionCard.swift in Sources */,
+				A9376D3D2E820D7F95101C5E /* GlassyRecordApp.swift in Sources */,
+				CB18F6C058AE928410DB0273 /* GlassyTheme.swift in Sources */,
+				BCC8B874B37FEFB62E75FA3D /* HomeView.swift in Sources */,
+				7BCA2127116F15E129EF08CA /* L10n.swift in Sources */,
+				1E58D8C9A6443E11EA39CCB9 /* MockCameraFeed.swift in Sources */,
+				5359F5B389A1332D0DECB1EA /* MockRecordingWriter.swift in Sources */,
+				3670D17B0D8184EC3021DAA0 /* PiPAudioKeepAlive.swift in Sources */,
+				AB295386626C7B0FA48F85C2 /* PiPCameraManager.swift in Sources */,
+				707D0450D111A829287557FD /* PiPDisplayLayerHost.swift in Sources */,
+				ADCE2364A17E0DC899B85737 /* PiPFramePipeline.swift in Sources */,
+				C56B3C4AEE230A30F2C0CBAE /* PiPFrameScaler.swift in Sources */,
+				4DFBB790FDBE2356C7378BC0 /* PiPPixelGeometry.swift in Sources */,
+				1AD7A76FAAC98D9929D2A212 /* PiPProcessedPreviewView.swift in Sources */,
+				98124590B18FC77166BA7E80 /* PiPSampleBufferFactory.swift in Sources */,
+				30E649262D2DA20FF2FD891B /* PlaceholderStateView.swift in Sources */,
+				636E2390D54C27E8C3355362 /* RecordingControlPanel.swift in Sources */,
+				C29718E0A5D9BC39255F2B18 /* RecordingNotificationService.swift in Sources */,
+				86B610C04FA5897DC545A47C /* RecordingOverlayView.swift in Sources */,
+				30FD6BF9769A32EE252DF9DC /* RecordingViewModel.swift in Sources */,
+				3A66F31496882176DB98681C /* ReplayKitCameraPreviewView.swift in Sources */,
+				3DB3F13B72EC285406F59D1D /* ScreenRecorderService.swift in Sources */,
+				7FECA9844022DF40E346A28C /* SettingsUserDefaults.swift in Sources */,
+				92BC7AAFE03BAFC2C74D5613 /* SettingsView.swift in Sources */,
+				FAD3456328266F3426C3CF38 /* SimulatorFaceCamPreview.swift in Sources */,
+				255E767BF14C133F98A2AB03 /* SimulatorSupport.swift in Sources */,
+				D4BD1B6D6B1BCD7BAAEE75AD /* SystemBroadcastPickerRepresentable.swift in Sources */,
+				88BFEB187477336330E851E2 /* TouchIndicatorOverlayHost.swift in Sources */,
+				078490335D8CFF74D54B88B5 /* UsageStatsView.swift in Sources */,
+				D5AE82CA977DC096865A82E9 /* UsageTracker.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		02DDE1CDA1963130951B522E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 37A8FC07AE371F20BFEF09B3 /* GlassyRecord */;
+			targetProxy = 26865D8C842124B0ADAE7111 /* PBXContainerItemProxy */;
+		};
+		43C168E6AAE7DF27998C99F9 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 3985885A057BF20FC5736A43 /* GlassyRecordBroadcastUpload */;
+			targetProxy = 1436572B0F0ACB565F325702 /* PBXContainerItemProxy */;
+		};
+		6B8E1BB712919FA8674F026F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 37A8FC07AE371F20BFEF09B3 /* GlassyRecord */;
+			targetProxy = 93E66790CAF7E6B274B8F104 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		042F4F51F0138612E2A5C739 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.azumbo.glassyrecord.app.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/GlassyRecord.app/GlassyRecord";
+			};
+			name = Debug;
+		};
+		165DCB23B8F10F0E55934473 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.azumbo.glassyrecord.app.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/GlassyRecord.app/GlassyRecord";
+			};
+			name = Release;
+		};
+		45A4F9E846B318D670A3C837 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.azumbo.glassyrecord.app.uitests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = GlassyRecord;
+			};
+			name = Debug;
+		};
+		5A9B7609E854E2BF09F07CA0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = GlassyRecord/Resources/GlassyRecord.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = GlassyRecord/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.azumbo.glassyrecord.app;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		6E85AC424EA188A12B2863E7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = GlassyRecordBroadcastUpload/GlassyRecordBroadcastUpload.entitlements;
+				INFOPLIST_FILE = GlassyRecordBroadcastUpload/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.azumbo.glassyrecord.app.broadcast;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		73B00F914B3446C9247B01EC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = GlassyRecord/Resources/GlassyRecord.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = GlassyRecord/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.azumbo.glassyrecord.app;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		7EE6DA66AC33F2F7740D2682 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = PRPL734V4V;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		817E49DE7B976B20217E644F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = GlassyRecordBroadcastUpload/GlassyRecordBroadcastUpload.entitlements;
+				INFOPLIST_FILE = GlassyRecordBroadcastUpload/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.azumbo.glassyrecord.app.broadcast;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		D76787295B9A8ED4E955737E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.azumbo.glassyrecord.app.uitests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = GlassyRecord;
+			};
+			name = Release;
+		};
+		DE530BDAA682C9A9056896B6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = PRPL734V4V;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		2478CF23B9B7CC3755A9C1AD /* Build configuration list for PBXNativeTarget "GlassyRecordBroadcastUpload" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				817E49DE7B976B20217E644F /* Debug */,
+				6E85AC424EA188A12B2863E7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		29D5B12779085D22000A20C4 /* Build configuration list for PBXNativeTarget "GlassyRecordTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				042F4F51F0138612E2A5C739 /* Debug */,
+				165DCB23B8F10F0E55934473 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		402FFC880F3EAA0C42FE7387 /* Build configuration list for PBXNativeTarget "GlassyRecord" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5A9B7609E854E2BF09F07CA0 /* Debug */,
+				73B00F914B3446C9247B01EC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		8E49C3000D707FF18DF7E31C /* Build configuration list for PBXNativeTarget "GlassyRecordUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				45A4F9E846B318D670A3C837 /* Debug */,
+				D76787295B9A8ED4E955737E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		FE551AAC788ED85266749BAB /* Build configuration list for PBXProject "GlassyRecord" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DE530BDAA682C9A9056896B6 /* Debug */,
+				7EE6DA66AC33F2F7740D2682 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 18ECFB6550180C90D03B3E2D /* Project object */;
+}

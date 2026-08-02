@@ -1,0 +1,124 @@
+name: GlassyRecord
+options:
+  bundleIdPrefix: com.azumbo.glassyrecord
+  deploymentTarget:
+    iOS: "16.0"
+  xcodeVersion: "26.0"
+  createIntermediateGroups: true
+  knownRegions:
+    - en
+    - Base
+    - ru
+  developmentLanguage: en
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    DEVELOPMENT_TEAM: PRPL734V4V
+    CODE_SIGN_STYLE: Automatic
+    TARGETED_DEVICE_FAMILY: "1,2"
+    SUPPORTS_MACCATALYST: false
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    STRING_CATALOG_GENERATE_SYMBOLS: YES
+    ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS: NO
+targets:
+  GlassyRecord:
+    type: application
+    platform: iOS
+    sources:
+      - path: GlassyRecord
+        excludes:
+          - "**/*.md"
+          - "Core/Persistence/PersistenceController.swift"
+      - path: Shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.azumbo.glassyrecord.app
+        INFOPLIST_FILE: GlassyRecord/Resources/Info.plist
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        ENABLE_PREVIEWS: YES
+    dependencies:
+      - target: GlassyRecordBroadcastUpload
+      - sdk: ARKit.framework
+      - sdk: AVFoundation.framework
+      - sdk: ReplayKit.framework
+      - sdk: Metal.framework
+      - sdk: Vision.framework
+      - sdk: SceneKit.framework
+      - sdk: Photos.framework
+      - sdk: AVKit.framework
+      - sdk: WebKit.framework
+    attributes:
+      ProvisioningStyle: Automatic
+      SystemCapabilities:
+        com.apple.ApplicationGroups.iOS:
+          enabled: 1
+    entitlements:
+      path: GlassyRecord/Resources/GlassyRecord.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.azumbo.glassyrecord.shared
+        com.apple.developer.avfoundation.multitasking-camera-access: true
+  GlassyRecordBroadcastUpload:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: GlassyRecordBroadcastUpload
+      - path: Shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.azumbo.glassyrecord.app.broadcast
+        INFOPLIST_FILE: GlassyRecordBroadcastUpload/Info.plist
+    dependencies:
+      - sdk: ReplayKit.framework
+      - sdk: AVFoundation.framework
+    attributes:
+      ProvisioningStyle: Automatic
+      SystemCapabilities:
+        com.apple.ApplicationGroups.iOS:
+          enabled: 1
+    entitlements:
+      path: GlassyRecordBroadcastUpload/GlassyRecordBroadcastUpload.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.azumbo.glassyrecord.shared
+  GlassyRecordTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - GlassyRecordTests
+    dependencies:
+      - target: GlassyRecord
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.azumbo.glassyrecord.app.tests
+        GENERATE_INFOPLIST_FILE: YES
+  GlassyRecordUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - GlassyRecordUITests
+    dependencies:
+      - target: GlassyRecord
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.azumbo.glassyrecord.app.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: GlassyRecord
+schemes:
+  GlassyRecord:
+    build:
+      targets:
+        GlassyRecord: all
+        GlassyRecordBroadcastUpload: all
+    run:
+      environmentVariables:
+        OS_ACTIVITY_MODE: disable
+    test:
+      targets:
+        - GlassyRecordTests
+        - GlassyRecordUITests
+      environmentVariables:
+        OS_ACTIVITY_MODE: disable
