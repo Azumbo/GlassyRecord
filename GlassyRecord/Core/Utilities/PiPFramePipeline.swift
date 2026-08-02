@@ -14,6 +14,8 @@ final class PiPFramePipeline: @unchecked Sendable {
     private var targetRenderSize: CGSize = PiPDisplayLayerHost.baseRenderSize
     private var glassesEnabled = false
     private weak var glassesService: GlassesOverlayService?
+    private let blurProcessor = BackgroundBlurProcessor()
+    private var backgroundBlurLevel: BackgroundBlurLevel = .off
     private var frameIndex: Int64 = 0
     private(set) var hasDeliveredFrame = false
     var onFirstFrame: (() -> Void)?
@@ -32,12 +34,24 @@ final class PiPFramePipeline: @unchecked Sendable {
     func configure(
         contentScale: CGFloat,
         glassesEnabled: Bool,
-        glassesService: GlassesOverlayService?
+        glassesService: GlassesOverlayService?,
+        backgroundBlurLevel: BackgroundBlurLevel? = nil
     ) {
         lock.withLock {
             self.contentScale = contentScale
             self.glassesEnabled = glassesEnabled
             self.glassesService = glassesService
+            if let backgroundBlurLevel {
+                self.backgroundBlurLevel = backgroundBlurLevel
+                blurProcessor.setLevel(backgroundBlurLevel)
+            }
+        }
+    }
+
+    func setBackgroundBlurLevel(_ level: BackgroundBlurLevel) {
+        lock.withLock {
+            backgroundBlurLevel = level
+            blurProcessor.setLevel(level)
         }
     }
 
@@ -71,6 +85,7 @@ final class PiPFramePipeline: @unchecked Sendable {
                 targetRenderSize: targetRenderSize,
                 glassesEnabled: glassesEnabled,
                 glassesService: glassesService,
+                blurLevel: backgroundBlurLevel,
                 displayLayer: displayLayer,
                 previewDisplayLayer: previewDisplayLayer
             )
@@ -84,6 +99,11 @@ final class PiPFramePipeline: @unchecked Sendable {
             guard self.lock.withLock({ self.isStreaming }) else { return }
 
             var finalBuffer = pixelBuffer
+
+            // blur → glasses → scale: очки остаются чёткими на лице.
+            if snapshot.blurLevel != .off {
+                finalBuffer = self.blurProcessor.processFrame(finalBuffer)
+            }
 
             if snapshot.glassesEnabled, let service = snapshot.glassesService {
                 finalBuffer = service.processFrame(finalBuffer)

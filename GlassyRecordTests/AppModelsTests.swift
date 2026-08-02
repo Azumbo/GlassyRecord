@@ -21,6 +21,8 @@ final class AppModelsTests: XCTestCase {
         XCTAssertEqual(settings.pipAspectRatio.startSize, CGSize(width: 68, height: 120))
         XCTAssertEqual(PiPAspectRatio.landscape16x9.startSize, CGSize(width: 120, height: 68))
         XCTAssertEqual(settings.lensTransparency, 0.85, accuracy: 0.001)
+        XCTAssertEqual(settings.backgroundBlurLevel, .off)
+        XCTAssertEqual(BackgroundBlurLevel.strong.blurRadius, 22)
     }
 
     func testRecordingSessionCodable() throws {

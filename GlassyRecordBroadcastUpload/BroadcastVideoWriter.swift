@@ -23,6 +23,12 @@ final class BroadcastVideoWriter: @unchecked Sendable {
     private let videoWidth: Int
     private let videoHeight: Int
     private var lastErrorMessage: String?
+    private(set) var micBuffersWritten = 0
+    private(set) var appBuffersWritten = 0
+
+    var canAcceptAudio: Bool {
+        writeQueue.sync { sessionStarted && !isFinishing && assetWriter?.status == .writing }
+    }
 
     init(
         outputURL: URL,
@@ -198,7 +204,9 @@ final class BroadcastVideoWriter: @unchecked Sendable {
                     guard config.systemAudioEnabled,
                           let systemAudioInput,
                           systemAudioInput.isReadyForMoreMediaData else { return }
-                    if !systemAudioInput.append(sampleBuffer) {
+                    if systemAudioInput.append(sampleBuffer) {
+                        appBuffersWritten += 1
+                    } else {
                         lastErrorMessage = assetWriter.error?.localizedDescription
                             ?? "Не удалось записать звук приложения"
                     }
@@ -206,7 +214,9 @@ final class BroadcastVideoWriter: @unchecked Sendable {
                     guard config.microphoneEnabled,
                           let microphoneAudioInput,
                           microphoneAudioInput.isReadyForMoreMediaData else { return }
-                    if !microphoneAudioInput.append(sampleBuffer) {
+                    if microphoneAudioInput.append(sampleBuffer) {
+                        micBuffersWritten += 1
+                    } else {
                         lastErrorMessage = assetWriter.error?.localizedDescription
                             ?? "Не удалось записать микрофон"
                     }
@@ -224,6 +234,8 @@ final class BroadcastVideoWriter: @unchecked Sendable {
         let errorMessage: String?
         let wroteFrames: Bool
         let fileSize: Int
+        let micBuffers: Int
+        let appBuffers: Int
     }
 
     func finishSync() -> FinishResult {
@@ -271,6 +283,9 @@ final class BroadcastVideoWriter: @unchecked Sendable {
         let status = prepare.writer?.status
         let writerError = prepare.writer?.error?.localizedDescription
 
+        let micCount = writeQueue.sync { micBuffersWritten }
+        let appCount = writeQueue.sync { appBuffersWritten }
+
         if prepare.wroteFrames, status == .completed, exists, size > 0 {
             return FinishResult(
                 success: true,
@@ -278,7 +293,9 @@ final class BroadcastVideoWriter: @unchecked Sendable {
                 outputURL: outputURL,
                 errorMessage: nil,
                 wroteFrames: true,
-                fileSize: size
+                fileSize: size,
+                micBuffers: micCount,
+                appBuffers: appCount
             )
         }
 
@@ -295,7 +312,9 @@ final class BroadcastVideoWriter: @unchecked Sendable {
             outputURL: outputURL,
             errorMessage: message,
             wroteFrames: prepare.wroteFrames,
-            fileSize: size
+            fileSize: size,
+            micBuffers: micCount,
+            appBuffers: appCount
         )
     }
 

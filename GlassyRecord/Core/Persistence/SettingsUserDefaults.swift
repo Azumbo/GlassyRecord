@@ -22,6 +22,9 @@ enum SettingsUserDefaults {
                 object["faceCamNormalizedX"] = Double(corner.normalizedPosition.x)
                 object["faceCamNormalizedY"] = Double(corner.normalizedPosition.y)
             }
+            if object["backgroundBlurLevel"] == nil {
+                object["backgroundBlurLevel"] = BackgroundBlurLevel.off.rawValue
+            }
             if let migrated = try? JSONSerialization.data(withJSONObject: object),
                var settings = try? JSONDecoder().decode(AppSettings.self, from: migrated) {
                 settings.applyPipFaceSizePreset(settings.pipFaceSizePreset)

@@ -56,6 +56,7 @@ final class PiPCameraManager: NSObject, ObservableObject {
     private let audioKeepAlive = PiPAudioKeepAlive()
     /// Пока идёт broadcast, keep-alive не держит AVAudioSession — иначе ReplayKit не получает mic.
     private var suppressAudioKeepAliveForBroadcast = false
+    private var backgroundBlurLevel: BackgroundBlurLevel = .off
 
     var previewSession: AVCaptureSession? { captureSession }
     var previewDevice: AVCaptureDevice? { captureDevice }
@@ -92,7 +93,8 @@ final class PiPCameraManager: NSObject, ObservableObject {
         framePipeline.configure(
             contentScale: contentScale,
             glassesEnabled: glassesEnabled,
-            glassesService: glassesEnabled ? glassesService : nil
+            glassesService: glassesEnabled ? glassesService : nil,
+            backgroundBlurLevel: backgroundBlurLevel
         )
 
         if restartPiPIfActive {
@@ -116,13 +118,19 @@ final class PiPCameraManager: NSObject, ObservableObject {
         framePipeline.configure(
             contentScale: contentScale,
             glassesEnabled: glassesEnabled,
-            glassesService: glassesEnabled ? glassesService : nil
+            glassesService: glassesEnabled ? glassesService : nil,
+            backgroundBlurLevel: backgroundBlurLevel
         )
         if enabled {
             glassesService?.startTrackingForPiP()
         } else {
             glassesService?.stopTracking()
         }
+    }
+
+    func setBackgroundBlurLevel(_ level: BackgroundBlurLevel) {
+        backgroundBlurLevel = level
+        framePipeline.setBackgroundBlurLevel(level)
     }
 
     func setContentScale(_ scale: CGFloat, invalidatePiP: Bool = true) {
@@ -176,7 +184,8 @@ final class PiPCameraManager: NSObject, ObservableObject {
         framePipeline.configure(
             contentScale: self.contentScale,
             glassesEnabled: glassesEnabled,
-            glassesService: glassesEnabled ? glassesService : nil
+            glassesService: glassesEnabled ? glassesService : nil,
+            backgroundBlurLevel: backgroundBlurLevel
         )
         applyPresetRenderSizes(resetWindowToMinimum: true)
         isPrepared = true
@@ -275,6 +284,8 @@ final class PiPCameraManager: NSObject, ObservableObject {
     func releaseAudioSessionForBroadcast() {
         suppressAudioKeepAliveForBroadcast = true
         audioKeepAlive.stop()
+        // Всегда снимаем active session: configureAudioSession мог активировать её без keep-alive.
+        try? AVAudioSession.sharedInstance().setActive(false, options: [.notifyOthersOnDeactivation])
     }
 
     func restoreAudioSessionAfterBroadcast() {
@@ -384,7 +395,7 @@ final class PiPCameraManager: NSObject, ObservableObject {
             mode: .moviePlayback,
             options: [.mixWithOthers]
         )
-        try? session.setActive(true)
+        // Не активируем здесь: иначе ReplayKit не получает mic до keep-alive / release.
     }
 
     private func configurePictureInPicture(forceRecreate: Bool = false) {

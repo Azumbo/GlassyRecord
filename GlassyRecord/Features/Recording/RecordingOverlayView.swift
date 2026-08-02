@@ -53,7 +53,7 @@ struct RecordingOverlayContent: View {
                 broadcastSetupOverlay
             }
 
-            if showPiPInlinePreview {
+            if showPiPFaceCamChrome {
                 pipInlineOverlay
                     .zIndex(10)
             }
@@ -125,8 +125,13 @@ struct RecordingOverlayContent: View {
             }
     }
 
-    private var showPiPInlinePreview: Bool {
+    private var showPiPFaceCamChrome: Bool {
         viewModel.usesBroadcastMode && (viewModel.isAwaitingBroadcast || viewModel.isRecording)
+    }
+
+    /// Дублирующий preview скрываем, когда уже виден системный PiP.
+    private var showInlinePiPPreview: Bool {
+        !viewModel.isPiPActive
     }
 
     private var showFaceCamPlacement: Bool {
@@ -158,34 +163,36 @@ struct RecordingOverlayContent: View {
 
     private var pipInlineOverlay: some View {
         GeometryReader { geo in
-            let stackWidth: CGFloat = 200
-            let previewHeight = pipPreviewSize.height
-            let controlsHeight: CGFloat = 110
-            let stackHeight = previewHeight + 8 + controlsHeight
+            let stackWidth: CGFloat = 220
+            let previewHeight = showInlinePiPPreview ? pipPreviewSize.height : 0
+            let controlsHeight: CGFloat = 220
+            let stackHeight = previewHeight + (showInlinePiPPreview ? 8 : 0) + controlsHeight
             let center = CGPoint(
                 x: viewModel.faceCamPosition.x * geo.size.width,
                 y: viewModel.faceCamPosition.y * geo.size.height
             )
 
             VStack(alignment: .center, spacing: 8) {
-                Group {
-                    if let previewLayer = viewModel.pipProcessedPreviewLayer {
-                        PiPProcessedPreviewView(displayLayer: previewLayer)
-                            .frame(width: pipPreviewSize.width, height: pipPreviewSize.height)
-                            .clipped()
-                            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                            .overlay {
-                                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                    .strokeBorder(.white.opacity(0.25), lineWidth: 1)
-                            }
-                    } else {
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .fill(GlassyTheme.fillTertiary)
-                            .frame(width: pipPreviewSize.width, height: pipPreviewSize.height)
-                            .overlay { ProgressView() }
+                if showInlinePiPPreview {
+                    Group {
+                        if let previewLayer = viewModel.pipProcessedPreviewLayer {
+                            PiPProcessedPreviewView(displayLayer: previewLayer)
+                                .frame(width: pipPreviewSize.width, height: pipPreviewSize.height)
+                                .clipped()
+                                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                                .overlay {
+                                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                        .strokeBorder(.white.opacity(0.25), lineWidth: 1)
+                                }
+                        } else {
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .fill(GlassyTheme.fillTertiary)
+                                .frame(width: pipPreviewSize.width, height: pipPreviewSize.height)
+                                .overlay { ProgressView() }
+                        }
                     }
+                    .contentShape(Rectangle())
                 }
-                .contentShape(Rectangle())
 
                 pipSizePresetControl
                     .frame(width: stackWidth)
@@ -243,9 +250,31 @@ struct RecordingOverlayContent: View {
                     } label: {
                         Text(preset.shortLabel)
                             .font(.caption2.weight(.medium))
-                            .frame(minWidth: 40, minHeight: 32)
+                            .frame(minWidth: 44, minHeight: 44)
                     }
                     .buttonStyle(PipPresetButtonStyle(isSelected: viewModel.faceCamSizePreset == preset))
+                    .accessibilityLabel(preset.menuLabel)
+                }
+            }
+
+            Text(L10n.t("settings.background_blur"))
+                .font(.caption2.weight(.medium))
+                .padding(.top, 4)
+
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 44), spacing: 4)], spacing: 4) {
+                ForEach(BackgroundBlurLevel.allCases) { level in
+                    Button {
+                        viewModel.selectBackgroundBlur(level)
+                        settingsStore.update { $0.backgroundBlurLevel = level }
+                        viewModel.userInteraction()
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    } label: {
+                        Text(level.shortLabel)
+                            .font(.caption2.weight(.medium))
+                            .frame(minWidth: 44, minHeight: 44)
+                    }
+                    .buttonStyle(PipPresetButtonStyle(isSelected: viewModel.backgroundBlurLevel == level))
+                    .accessibilityLabel(level.displayName)
                 }
             }
         }
@@ -289,17 +318,17 @@ struct RecordingOverlayContent: View {
                     viewModel.userInteraction()
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 } label: {
-                    Label("Готов к записи", systemImage: "checkmark.circle.fill")
+                    Label(L10n.t("recording.ready"), systemImage: "checkmark.circle.fill")
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(.red)
+                .tint(.accentColor)
 
                 VStack(spacing: 6) {
-                    Text("Дальше начните запись из Пункта управления iOS:")
-                    Text("Зажмите кнопку записи экрана → выберите «Glassy Record» (не обычную запись) → включите Микрофон → Start Broadcast.")
+                    Text(L10n.t("recording.cc_steps_title"))
+                    Text(L10n.t("recording.cc_steps_body"))
                 }
                 .font(.caption)
                 .foregroundStyle(GlassyTheme.labelSecondary)

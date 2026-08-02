@@ -116,7 +116,29 @@ struct SettingsView: View {
             Text(L10n.t("pip.size.hint"))
                 .font(.caption)
                 .foregroundStyle(GlassyTheme.labelSecondary)
+
+            Picker(L10n.t("settings.background_blur"), selection: backgroundBlurBinding) {
+                ForEach(BackgroundBlurLevel.allCases) { level in
+                    Text(level.displayName).tag(level)
+                }
+            }
+            Text(L10n.t("settings.background_blur_hint"))
+                .font(.caption)
+                .foregroundStyle(GlassyTheme.labelSecondary)
         }
+    }
+
+    private var backgroundBlurBinding: Binding<BackgroundBlurLevel> {
+        Binding(
+            get: { settingsStore.settings.backgroundBlurLevel },
+            set: { level in
+                settingsStore.update { $0.backgroundBlurLevel = level }
+                UsageTracker.shared.track(
+                    .backgroundBlurChanged,
+                    params: ["level": level.rawValue, "source": "settings"]
+                )
+            }
+        )
     }
 
     private var faceCamSizePresetBinding: Binding<PiPFaceSizePreset> {
@@ -132,7 +154,7 @@ struct SettingsView: View {
     private var audioSection: some View {
         Section(L10n.t("settings.audio")) {
             Toggle(L10n.t("settings.mic"), isOn: binding(\.microphoneEnabled, feature: .micToggled, param: { ["enabled": String($0), "source": "settings"] }))
-            Toggle("Системный звук", isOn: binding(\.systemAudioEnabled, feature: .systemAudioToggled, param: { ["enabled": String($0)] }))
+            Toggle(L10n.t("settings.system_audio"), isOn: binding(\.systemAudioEnabled, feature: .systemAudioToggled, param: { ["enabled": String($0)] }))
             if settingsStore.settings.microphoneEnabled {
                 LabeledContent(L10n.t("settings.mic_volume")) {
                     Slider(value: bindingFloat(\.microphoneVolume), in: 0...2)

@@ -29,6 +29,7 @@ final class RecordingViewModel: ObservableObject {
     @Published var touchIndicators: [TouchIndicator] = []
     private var lastTouchIndicatorPoint: CGPoint?
     @Published var glassesEnabled = false
+    @Published var backgroundBlurLevel: BackgroundBlurLevel = .off
     @Published private(set) var usesBroadcastMode = !SimulatorSupport.isRunning
     @Published private(set) var isPiPPreviewReady = false
     @Published private(set) var isScreenCaptured = false
@@ -119,7 +120,10 @@ final class RecordingViewModel: ObservableObject {
         glassesService.setFrameColor(settings.glassesColor)
         glassesService.setEnabled(glassesEnabled, usesPiPCapture: usesBroadcastMode)
         applyFaceCamScaleFromSettings()
-        pipCameraManager.setAspectRatio(settings.pipAspectRatio, invalidatePiP: false)
+        let live = SettingsUserDefaults.load()
+        pipCameraManager.setAspectRatio(live.pipAspectRatio, invalidatePiP: false)
+        pipCameraManager.setBackgroundBlurLevel(live.backgroundBlurLevel)
+        backgroundBlurLevel = live.backgroundBlurLevel
 
         if usesBroadcastMode {
             setupPhase = .idle
@@ -131,7 +135,7 @@ final class RecordingViewModel: ObservableObject {
             }
             startStateRefreshLoop()
             Task {
-                try? await audioService.ensureMicrophonePermission(enabled: settings.microphoneEnabled)
+                try? await audioService.ensureMicrophonePermission(enabled: live.microphoneEnabled)
                 await RecordingNotificationService.requestAuthorization()
                 await preparePiPCamera()
             }
@@ -159,22 +163,25 @@ final class RecordingViewModel: ObservableObject {
 
     func prepareBroadcastConfig() {
         guard AppGroup.isConfigured else { return }
+        let live = SettingsUserDefaults.load()
         applyFaceCamScaleFromSettings()
         Task {
-            try? await audioService.ensureMicrophonePermission(enabled: settings.microphoneEnabled)
+            try? await audioService.ensureMicrophonePermission(enabled: live.microphoneEnabled)
         }
-        pipCameraManager.setAspectRatio(settings.pipAspectRatio, invalidatePiP: true)
+        pipCameraManager.setAspectRatio(live.pipAspectRatio, invalidatePiP: true)
         pipCameraManager.setContentScale(faceCamScale, invalidatePiP: true)
+        pipCameraManager.setBackgroundBlurLevel(live.backgroundBlurLevel)
         pipCameraManager.releaseAudioSessionForBroadcast()
         BroadcastConfigStore.saveConfig(makeBroadcastConfig())
-        RPScreenRecorder.shared().isMicrophoneEnabled = settings.microphoneEnabled
+        RPScreenRecorder.shared().isMicrophoneEnabled = live.microphoneEnabled
         pipCameraManager.requestPiPActive()
         UsageTracker.shared.track(
             .broadcastPrepare,
             params: [
-                "mic": String(settings.microphoneEnabled),
-                "system_audio": String(settings.systemAudioEnabled),
-                "pip_preset": faceCamSizePreset.rawValue
+                "mic": String(live.microphoneEnabled),
+                "system_audio": String(live.systemAudioEnabled),
+                "pip_preset": faceCamSizePreset.rawValue,
+                "blur": live.backgroundBlurLevel.rawValue
             ]
         )
     }
@@ -322,8 +329,12 @@ final class RecordingViewModel: ObservableObject {
     }
 
     func makeBroadcastConfig() -> BroadcastRecordingConfig {
-        BroadcastRecordingConfig.from(
-            settings: settings,
+        // Всегда свежие toggles mic/system — не снимок с init экрана записи.
+        var live = SettingsUserDefaults.load()
+        live.faceCamNormalizedX = Double(faceCamPosition.x)
+        live.faceCamNormalizedY = Double(faceCamPosition.y)
+        return BroadcastRecordingConfig.from(
+            settings: live,
             faceCamPosition: faceCamPosition,
             faceCamScale: faceCamScale,
             glassesEnabled: glassesEnabled
@@ -417,13 +428,19 @@ final class RecordingViewModel: ObservableObject {
                 } else {
                     url = try await broadcastService.waitForFinishedRecording()
                 }
+                let live = SettingsUserDefaults.load()
+                let mixedURL = try await AudioTrackMixer.mixToSingleTrackIfNeeded(
+                    sourceURL: url,
+                    micVolume: live.microphoneVolume,
+                    systemVolume: live.systemAudioVolume
+                )
                 BroadcastConfigStore.reset()
                 pipCameraManager.stop()
                 isRecording = false
                 updateTouchIndicatorOverlay(active: false)
                 setupPhase = .idle
 
-                let session = try await makeRecordingSession(from: url, duration: recordedDuration)
+                let session = try await makeRecordingSession(from: mixedURL, duration: recordedDuration)
                 completedSession = session
                 let fileSize = (try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? NSNumber)?.intValue ?? 0
                 UsageTracker.shared.track(
@@ -500,6 +517,12 @@ final class RecordingViewModel: ObservableObject {
         }
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
         UsageTracker.shared.track(.glassesToggled, params: ["enabled": String(glassesEnabled)])
+    }
+
+    func selectBackgroundBlur(_ level: BackgroundBlurLevel) {
+        backgroundBlurLevel = level
+        pipCameraManager.setBackgroundBlurLevel(level)
+        UsageTracker.shared.track(.backgroundBlurChanged, params: ["level": level.rawValue, "source": "recording"])
     }
 
     func setGlassesColor(_ color: GlassesFrameColor) {

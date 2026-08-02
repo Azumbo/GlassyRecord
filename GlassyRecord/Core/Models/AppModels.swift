@@ -113,13 +113,54 @@ enum PiPFaceSizePreset: String, CaseIterable, Codable, Identifiable {
     var menuLabel: String {
         switch self {
         case .half: L10n.t("pip.preset.half_menu")
+        case .minus25: L10n.t("pip.preset.minus25_menu")
         case .standard: L10n.t("pip.preset.standard_menu")
-        default: shortLabel
+        case .plus50: L10n.t("pip.preset.plus50_menu")
+        case .plus100: L10n.t("pip.preset.plus100_menu")
+        case .plus150: L10n.t("pip.preset.plus150_menu")
         }
     }
 
     static func nearest(to scale: CGFloat) -> PiPFaceSizePreset {
         allCases.min { abs($0.scaleFactor - scale) < abs($1.scaleFactor - scale) } ?? .standard
+    }
+}
+
+/// Уровень размытия фона за человеком в Face Cam / PiP.
+enum BackgroundBlurLevel: String, CaseIterable, Codable, Identifiable {
+    case off
+    case light
+    case medium
+    case strong
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .off: L10n.t("blur.off")
+        case .light: L10n.t("blur.light")
+        case .medium: L10n.t("blur.medium")
+        case .strong: L10n.t("blur.strong")
+        }
+    }
+
+    var shortLabel: String {
+        switch self {
+        case .off: L10n.t("blur.short.off")
+        case .light: L10n.t("blur.short.light")
+        case .medium: L10n.t("blur.short.medium")
+        case .strong: L10n.t("blur.short.strong")
+        }
+    }
+
+    /// Радиус CIGaussianBlur при VGA Face Cam.
+    var blurRadius: CGFloat {
+        switch self {
+        case .off: 0
+        case .light: 6
+        case .medium: 12
+        case .strong: 22
+        }
     }
 }
 
@@ -305,6 +346,7 @@ struct AppSettings: Codable, Equatable {
     var systemAudioEnabled: Bool = true
     var microphoneVolume: Float = 1.0
     var systemAudioVolume: Float = 1.0
+    var backgroundBlurLevel: BackgroundBlurLevel = .off
     var touchIndicatorEnabled: Bool = true
     var touchIndicatorColorHex: String = "#FF3B30"
     var touchIndicatorSize: CGFloat = 24
